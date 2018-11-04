@@ -1,0 +1,287 @@
+# R script for pre-processing 
+# Copyright (C) 2018  Francisco J. Romero-Campero, Pedro de los Reyes Rodríguez,
+# Ana Belén Romero Losada
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public
+# License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Authors: Pedro de los Reyes Rodríguez
+#          Ana Belén Romero-Losada
+#          Francisco J. Romero-Campero
+# 
+# Contact: Francisco J. Romero-Campero - fran@us.es 
+# Date: September 2018
+
+
+library(shiny)
+library(org.At.tair.db)
+library(igraph)
+
+##Parameters
+radius.1 <- 100 #Outer circle radius
+
+
+# columns(org.At.tair.db)
+my.key <- keys(org.At.tair.db, keytype="ENTREZID")
+my.col <- c("SYMBOL", "TAIR")
+alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias <- alias2symbol.table$SYMBOL
+names(alias) <- alias2symbol.table$TAIR
+#target.alias <- alias[target.genes]
+alias[is.na(alias)] <- "" 
+genes <- paste(names(alias), alias, sep=" - ")
+
+agis <-alias2symbol.table$TAIR
+names(agis) <- alias2symbol.table$SYMBOL
+agis[is.na(agis)] <- ""
+
+
+##Functions
+#Function for radian conversion
+radian.conversion <- function(alpha)
+{
+  rad <- (alpha*pi/180)
+  return(rad)
+}
+
+##Draw a circle and plot it
+angle <- seq(from=0, to=2*pi, by=0.01)
+x.circle.1 <- radius.1*sin(angle)
+y.circle.1 <- radius.1*cos(angle)
+
+radius.2 <- radius.1 - radius.1/12
+x.circle.2 <- radius.2 * sin(angle)
+y.circle.2 <- radius.2 * cos(angle)
+
+#Read graph adjacency matrix
+adj.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed_only_tfs.txt"))
+is.matrix(adj.matrix)
+dim(adj.matrix)
+rownames(adj.matrix) == colnames(adj.matrix)
+adj.global.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed.txt"))
+
+#Read expression data table
+expression.data <- read.table(file="data/athaliana_neutral_circadian_genes.txt", 
+                              as.is = TRUE, header = TRUE, row.names = NULL)
+head(expression.data)
+
+#Read mean expression data
+mean.expression <- read.table(file="data/athaliana_neutral_mean_expression.txt", header = TRUE)
+atha.genes <- as.vector(mean.expression$gene)
+mean.expression <- as.matrix(mean.expression[,2:ncol(mean.expression)])
+rownames(mean.expression) <- atha.genes
+
+#Generating the network
+tfs.network <- graph.adjacency(adjmatrix = adj.matrix, mode = "directed")
+
+#Set the angle to each transcription factor. The position (angle) in the network depends on the
+#peak expression
+tfs.angles <- radian.conversion(c(2*15, 8*15, 8*15, 0, 0, 0, 4*15, 8*15, 10*15, 12*15, 
+                                  16*15, 20*15, 4*15, 10*15, 4*15, 4*15, 2*15, 14*15, 8*15, 10*15, 12*15, 
+                                  4*15, 12*15, 10*15, 15*15))
+length(tfs.angles)
+
+#Set a radius to each TF to avoid the overlap
+radius.to.multiply <- c(rep((radius.1*0.8),2), radius.1*0.7,radius.1*0.8,radius.1*0.7,
+                        radius.1*0.6, radius.1*0.8,radius.1*0.6,rep((radius.1*0.8),4), 
+                        rep((radius.1*0.7),2), radius.1*0.6, 
+                        radius.1*0.5, radius.1*0.7,radius.1*0.8, 
+                        radius.1*0.5, radius.1*0.6, radius.1*0.7,
+                        radius.1*0.4, radius.1*0.6, radius.1*0.5, radius.1*0.8)
+# tfs.x <- (radius.2 - 3) * sin(tfs.angles)
+# tfs.y <- (radius.2 - 3) * cos(tfs.angles)
+
+#Set the x.y coordinates for the positions 
+tfs.x <- radius.to.multiply * sin(tfs.angles)
+tfs.y <- radius.to.multiply * cos(tfs.angles)
+
+#Generatin a positions matrix 
+matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(adj.matrix), ncol = 2)
+
+node.labels <- c("LHY1","CRY2", "PIF3", "PHYA", "PHYB", rep(x = "ELF3", times=7), "FHY1", 
+                 "ELF4", "PIF4", "PRR9", rep(x = "CCA1", times=5), "PIF5", "PRR7", "PRR5", "TOC1")
+
+
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Circadian clock network"),
+   
+   
+   
+   # Sidebar with inputs
+   sidebarLayout(
+      sidebarPanel(
+        #Selectize input to choose the gene for represent in the network
+        selectizeInput(inputId="target.gene", 
+                       label="Target gene", 
+                       choices=genes, 
+                       selected = "AT1G22770", 
+                       multiple = FALSE),
+        
+        checkboxGroupInput(inputId = "selected.tfs",
+                           label = "Select Transcription Factors:",
+                           choices = list("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3",
+                                          "FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5",
+                                          "PRR7","PRR5","TOC1"), 
+                           inline = TRUE, 
+                           width = "100%"),
+        
+        checkboxInput(inputId = "all",label = "Select All", width = "100%"),
+        
+        selectInput(inputId = "interactions", 
+                    label = "Show interactions between TFs?", 
+                    choices = list("Yes", "No"), 
+                    selected = "Yes", multiple = FALSE),
+        
+        actionButton(inputId = "button", label = "GO")
+        
+        
+        
+
+      ),
+      
+      #Plot the generated network
+      
+      mainPanel(
+         plotOutput(outputId = "network", width = "400px", height = "400px"),
+         plotOutput(outputId = "expression")
+      )
+   )
+)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  observeEvent(eventExpr = input$button, handlerExpr = {
+    output$network <- renderPlot({
+      target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+      
+      if (target.agi %in% row.names(adj.global.matrix)) {
+        #Plot circle
+        plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="")
+        lines(x.circle.2, y.circle.2, lwd=3)
+        x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                       sin(seq(from=-pi, to=0, by=0.01))* radius.1)
+        y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                      cos(seq(from=-pi, to=0, by=0.01))*radius.1)
+        polygon(x = x.polygon, y = y.polygon, col = "black")
+        for (i in 0:5)
+        {
+          angle.zt <- radian.conversion(alpha = 60*i)
+          zt <- 4*i
+          current.zt <- paste("ZT", zt,  sep = "")
+          text(x = (radius.1 + radius.1/5)*sin(angle.zt), y = (radius.1 + radius.1/5)*cos(angle.zt), labels = current.zt)
+          lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
+                y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
+        }
+        
+        if (input$all){
+          sel.tfs <- c("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
+          to.keep <- agis[sel.tfs]
+          
+        } else {
+          to.keep <- agis[input$selected.tfs]
+        }
+        ##First, modify the adj matrix to keep only the selected tfs marked in the app
+       
+        rows.cols.to.keep <- unlist(sapply(to.keep, grep, row.names(adj.matrix)))
+        adj.matrix <- adj.matrix[rows.cols.to.keep,rows.cols.to.keep]
+        
+        #Modify adj.matrix and matrix.pos to add the target.gene
+        gene.peak <- expression.data[expression.data$genes==target.agi,"peaks"]
+        gene.peak <- as.numeric(strsplit(gene.peak, split = "ZT")[[1]][2])
+        gene.row <- adj.global.matrix[target.agi,] 
+        gene.row <- gene.row[rows.cols.to.keep] #remove non selected tfs from the added row
+        
+        if (input$interactions == "Yes")
+        {
+          #To show the interactions between the TFs too
+          new.matrix <- cbind(adj.matrix, gene.row)
+          new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
+        } else {
+          #To show only the interactions between the TFs and the selected gene.
+          rownames.matrix <- row.names(adj.matrix)
+          null.matrix <- matrix(data = rep(x = 0, times=length(rownames.matrix)^2),
+                                byrow = TRUE, ncol = length(rownames.matrix), nrow = length(rownames.matrix))
+          rownames(null.matrix) <- rownames.matrix
+          colnames(null.matrix) <- rownames.matrix
+          new.matrix <- cbind(null.matrix, gene.row)
+          new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
+          
+        }
+
+                
+        #Generating the complete network
+        tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed")
+        
+        #First, modify the angles, radius, and labels positions to keep only 
+        #the selected tfs
+        tfs.angles <- tfs.angles[rows.cols.to.keep]
+        radius.to.multiply <- radius.to.multiply[rows.cols.to.keep]
+        node.labels <- node.labels[rows.cols.to.keep]
+        
+        #Modify the angles, the radius and the positions to add the new node
+        new.tfs.angles <- c(tfs.angles, radian.conversion(gene.peak*15))
+        new.multiply <- c(radius.to.multiply, radius.1*0.3)
+        tfs.x <- new.multiply * sin(new.tfs.angles)
+        tfs.y <- new.multiply * cos(new.tfs.angles)
+        
+        new.matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(new.matrix), ncol = 2)
+        new.node.labels <- c(node.labels, alias[target.agi])
+        
+        #Plot the network
+        #par(mar = c(4,4,4,4))
+        plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
+                    vertex.color = c(rep(x = "firebrick1",times=nrow(new.matrix)-1),"chartreuse3"), vertex.label=new.node.labels, edge.arrow.size = 0.6, 
+                    edge.arrow.width=1, edge.curved= TRUE, edge.width = 1, vertex.label.dist = 0,
+                    vertex.label.cex=0.4, vertex.label.font=2)
+        
+        
+      } else {
+        #par(mar = c(0,0,0,0))
+        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+        text(x=0.5, y = 0.5, paste("The", target.agi, "gene does not present a circadian expression pattern"), cex = 0.7)
+      }
+      
+       })
+    
+  })
+  
+  observeEvent(eventExpr = input$button, handlerExpr = {
+    output$expression <- renderPlot({
+      target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+      gene.expression <- scale(mean.expression[target.agi,])
+      
+      plot(x=seq(from=0,to=20,by=4),gene.expression,
+           type="o",lwd=3,cex=1.5,
+           ylim=c(-2.5,2),xlim=c(0,24),
+           col="darkgreen",axes=FALSE,xlab="",ylab="", 
+           main=paste(target.agi, alias[target.agi],sep=" - "))
+      
+      polygon(x=c(0,12,12,0),y=c(-2,-2,-2.3,-2.3),lwd=2)
+      polygon(x=c(12,24,24,12),y=c(-2,-2,-2.3,-2.3),col = "black",lwd=2)
+      
+      axis(side = 2,at = -2:2,labels = FALSE,lwd=2)
+      mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.3,at = 0)
+      axis(side = 1,at=seq(from=0,to=24,by=2),line=-1,las=2,labels = paste("ZT",seq(from=0,to=24,by=2),sep=""),lwd=2)
+      
+    })
+    
+  })
+  
+  
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
