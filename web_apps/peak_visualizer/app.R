@@ -436,7 +436,7 @@ server <- function(input, output) {
         current.peaks <- read.table(file=current.bed.file,header = F, as.is = T)
         peak.coordinates <- subset(current.peaks, V1 == range.to.plot$seqnames & V2 >= range.to.plot$start & V3 <= range.to.plot$end) 
         current.peaks.to.plot <- peak.coordinates[,2:3]
-        
+
         ## Transform coordinates 
         current.peaks.to.plot <- current.peaks.to.plot - range.to.plot$start
         
@@ -546,40 +546,41 @@ server <- function(input, output) {
       necessary.shapes <- rep(symbol.shapes[1:number.of.shapes],each = length(detected.tfbs)/number.of.shapes)
       necessary.colors <- rep(symbol.color,number.of.shapes)
       
-      for(i in 1:length(detected.tfbs))
+      if(length(detected.tfbs) > 0)
       {
-        current.tfbs <- detected.tfbs[i]
-        current.shape <- necessary.shapes[i]
-        current.color <- necessary.colors[i]
-        
-        positions <- subset(df.hits, name == current.tfbs)
-        
-        for(j in 1:nrow(positions))
+        for(i in 1:length(detected.tfbs))
         {
-          tf.to.draw <- positions$tf_number[j]
-          pos.to.draw <- positions$position[j]
+          current.tfbs <- detected.tfbs[i]
+          current.shape <- necessary.shapes[i]
+          current.color <- necessary.colors[i]
+        
+          positions <- subset(df.hits, name == current.tfbs)
+        
+          for(j in 1:nrow(positions))
+          {
+            tf.to.draw <- positions$tf_number[j]
+            pos.to.draw <- positions$position[j]
           
-          points(x = pos.to.draw, y = 25*(tf.to.draw - 1) - 5 - 5*peak.width,
-                 pch = current.shape, col = current.color, cex = 1)
+            points(x = pos.to.draw, y = 25*(tf.to.draw - 1) - 5 - 5*peak.width,
+                   pch = current.shape, col = current.color, cex = 1)
+          }
+        }
+      
+        ## Add legend for TFBS
+        legend.step <- 10
+        for(i in 1:length(detected.tfbs))
+        {
+          points(x = -3000, y = upper.lim - (i-1)*legend.step, 
+                 pch=necessary.shapes[i], col = necessary.colors[i],cex = 1)
+        
+        
+          current.seq <- as.character(subset(df.hits,name == detected.tfbs[i])[["seq"]][[1]])
+          current.label <- paste(c(detected.tfbs[i], "  -  ", current.seq ),collapse="")
+        
+          text(x = -2900, y = upper.lim - (i-1)*legend.step, labels = current.label,
+               adj = 0,cex = 0.7)
         }
       }
-      
-      ## Add legend for TFBS
-      
-      legend.step <- 10
-      for(i in 1:length(detected.tfbs))
-      {
-        points(x = -3000, y = upper.lim - (i-1)*legend.step, 
-               pch=necessary.shapes[i], col = necessary.colors[i],cex = 1)
-        
-        
-        current.seq <- as.character(subset(df.hits,name == detected.tfbs[i])[["seq"]][[1]])
-        current.label <- paste(c(detected.tfbs[i], "  -  ", current.seq ),collapse="")
-        
-        text(x = -2900, y = upper.lim - (i-1)*legend.step, labels = current.label,
-             adj = 0,cex = 0.7)
-      }
-      
       
       ## Draw profiles for TF binding
       for(i in 1:number.tfs)

@@ -20,21 +20,29 @@ genes <- sort(network.data$name)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Old Faithful Geyser Data"),
+  titlePanel(tags$b("ATTRACTOR, an Arabidopsis Thaliana TRanscriptionAl Circadian neTwORk")),
    
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         sliderInput("bins",
-                     "Number of bins:",
-                     min = 1,
-                     max = 50,
-                     value = 30)
+        
+        tags$h3(tags$b("Gene Selection:")),
+        
+        selectizeInput(inputId = "selected.genes",
+                       label = "Gene ID",
+                       choices = genes,
+                       selected = "AT1G22770",
+                       multiple = TRUE),
+        ## Button to trigger selections based on gene ID
+        actionButton(inputId = "button_gene_id",label="Select Genes"),
+        width = 3 
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-         plotOutput("networkPlot")
+         plotOutput("networkPlot"),
+         
+         width = 9
       )
    )
 )
@@ -54,17 +62,37 @@ server <- function(input, output) {
       geom_point(color=node.colors,size=1)
   })
   
-   
+  selected_gene_id <- eventReactive(input$button_gene_id, {
+    print("aquí llego 0")
+    selected.genes.df <- subset(network.data, names %in% input$selected.genes)
+    print(selected.genes.df)
+#    return(selected.genes.df)
+  })
   
   
-   output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x    <- faithful[, 2] 
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
-      
-      # draw the histogram with the specified number of bins
-      hist(x, breaks = bins, col = 'darkgray', border = 'white')
-   })
+  ## Visualization of selected genes by ID
+  observeEvent(input$button_gene_id, {
+    print("aquí llego 1")
+    
+    selected.genes.df <- subset(network.data, names %in% input$selected.genes)
+    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    output$networkPlot <- renderPlot({
+      ggplot(network.data, aes(x.pos,y.pos)) + 
+        theme(panel.background = element_blank(), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks.y = element_blank()) + 
+        geom_point(color=node.colors,size=1) +
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=3, fill=selected.nodes.colors,colour="black",pch=21)
+      })
+  })
+
 }
 
 # Run the application 
