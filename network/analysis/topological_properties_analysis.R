@@ -21,6 +21,7 @@ atha.eccent <- vector(mode="numeric",length=length(vertex.names))
 ## connect to curren node (regulators)
 for (i in 1:vcount(atha.graph))
 {
+  print(i)
   if (length(neighbors(graph = atha.graph, v=vertex.names[i], mode="in")$name) == 0) 
   {
     atha.neighbors[i] <- NA
