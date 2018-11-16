@@ -15,7 +15,7 @@ network.data$y.pos <- y.coord
 
 pos.data <- t(matrix(data=c(x.coord,y.coord),ncol=2))
 
-rotation.angle <- pi / 2
+rotation.angle <- -pi/2
 rotation.matrix <- matrix(data = c(cos(rotation.angle),sin(rotation.angle),-sin(rotation.angle),cos(rotation.angle)),nrow = 2,ncol = 2)
 rotated.pos <- t(rotation.matrix %*% pos.data)
 
