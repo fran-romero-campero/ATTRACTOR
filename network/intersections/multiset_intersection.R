@@ -33,11 +33,11 @@ tf2 <- read.table(file="../../data/targets_in_network/LHY_targets_in_network.txt
                           header = FALSE, as.is = TRUE)
 
 #Reading the group of genes peaking at specific time
-set.of.genes <- read.table(file = "../../data/clusters/peak_ZT16.txt",
+genes.peak.zt <- read.table(file = "../../data/clusters/peak_ZT16.txt",
                              header = FALSE, as.is = TRUE)
 
 #EStablishing the sets to test
-sets <- c(cca1.targets, lhy.targets, genes.peak.zt0)
+sets <- c(cca1.targets, lhy.targets, genes.peak.zt)
 names(sets) <- c("cca1", "lhy", "peakZT0")
 
 #Test and visualization of intersections
@@ -105,6 +105,8 @@ intersectSets(tf1, tf2, genes.peak.zt)
 
 #####loop to perform all possible intersections
 
+
+
 for (i in 1:length(tfs))
 {
   for (j in 1: length(tfs))
@@ -116,10 +118,12 @@ for (i in 1:length(tfs))
   }
 }
 
+
+
 ######------Test of intersection between beds------#######
 
 
-#Reading the bed files of the transicripcion factors
+#Reading the bed files of the transcription factors
 peaks1 <- read.table(file = "bed.files/PRR5_1_peaks.narrowPeak")
 head(peaks1)
 
@@ -135,7 +139,8 @@ length.sets <- sapply(X = peaks.list, FUN = nrow)
 
 
 peaks.set1 <- peaks1
-peaks.set2 <- peaks3
+peaks.set2 <- peaks2
+
 
 i <- 89
 
