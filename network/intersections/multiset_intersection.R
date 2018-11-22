@@ -30,13 +30,13 @@
 library(SuperExactTest)
 
 ##Reading the two sets TF target genes
-tf1 <- read.table(file = "../../data/targets_in_network/CCA1_ZT02_targets_in_network.txt",
+tf1 <- read.table(file = "../../web_apps/peak_visualizer/data/targets_in_network/CCA1_ZT02_targets_in_network.txt",
                            header = FALSE, as.is = TRUE)
-tf2 <- read.table(file="../../data/targets_in_network/LHY_targets_in_network.txt",
+tf2 <- read.table(file="../../web_apps/peak_visualizer/data/targets_in_network/LHY_targets_in_network.txt",
                           header = FALSE, as.is = TRUE)
 
 #Reading the group of genes peaking at specific time
-genes.peak.zt <- read.table(file = "../../data/clusters/peak_ZT16.txt",
+genes.peak.zt <- read.table(file = "../../web_apps/peak_visualizer/data/clusters/peak_ZT0.txt",
                              header = FALSE, as.is = TRUE)
 
 #EStablishing the sets to test
@@ -77,7 +77,7 @@ length(sets)
 
 length.gene.sets <- sapply(X = sets,FUN = length)
 
-#Si queremos hacer un test introduciendo sólo cifras. 
+#If you want to carry out the test introducing only numbers:
 cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
 
 
@@ -232,9 +232,11 @@ intersectBed <- function(peaks.set1, peaks.set2)
   return(intersection)
 }
 
-#Ya he creado una función para extraer las intersecciones entre dos archivos
-#bed (intersectBed) Para hacerlo entre tres, primero lo hago entre las
-#dos primeras y después con la tercera. 
+# The intersectBed function allow to get the intersections betwwen to bed files. If you want to perform the
+# the intersection between three bed files, you can do it in a consecutive manner. 
 
 first <- intersectBed(peaks1, peaks2)
 second <- intersectBed(first, peaks3)
+
+cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
+
