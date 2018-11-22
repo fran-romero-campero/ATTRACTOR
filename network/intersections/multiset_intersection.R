@@ -23,6 +23,9 @@
 # Analysis of intersections among multiple sets is fundamental 
 # for in-depth understanding of their complex relationships
 
+# This script performs intersections between the targets of two transcription factors and 
+# a set of genes. 
+
 #install.packages("SuperExactTest")
 library(SuperExactTest)
 
