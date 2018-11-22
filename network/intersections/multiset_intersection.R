@@ -189,9 +189,9 @@ for (i in 1:nrow(peaks.set1))
 
 
 
-  
-  
 
+  
+#intersectBed function
 intersectBed <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=0 )
@@ -237,6 +237,7 @@ intersectBed <- function(peaks.set1, peaks.set2)
 
 first <- intersectBed(peaks1, peaks2)
 second <- intersectBed(first, peaks3)
+second
 
 cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
 
