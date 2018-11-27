@@ -54,12 +54,23 @@ ui <- fluidPage(
       sidebarPanel(
         
         tags$h3(tags$b("Gene Selection:")),
-        ## Select a few genes
-        selectizeInput(inputId = "selected.genes",
-                       label = "Gene ID",
-                       choices = genes.selectize,
-                       selected = "AT1G22770",
-                       multiple = TRUE),
+        
+        radioButtons(inputId = "gene_selection_mode",
+                     label = "Gene Selection Mode", 
+                     choices = c("Individual Genes", "Gene List"),
+                     selected = "Individual Genes"),
+        
+        ## Dynamic panel for selecting single genes
+        conditionalPanel(condition = "input.gene_selection_mode == 'Individual Genes'",
+          ## Select a few genes
+          selectizeInput(inputId = "selected.genes",
+                         label = "Gene ID",
+                         choices = genes.selectize,
+                         selected = "AT1G22770",
+                         multiple = TRUE)
+        ),
+        
+        
         ## Button to trigger selections based on gene ID
         actionButton(inputId = "button_gene_id",label="Select Genes"),
         
