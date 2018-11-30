@@ -43,6 +43,16 @@ names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
+## Transcription factors AGI ids and names
+tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+         "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
+
+tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
+             "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
+             "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+
+names(tf.ids) <- tfs.names
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
@@ -57,7 +67,10 @@ ui <- fluidPage(
         
         radioButtons(inputId = "gene_selection_mode",
                      label = "Gene Selection Mode", 
-                     choices = c("Individual Genes", "Gene List"),
+                     choices = c("Individual Genes", 
+                                 "Gene List", 
+                                 "Common TF target genes",
+                                 "Topological parameter"),
                      selected = "Individual Genes"),
         
         ## Dynamic panel for selecting single genes
@@ -67,16 +80,16 @@ ui <- fluidPage(
                          label = "Gene ID",
                          choices = genes.selectize,
                          selected = "AT1G22770",
-                         multiple = TRUE)
+                         multiple = TRUE),
+          ## Button to trigger selections based on gene ID
+          actionButton(inputId = "button_gene_id",label="Select Genes")
         ),
         
-        
-        ## Button to trigger selections based on gene ID
-        actionButton(inputId = "button_gene_id",label="Select Genes"),
-        
-        textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
-                      height = "200px",placeholder = "Insert set of genes",
-                      value= "AT2G23290
+        ## Dynamic panel for selecting gene list
+        conditionalPanel(condition = "input.gene_selection_mode == 'Gene List'",
+                         textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
+                                       height = "200px",placeholder = "Insert set of genes",
+                                       value= "AT2G23290
 AT2G40900
 AT2G40890
 AT2G47450
@@ -86,19 +99,25 @@ AT2G33230
 AT5G12440
 AT4G17245
 AT4G16780"),
-        actionButton(inputId = "button_select_gene_list",label = "Select Genes"),
-        
-        
-        sliderInput(inputId = "degree_range", label = h3("Degree Range"), min = 0, 
-                    max = 11, value = c(2, 4)),
-        actionButton(inputId = "button_degree",label = "Select Genes"),
-        
-        checkboxGroupInput(inputId = "selected.tfs",
-                           label = "Select Transcription Factors:",
-                           choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
-                                          "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3","ELF4"),
-                           inline = TRUE,width = "100%"),
-        actionButton(inputId = "button_tfs",label = "Select Genes"),
+                         actionButton(inputId = "button_select_gene_list",label = "Select Genes")
+        ),
+
+        conditionalPanel(condition = "input.gene_selection_mode == 'Common TF target genes'",        
+          checkboxGroupInput(inputId = "selected.tfs",
+                             label = "Select Transcription Factors:",
+                             choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+                                            "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3","ELF4"),
+                             inline = TRUE,width = "100%"),
+          checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
+          actionButton(inputId = "button_tfs",label = "Select Genes")
+        ),
+
+        conditionalPanel(condition = "input.gene_selection_mode == 'Topological parameter'",
+          sliderInput(inputId = "degree_range", label = h3("Degree Range"), min = 0, 
+                      max = 11, value = c(2, 4)),
+          actionButton(inputId = "button_degree",label = "Select Genes")
+        ),
+
         width = 3 
       ),
       
@@ -223,23 +242,46 @@ server <- function(input, output) {
       gene.selection <- rowSums(network.data[,input$selected.tfs]) == length(input$selected.tfs)
       
     }
+    
+    #selected.tfs.df <- subset(network.data, names %in% tf.ids[input$selected.tfs])
+    
     selected.genes.df <- network.data[gene.selection,]
     selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
     
     print(selected.genes.df)
     print(selected.nodes.colors)
     
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+     # geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+
+    if(input$edges)
+    {
+      for(i in 1:length(input$selected.tfs))
+      {
+        tf.xpos <- subset(network.data, names == tf.ids[input$selected.tfs[i]])[["x.pos"]]
+        tf.ypos <- subset(network.data, names == tf.ids[input$selected.tfs[i]])[["y.pos"]]
+        network.representation <- network.representation +
+          annotate("segment",
+                   x=rep(tf.xpos,nrow(selected.genes.df)),
+                   y=rep(tf.ypos,nrow(selected.genes.df)),
+                   xend=selected.genes.df$x.pos,
+                   yend=selected.genes.df$y.pos, 
+                   color="grey", arrow=arrow(type="closed",length=unit(0.1, "cm")))
+      }
+    }
+
     output$networkPlot <- renderPlot({
-      ggplot(network.data, aes(x.pos,y.pos)) + 
-        theme(panel.background = element_blank(), 
-              panel.grid.major = element_blank(), 
-              panel.grid.minor = element_blank(),
-              axis.title = element_blank(),
-              axis.text = element_blank(),
-              axis.ticks.y = element_blank()) + 
-        geom_point(color=node.colors,size=1) +
-        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+      network.representation
     },height = 700)
+    
   })
   
   
