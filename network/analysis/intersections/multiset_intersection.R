@@ -30,13 +30,13 @@
 library(SuperExactTest)
 
 ##Reading the two sets TF target genes
-tf1 <- read.table(file = "../../web_apps/peak_visualizer/data/targets_in_network/CCA1_ZT02_targets_in_network.txt",
+tf1 <- read.table(file = "../../../web_apps/peak_visualizer/data/targets_in_network/CCA1_ZT02_targets_in_network.txt",
                            header = FALSE, as.is = TRUE)
-tf2 <- read.table(file="../../web_apps/peak_visualizer/data/targets_in_network/LHY_targets_in_network.txt",
+tf2 <- read.table(file="../../../web_apps/peak_visualizer/data/targets_in_network/LHY_targets_in_network.txt",
                           header = FALSE, as.is = TRUE)
 
 #Reading the group of genes peaking at specific time
-genes.peak.zt <- read.table(file = "../../web_apps/peak_visualizer/data/clusters/peak_ZT0.txt",
+genes.peak.zt <- read.table(file = "../../../network/clusters/peak_ZT0.txt",
                              header = FALSE, as.is = TRUE)
 
 #EStablishing the sets to test
@@ -108,23 +108,33 @@ intersectSets(tf1, tf2, genes.peak.zt)
 
 #####loop to perform all possible intersections
 
-tf.files <- list.files(path = "../../web_apps/peak_visualizer/data/targets_in_network/targets_to_intersect/", pattern = "targets")
-gene.files <- list.files(path = "../../web_apps/peak_visualizer/data/clusters/by_peaks", pattern = "peak")
+tf.files <- list.files(path = "../../../web_apps/peak_visualizer/data/targets_in_network/targets_to_intersect/", pattern = "targets")
+gene.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clusters/by_peaks", pattern = "peak")
+
+#Initialize matrix to store the results
+intersection.table <- matrix(ncol=6)
+colnames(intersection.table) <- c("TF1", "TF2", "Cluster", "P value", 
+                                  "Enrichment", "Intersection Genes") 
+
+#Initialize vector to add it as row into the matrix
+current.intersection <- c()
+
+head(intersection.table)
 
 i <- 1
-j <- 2
-k <- 1
+j <- 5
+k <- 5
 for (i in 1:length(tf.files))
 {
   for (j in 1: length(tf.files))
   {
     for (k in 1:length(gene.files))
     {
-      tf1 <- read.table(file=paste0("../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[i]),
+      tf1 <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[i]),
                         header = TRUE, as.is = TRUE)
-      tf2 <- read.table(file=paste0("../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[j]),
+      tf2 <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[j]),
                         header = TRUE, as.is = TRUE)
-      set.of.genes <- read.table(file=paste0("../../web_apps/peak_visualizer/data/clusters/by_peaks/",gene.files[k]),
+      set.of.genes <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/clusters/by_peaks/",gene.files[k]),
                                  header = FALSE, as.is = TRUE)
       
       if(tf.files[i] != tf.files[j])
@@ -134,22 +144,25 @@ for (i in 1:length(tf.files))
         p.value <- result[1][[1]]
         enrichment <- result[2][[1]]
         intersect.genes <- result[3][[1]]
+        
         if (length(intersect.genes) !=0 & p.value < 0.000005)
         {
           print("HIT")
-          result.table <- matrix(nrow = length(intersect.genes), ncol = 3)
-          colnames(result.table) <- c("p.value", "enrichment", "genes")
-          result.table[1,1] <- p.value
-          result.table[1,2] <- enrichment
-          result.table[,3] <- intersect.genes
-          write.table(result.table, file = paste0("hit_intersections/results_",tf.files[i],tf.files[j],"_and_", gene.files[k]),
-                      sep = "\t", quote = FALSE)
+          current.intersection[1] <- strsplit(tf.files[i], split = "_")[[1]][1]
+          current.intersection[2] <- strsplit(tf.files[j], split = "_")[[1]][1]
+          current.intersection[3] <- strsplit(gene.files[k], split = ".txt")[[1]][1]
+          current.intersection[4] <- p.value
+          current.intersection[5] <- enrichment
+          current.intersection[6] <- paste(intersect.genes, collapse= ",")
+          intersection.table <- rbind(intersection.table, current.intersection)
+          
         }
       }
         
       
     }
   }
+  write.table(intersection.table, file="all_intersections.txt", sep="\t", row.names = FALSE)
 }
 
 
