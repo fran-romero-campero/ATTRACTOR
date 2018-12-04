@@ -2,6 +2,7 @@
 library(shiny)
 library(ggplot2)
 library(org.At.tair.db)
+library(SuperExactTest)
 
 #Auxiliary functions
 intersectSets <- function(tf1,tf2,set.of.genes){
@@ -146,7 +147,7 @@ AT4G16780"),
                       choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
           selectInput(inputId = "set", label="Cluster of Circadian Genes", 
-                      choices = c("Peak ZT0", "Peak ZT4", "Peak ZT8"), selected = NULL,
+                      choices = c("peak_ZT0", "peak_ZT4", "peak_ZT8"), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
         actionButton(inputId = "button_intersect", label = "Test"),
           
@@ -159,8 +160,8 @@ AT4G16780"),
       # Show a plot of the generated distribution
       mainPanel(
          plotOutput("networkPlot"),
-         textOutput(outputId = "output_text"),
-         dataTableOutput(outputId = "output_table"),
+         textOutput(outputId = "outputTtext"),
+         dataTableOutput(outputId = "outputTable"),
          
          width = 9
       )
@@ -325,7 +326,27 @@ server <- function(input, output) {
   
   observeEvent(input$button_intersect, {
     print("Aquí llega Pedro")
+    tf1.filename <- paste0(input$tf1, "_targets_in_network.txt")
+    tf2.filename <- paste0(input$tf2, "_targets_in_network.txt")
+    set.of.genes.filename <- paste0(input$set, ".txt")
+    
+    tf1 <- read.table(file=paste0("data/intersections/",tf1.filename), header = TRUE, as.is=TRUE)
+    tf2 <- read.table(file=paste0("data/intersections/",tf2.filename), header = TRUE, as.is=TRUE)
+    set.of.genes <- read.table(file=paste0("data/intersections/",set.of.genes.filename), header = TRUE, as.is=TRUE)
+    
+    #APply the function intersectSets
+    result <- intersectSets(tf1, tf2, set.of.genes)
+    p.value <- result[1][[1]]
+    enrichment <- result[2][[1]]
+    intersect.genes <- result[3][[1]]
+    
+    ## Visualization of text with p value and enrichment
+    output$outputText <- renderText(expr = "Holaaaaa", quoted = FALSE)
+    
+    
   })
+  
+
   
 }
 
