@@ -160,7 +160,9 @@ AT4G16780"),
       # Show a plot of the generated distribution
       mainPanel(
          plotOutput("networkPlot"),
-         textOutput(outputId = "outputTtext"),
+         tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+         tags$br(),tags$br(),tags$br(),
+         htmlOutput(outputId = "outputText"),
          dataTableOutput(outputId = "outputTable"),
          
          width = 9
@@ -341,7 +343,13 @@ server <- function(input, output) {
     intersect.genes <- result[3][[1]]
     
     ## Visualization of text with p value and enrichment
-    output$outputText <- renderText(expr = "Holaaaaa", quoted = FALSE)
+    output$outputText <- renderText(expr = paste0("<b>The p-value significance
+                                                  of the intersection is ", p.value,
+                                                  " and the enrichment is ", enrichment,
+                                                  "<b>")
+                                    , quoted = FALSE)
+    
+    
     
     
   })
