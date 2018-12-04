@@ -106,7 +106,43 @@ intersectSets <- function(tf1,tf2,set.of.genes){
 
 intersectSets(tf1, tf2, genes.peak.zt)
 
-#####loop to perform all possible intersections
+######Exploring to obtain information (AGI, description, peak time...) #####
+#-----from a list of genes.
+result <- intersectSets(tf1, tf2, genes.peak.zt)
+intersect.genes <- result[3][[1]]
+
+columns(org.At.tair.db)
+my.key <- keys(org.At.tair.db, keytype="ENTREZID")
+my.col <- c("SYMBOL", "TAIR")
+alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias <- alias2symbol.table$SYMBOL
+names(alias) <- alias2symbol.table$TAIR
+alias[is.na(alias)] <- "" 
+
+
+#Read expression data table
+expression.data <- read.table(file="../../../web_apps/network_visualizer/data/athaliana_neutral_circadian_genes.txt", 
+                              as.is = TRUE, header = TRUE, row.names = NULL)
+head(expression.data)
+
+
+subset(expression.data, genes == intersect.genes)
+#AQUI ME QUEDO
+#-------------------------------------------------------------------------@
+#-------------------------------------------------------------------------@
+#-------------------------------------------------------------------------@
+#-------------------------------------------------------------------------@
+
+#Initialize table to store information about the genes in the intersection
+table.of.genes <- matrix(ncol=5, nrow = length(intersect.genes))
+colnames(table.of.genes) <- c("Primary_Symbol", "AGI", "Description", "Peak", "Trough")
+#Fill the table
+table.of.genes[,"AGI"] <- intersect.genes
+table.of.genes[,"Primary_Symbol"] <- alias[intersect.genes]
+
+
+
+#####loop to perform all possible intersections####
 
 tf.files <- list.files(path = "../../../web_apps/peak_visualizer/data/targets_in_network/targets_to_intersect/", pattern = "targets")
 gene.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clusters/by_peaks", pattern = "peak")

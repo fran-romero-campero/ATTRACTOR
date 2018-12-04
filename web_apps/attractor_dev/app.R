@@ -342,6 +342,8 @@ server <- function(input, output) {
     enrichment <- result[2][[1]]
     intersect.genes <- result[3][[1]]
     
+    
+    
     ## Visualization of text with p value and enrichment
     output$outputText <- renderText(expr = paste0("<b>The p-value significance
                                                   of the intersection is ", p.value,
