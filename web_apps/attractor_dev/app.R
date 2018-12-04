@@ -1,0 +1,334 @@
+## Load libraries
+library(shiny)
+library(ggplot2)
+library(org.At.tair.db)
+
+#Auxiliary functions
+intersectSets <- function(tf1,tf2,set.of.genes){
+  intersection.data <- list()
+  sets <- c(tf1, tf2, set.of.genes)
+  #names(sets) <- c("cca1", "lhy", "peakZT0")
+  results <- supertest(x = sets, n = 6830)
+  results.table <- summary(results)
+  p.value <- tail(results.table$P.value, n=1) #Get the last p-value
+  enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
+  intersection.genes <- (results.table$Table)[["Elements"]][nrow(results.table$Table)]
+  intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
+  intersection.data[[1]] <- p.value
+  intersection.data[[2]] <- enrichment
+  intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
+  names(intersection.data) <- c("p-value", "enrichment", "gene.table")
+  return(intersection.data)
+  
+}
+
+## Load network
+network.data <- read.table(file="data/attractor_network_topological_parameters.tsv",header = TRUE,as.is=TRUE)
+
+## Tranforming coordinates for a better visualization
+x.coord <- as.numeric(network.data$y.pos)
+y.coord <- as.numeric(network.data$x.pos)
+
+network.data$x.pos <- x.coord
+network.data$y.pos <- y.coord
+
+pos.data <- t(matrix(data=c(x.coord,y.coord),ncol=2))
+
+rotation.angle <- -pi/2
+rotation.matrix <- matrix(data = c(cos(rotation.angle),sin(rotation.angle),-sin(rotation.angle),cos(rotation.angle)),nrow = 2,ncol = 2)
+rotated.pos <- t(rotation.matrix %*% pos.data)
+
+network.data$x.pos <- rotated.pos[,1]
+network.data$y.pos <- rotated.pos[,2]
+ 
+selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
+names(selected.colors) <- peak.times
+node.colors <- selected.colors[network.data$cluster.classification]
+names(node.colors) <- NULL
+
+## Extract gene ids
+genes <- sort(network.data$name)
+
+## Load all and circadian genes
+my.key <- keys(org.At.tair.db, keytype="ENTREZID")
+my.col <- c("SYMBOL", "TAIR")
+columns(org.At.tair.db)
+alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
+alias <- alias2symbol.table$SYMBOL
+names(alias) <- alias2symbol.table$TAIR
+alias[is.na(alias)] <- "" 
+genes.selectize <- paste(names(alias), alias, sep=" - ")
+
+## Transcription factors AGI ids and names
+tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+         "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
+
+tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
+             "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
+             "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+
+names(tf.ids) <- tfs.names
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+  titlePanel(tags$b("ATTRACTOR, an Arabidopsis Thaliana TRanscriptionAl Circadian neTwORk")),
+   
+   # Sidebar with a slider input for number of bins 
+   sidebarLayout(
+      sidebarPanel(
+        
+        tags$h3(tags$b("Gene Selection:")),
+        
+        radioButtons(inputId = "gene_selection_mode",
+                     label = "Gene Selection Mode", 
+                     choices = c("Individual Genes", 
+                                 "Gene List", 
+                                 "Common TF target genes",
+                                 "Topological parameter"),
+                     selected = "Individual Genes"),
+        
+        ## Dynamic panel for selecting single genes
+        conditionalPanel(condition = "input.gene_selection_mode == 'Individual Genes'",
+          ## Select a few genes
+          selectizeInput(inputId = "selected.genes",
+                         label = "Gene ID",
+                         choices = genes.selectize,
+                         selected = "AT1G22770",
+                         multiple = TRUE),
+          ## Button to trigger selections based on gene ID
+          actionButton(inputId = "button_gene_id",label="Select Genes")
+        ),
+        
+        ## Dynamic panel for selecting gene list
+        conditionalPanel(condition = "input.gene_selection_mode == 'Gene List'",
+                         textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
+                                       height = "200px",placeholder = "Insert set of genes",
+                                       value= "AT2G23290
+AT2G40900
+AT2G40890
+AT2G47450
+AT2G45190
+AT2G45400
+AT2G33230
+AT5G12440
+AT4G17245
+AT4G16780"),
+                         actionButton(inputId = "button_select_gene_list",label = "Select Genes")
+        ),
+
+        conditionalPanel(condition = "input.gene_selection_mode == 'Common TF target genes'",        
+          checkboxGroupInput(inputId = "selected.tfs",
+                             label = "Select Transcription Factors:",
+                             choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+                                            "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3","ELF4"),
+                             inline = TRUE,width = "100%"),
+          checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
+          actionButton(inputId = "button_tfs",label = "Select Genes")
+        ),
+
+        conditionalPanel(condition = "input.gene_selection_mode == 'Topological parameter'",
+          sliderInput(inputId = "degree_range", label = h3("Degree Range"), min = 0, 
+                      max = 11, value = c(2, 4)),
+          actionButton(inputId = "button_degree",label = "Select Genes")
+        ),
+        
+        
+          tags$h3(tags$b("Multiset Intersections:")),
+          
+          selectInput(inputId = "tf1", label="Transcription Factor 1", 
+                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      multiple = FALSE, selectize = TRUE),
+          selectInput(inputId = "tf2", label="Transcription Factor 2", 
+                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      multiple = FALSE, selectize = TRUE),
+          selectInput(inputId = "set", label="Cluster of Circadian Genes", 
+                      choices = c("Peak ZT0", "Peak ZT4", "Peak ZT8"), selected = NULL,
+                      multiple = FALSE, selectize = TRUE),
+        actionButton(inputId = "button_intersect", label = "Test"),
+          
+          
+
+        width = 3 
+      ),
+      
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+         plotOutput("networkPlot"),
+         textOutput(outputId = "output_text"),
+         dataTableOutput(outputId = "output_table"),
+         
+         width = 9
+      )
+   )
+)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+  
+  ## Initial/default visualization of ATTRACTOR
+  output$networkPlot <- renderPlot({
+    ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1)
+  },height = 700)
+  
+  selected_gene_id <- eventReactive(input$button_gene_id, {
+    print("aquí llego 0")
+    selected.genes.agi <- as.vector(unlist(as.data.frame(strsplit(input$selected.genes," - "))[1,]))
+    selected.genes.df <- subset(network.data, names %in% selected.genes.agi)
+    print(selected.genes.df)
+#    return(selected.genes.df)
+  })
+  
+  
+  ## Visualization of selected genes by ID
+  observeEvent(input$button_gene_id, {
+    print("aquí llego 1")
+    selected.genes.agi <- as.vector(unlist(as.data.frame(strsplit(input$selected.genes," - "))[1,]))
+    selected.genes.df <- subset(network.data, names %in% selected.genes.agi)
+    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    output$networkPlot <- renderPlot({
+      ggplot(network.data, aes(x.pos,y.pos)) + 
+        theme(panel.background = element_blank(), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks.y = element_blank()) + 
+        geom_point(color=node.colors,size=1) +
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=3, fill=selected.nodes.colors,colour="black",pch=21)
+      },height = 700)
+  })
+
+
+  ## Visualization of selected gene list
+  observeEvent(input$button_select_gene_list, {
+    print("aquí llego 2")
+    selected.gene.list <- as.vector(unlist(
+      strsplit(input$gene.list, split="\n",
+               fixed = TRUE)[1]))
+    print(selected.gene.list)
+    selected.genes.df <- subset(network.data, names %in% selected.gene.list)
+    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    output$networkPlot <- renderPlot({
+      ggplot(network.data, aes(x.pos,y.pos)) + 
+        theme(panel.background = element_blank(), 
+              panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              axis.title = element_blank(),
+              axis.text = element_blank(),
+              axis.ticks.y = element_blank()) + 
+        geom_point(color=node.colors,size=1) +
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    },height = 700)
+  })
+  
+  ## Visualization of selected genes according to their degree
+  observeEvent(input$button_degree, {
+    print("aquí llego 3")
+    
+    node.degree <- network.data$indegree
+    degree.values <- input$degree_range
+    selected.genes.df <- subset(network.data, indegree >= degree.values[1] & indegree <= degree.values[2])
+    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    output$networkPlot <- renderPlot({
+      ggplot(network.data, aes(x.pos,y.pos)) + 
+        theme(panel.background = element_blank(), 
+              panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              axis.title = element_blank(),
+              axis.text = element_blank(),
+              axis.ticks.y = element_blank()) + 
+        geom_point(color=node.colors,size=1) +
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    },height = 700)
+  })
+
+  ## Visualization of selected genes according to their degree
+  observeEvent(input$button_tfs, {
+    print("aquí llego 4")
+
+    if(length(input$selected.tfs) == 1)
+    {
+      gene.selection <- network.data[,input$selected.tfs] == 1
+      sum(gene.selection)
+    } else if(length(input$selected.tfs) > 1)
+    {
+      gene.selection <- rowSums(network.data[,input$selected.tfs]) == length(input$selected.tfs)
+      
+    }
+    
+    #selected.tfs.df <- subset(network.data, names %in% tf.ids[input$selected.tfs])
+    
+    selected.genes.df <- network.data[gene.selection,]
+    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+     # geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+
+    if(input$edges)
+    {
+      for(i in 1:length(input$selected.tfs))
+      {
+        tf.xpos <- subset(network.data, names == tf.ids[input$selected.tfs[i]])[["x.pos"]]
+        tf.ypos <- subset(network.data, names == tf.ids[input$selected.tfs[i]])[["y.pos"]]
+        network.representation <- network.representation +
+          annotate("segment",
+                   x=rep(tf.xpos,nrow(selected.genes.df)),
+                   y=rep(tf.ypos,nrow(selected.genes.df)),
+                   xend=selected.genes.df$x.pos,
+                   yend=selected.genes.df$y.pos, 
+                   color="grey", arrow=arrow(type="closed",length=unit(0.1, "cm")))
+      }
+    }
+
+    output$networkPlot <- renderPlot({
+      network.representation
+    },height = 700)
+    
+  })
+  
+  ##Visualization of text and table with p.value, enrichment and genes.
+  
+  observeEvent(input$button_intersect, {
+    print("Aquí llega Pedro")
+  })
+  
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
