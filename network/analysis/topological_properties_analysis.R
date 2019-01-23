@@ -86,3 +86,39 @@ average.path.length(graph = atha.graph, directed = TRUE, unconnected = TRUE)
 hist(atha.indegree)
 hist(atha.outdegree,breaks=200)
 hist(atha.outdegree+atha.indegree)
+
+### Añadir columna de troughs en la data.frame con todos los datos para cada nodo. 
+attractor.network <- read.table(file="../../network/attractor_network_topological_parameters.tsv",
+                                header=TRUE, as.is = T)
+head(attractor.network)
+peak.troughs <- read.table(file = "../../web_apps/network_visualizer/data/athaliana_neutral_circadian_genes.txt",
+                           header = TRUE, as.is = TRUE)
+head(peak.troughs)
+troughs <- peak.troughs$troughs
+names(troughs) <- peak.troughs$genes
+
+troughs.data <- troughs[attractor.network$names]
+names(troughs.data) <- NULL
+
+
+
+trough.zt <- c()
+i <- 10
+for (i in 1:length(troughs.data))
+{
+  trough.zt[i] <- substr(x = troughs.data[i],start = 3,stop = nchar(troughs.data[i]))
+  trough.zt[i] <-paste0("trough", trough.zt[i])
+}
+
+library(tibble)
+
+new.data <- add_column(attractor.network, trough.zt, .after = "cluster.classification")
+colnames(new.data)[4] <- "peak.zt"
+head(new.data)
+
+#Rewriting the data.frame with parameters
+write.table(new.data, file="../attractor_network_topological_parameters.tsv", sep = "\t", quote = FALSE,
+            row.names = FALSE)
+
+
+

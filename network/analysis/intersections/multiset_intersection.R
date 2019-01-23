@@ -86,7 +86,17 @@ cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
 ##---------Function that returns p-value, enrichment and the---------------------------#
 ##---------set of genes in the intersecion (intersectSets)----------------------------------------#
 
-intersectSets <- function(tf1,tf2,set.of.genes){
+##Correspondencia entre agi symbols y primary symbol
+library(org.At.tair.db)
+columns(org.At.tair.db)
+my.key <- keys(org.At.tair.db, keytype="ENTREZID")
+my.col <- c("SYMBOL", "TAIR")
+alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias <- alias2symbol.table$SYMBOL
+names(alias) <- alias2symbol.table$TAIR
+alias[is.na(alias)] <- "" 
+
+intersectSets <- function(tf1,tf2,set.of.genes, alias){
   intersection.data <- list()
   sets <- c(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
@@ -99,12 +109,18 @@ intersectSets <- function(tf1,tf2,set.of.genes){
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
   intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
+  
+  intersection.genes.agi <- intersection.genes
+  intersection.genes.primary.symbol <- alias[intersection.genes]
+  names(intersection.genes.primary.symbol) <- NULL
+  
+  
   names(intersection.data) <- c("p-value", "enrichment", "gene.table")
   return(intersection.data)
   
 }
 
-intersectSets(tf1, tf2, genes.peak.zt)
+intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias)
 
 ######Exploring to obtain information (AGI, description, peak time...) #####
 #-----from a list of genes.
