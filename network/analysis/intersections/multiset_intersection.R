@@ -96,7 +96,14 @@ alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 
-intersectSets <- function(tf1,tf2,set.of.genes, alias){
+## Correspondencia entre agi symbol y descripcion
+network.data <- read.table(file="../../../web_apps/attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+
+description <- network.data$description
+names(description) <- network.data$names
+description[1:3]
+
+intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
   intersection.data <- list()
   sets <- c(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
@@ -108,19 +115,22 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias){
   intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
-  intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
   
   intersection.genes.agi <- intersection.genes
   intersection.genes.primary.symbol <- alias[intersection.genes]
   names(intersection.genes.primary.symbol) <- NULL
   
+  intersection.genes.description <- gene.descriptions[intersection.genes]
+  names(intersection.genes.description) <- NULL
+  
+  intersection.data[[3]] <- data.frame(intersection.genes,intersection.genes.primary.symbol,intersection.genes.description,stringsAsFactors = F)
   
   names(intersection.data) <- c("p-value", "enrichment", "gene.table")
   return(intersection.data)
   
 }
 
-intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias)
+intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias,gene.descriptions = description)
 
 ######Exploring to obtain information (AGI, description, peak time...) #####
 #-----from a list of genes.

@@ -2,7 +2,7 @@
 library(shiny)
 library(ggplot2)
 library(org.At.tair.db)
-library(SuperExactTest)
+#library(SuperExactTest)
 
 #Auxiliary functions
 intersectSets <- function(tf1,tf2,set.of.genes){
@@ -24,7 +24,8 @@ intersectSets <- function(tf1,tf2,set.of.genes){
 }
 
 ## Load network
-network.data <- read.table(file="data/attractor_network_topological_parameters.tsv",header = TRUE,as.is=TRUE)
+#network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 
 ## Tranforming coordinates for a better visualization
 x.coord <- as.numeric(network.data$y.pos)
@@ -45,7 +46,7 @@ network.data$y.pos <- rotated.pos[,2]
 selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
-node.colors <- selected.colors[network.data$cluster.classification]
+node.colors <- selected.colors[network.data$peak.zt]
 names(node.colors) <- NULL
 
 ## Extract gene ids
@@ -71,6 +72,10 @@ tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT
              "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
 
 names(tf.ids) <- tfs.names
+
+## Extract gene descriptions
+gene.description <- network.data$description
+names(gene.description) <- network.data$names
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -199,7 +204,7 @@ server <- function(input, output) {
     print("aquí llego 1")
     selected.genes.agi <- as.vector(unlist(as.data.frame(strsplit(input$selected.genes," - "))[1,]))
     selected.genes.df <- subset(network.data, names %in% selected.genes.agi)
-    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
     print(selected.nodes.colors)
@@ -226,7 +231,7 @@ server <- function(input, output) {
                fixed = TRUE)[1]))
     print(selected.gene.list)
     selected.genes.df <- subset(network.data, names %in% selected.gene.list)
-    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
     print(selected.nodes.colors)
@@ -251,7 +256,7 @@ server <- function(input, output) {
     node.degree <- network.data$indegree
     degree.values <- input$degree_range
     selected.genes.df <- subset(network.data, indegree >= degree.values[1] & indegree <= degree.values[2])
-    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
     print(selected.nodes.colors)
@@ -286,7 +291,7 @@ server <- function(input, output) {
     #selected.tfs.df <- subset(network.data, names %in% tf.ids[input$selected.tfs])
     
     selected.genes.df <- network.data[gene.selection,]
-    selected.nodes.colors <- selected.colors[selected.genes.df$cluster.classification]
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
     print(selected.nodes.colors)
