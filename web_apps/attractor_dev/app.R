@@ -2,7 +2,7 @@
 library(shiny)
 library(ggplot2)
 library(org.At.tair.db)
-#library(SuperExactTest)
+library(SuperExactTest)
 
 #Auxiliary functions
 intersectSets <- function(tf1,tf2,set.of.genes){
@@ -22,6 +22,33 @@ intersectSets <- function(tf1,tf2,set.of.genes){
   return(intersection.data)
   
 }
+
+
+## Function to generate output table
+create.output.table <- function(input.gene.df,alias,tfs.names)
+{
+  output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+  colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+  output.selected.genes.df$`Gene Description` <- input.gene.df$description
+  
+  for(i in 1:nrow(output.selected.genes.df))
+  {
+    tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",input.gene.df[i,1])
+    output.selected.genes.df[i,1] <- paste(c("<a href=\"",
+                                             tair.link,
+                                             "\" target=\"_blank\">",
+                                             input.gene.df[i,1], "</a>"),
+                                           collapse="")
+    output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+    output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+    output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+    output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+  }
+  
+  return(output.selected.genes.df)
+}
+
+
 
 ## Load network
 #network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -146,14 +173,19 @@ AT4G16780"),
           tags$h3(tags$b("Multiset Intersections:")),
           
           selectInput(inputId = "tf1", label="Transcription Factor 1", 
-                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      choices = tfs.names, selected = NULL,
                       multiple = FALSE, selectize = TRUE),
           selectInput(inputId = "tf2", label="Transcription Factor 2", 
-                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      choices = tfs.names, selected = NULL,
                       multiple = FALSE, selectize = TRUE),
-          selectInput(inputId = "set", label="Cluster of Circadian Genes", 
-                      choices = c("peak_ZT0", "peak_ZT4", "peak_ZT8"), selected = NULL,
+          tags$b("Cluster of Circadian Genes"),
+          selectInput(inputId = "peak", label="Peak", 
+                      choices = c("Any",paste("ZT_",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
+          selectInput(inputId = "trough", label="Trough", 
+                      choices = c("Any",paste("ZT_",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                      multiple = FALSE, selectize = TRUE),
+        
         actionButton(inputId = "button_intersect", label = "Test"),
           
           
@@ -247,6 +279,33 @@ server <- function(input, output) {
         geom_point(color=node.colors,size=1) +
         geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
     },height = 700)
+    
+    
+    ## Prepare output table
+    # 
+    # output.selected.genes.df <- data.frame(matrix(nrow=nrow(selected.genes.df), ncol=6))
+    # colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+    # output.selected.genes.df$`Gene Description` <- selected.genes.df$description
+    # 
+    # for(i in 1:nrow(output.selected.genes.df))
+    # {
+    #   tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",selected.genes.df[i,1])
+    #   output.selected.genes.df[i,1] <- paste(c("<a href=\"",
+    #                                            tair.link,
+    #                                            "\" target=\"_blank\">",
+    #                                            selected.genes.df[i,1], "</a>"),
+    #                                          collapse="")
+    #   output.selected.genes.df[i,2] <- alias[selected.genes.df[i,1]]
+    #   output.selected.genes.df[i,4] <- paste(tfs.names[which(selected.genes.df[i,tfs.names] == 1)],collapse=", ")
+    #   output.selected.genes.df[i,5] <-paste0("ZT",substr(selected.genes.df[i,"peak.zt"],start=5,stop=nchar(selected.genes.df[i,"peak.zt"])))
+    #   output.selected.genes.df[i,6] <-paste0("ZT",substr(selected.genes.df[i,"trough.zt"],start=7,stop=nchar(selected.genes.df[i,"trough.zt"])))
+    # }
+    
+
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
+    
   })
   
   ## Visualization of selected genes according to their degree
@@ -272,6 +331,11 @@ server <- function(input, output) {
         geom_point(color=node.colors,size=1) +
         geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
     },height = 700)
+    
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
+
   })
 
   ## Visualization of selected genes according to their degree
@@ -326,6 +390,12 @@ server <- function(input, output) {
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
+    
+    
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
+    
     
   })
   
