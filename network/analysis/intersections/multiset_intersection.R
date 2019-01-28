@@ -96,29 +96,9 @@ alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 
-intersectSets <- function(tf1,tf2,set.of.genes, alias){
-  intersection.data <- list()
-  sets <- c(tf1, tf2, set.of.genes)
-  #names(sets) <- c("cca1", "lhy", "peakZT0")
-  results <- supertest(x = sets, n = 6830)
-  results.table <- summary(results)
-  p.value <- tail(results.table$P.value, n=1) #Get the last p-value
-  enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
-  intersection.genes <- (results.table$Table)[["Elements"]][nrow(results.table$Table)]
-  intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
-  intersection.data[[1]] <- p.value
-  intersection.data[[2]] <- enrichment
-  intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
-  
-  intersection.genes.agi <- intersection.genes
-  intersection.genes.primary.symbol <- alias[intersection.genes]
-  names(intersection.genes.primary.symbol) <- NULL
-  
-  
-  names(intersection.data) <- c("p-value", "enrichment", "gene.table")
-  return(intersection.data)
-  
-}
+
+
+
 
 intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias)
 

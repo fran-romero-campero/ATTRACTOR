@@ -5,7 +5,7 @@ library(org.At.tair.db)
 library(SuperExactTest)
 
 #Auxiliary functions
-intersectSets <- function(tf1,tf2,set.of.genes){
+intersectSets <- function(tf1,tf2,set.of.genes, alias){
   intersection.data <- list()
   sets <- c(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
@@ -15,9 +15,20 @@ intersectSets <- function(tf1,tf2,set.of.genes){
   enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
   intersection.genes <- (results.table$Table)[["Elements"]][nrow(results.table$Table)]
   intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
+  
+  intersection.genes.agi <- intersection.genes
+  intersection.genes.primary.symbol <- alias[intersection.genes]
+  names(intersection.genes.primary.symbol) <- NULL
+  gene.table <- matrix(nrow=length(intersection.genes), ncol=3)
+  gene.table[,1] <- intersection.genes.agi
+  gene.table[,2] <- intersection.genes.primary.symbol
+  #  gene.table[,3] <- description
+  
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
-  intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
+  intersection.data[[3]] <- gene.table
+  
+  
   names(intersection.data) <- c("p-value", "enrichment", "gene.table")
   return(intersection.data)
   
@@ -141,13 +152,16 @@ AT4G16780"),
           tags$h3(tags$b("Multiset Intersections:")),
           
           selectInput(inputId = "tf1", label="Transcription Factor 1", 
-                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      choices = c("CRY2","ELF4","FHY1","LHY","PHYA","PHYB","PIF3","PIF4","PIF5",
+                                  "PRR5", "PRR7", "PRR9","TOC1"), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
           selectInput(inputId = "tf2", label="Transcription Factor 2", 
-                      choices = c("PRR5", "PRR7", "PRR9"), selected = NULL,
+                      choices = c("CRY2","ELF4","FHY1","LHY","PHYA","PHYB","PIF3","PIF4","PIF5",
+                                  "PRR5", "PRR7", "PRR9","TOC1"), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
           selectInput(inputId = "set", label="Cluster of Circadian Genes", 
-                      choices = c("peak_ZT0", "peak_ZT4", "peak_ZT8"), selected = NULL,
+                      choices = c("peak_ZT0", "peak_ZT4", "peak_ZT8",
+                                  "peak_ZT12", "peak_ZT16", "peak_ZT20"), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
         actionButton(inputId = "button_intersect", label = "Test"),
           
@@ -336,11 +350,11 @@ server <- function(input, output) {
     tf2 <- read.table(file=paste0("data/intersections/",tf2.filename), header = TRUE, as.is=TRUE)
     set.of.genes <- read.table(file=paste0("data/intersections/",set.of.genes.filename), header = TRUE, as.is=TRUE)
     
-    #APply the function intersectSets
-    result <- intersectSets(tf1, tf2, set.of.genes)
+    #Apply the function intersectSets
+    result <- intersectSets(tf1, tf2, set.of.genes, alias)
     p.value <- result[1][[1]]
     enrichment <- result[2][[1]]
-    intersect.genes <- result[3][[1]]
+    gene.table <- result[3][[1]]
     
     
     
@@ -350,6 +364,9 @@ server <- function(input, output) {
                                                   " and the enrichment is ", enrichment,
                                                   "<b>")
                                     , quoted = FALSE)
+    
+    ## Visualization of a table with genes in the intsersections
+    output$table <- renderTable(expr= gene.table, striped = FALSE)
     
     
     
