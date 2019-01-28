@@ -238,7 +238,8 @@ indegree.top <- gene.names[topological.data$indegree > indegree.threshold]
 outdegree.threshold <- quantile(topological.data$outdegree, prob=0.95)
 outdegree.top <- gene.names[topological.data$outdegree > outdegree.threshold]
 
-trans.threshold <- quantile(topological.data$transitivity, prob=0.95) ##corregir esto
+topological.data$transitivity[is.na(topological.data$transitivity)] <- 0
+trans.threshold <- quantile(topological.data$transitivity, prob=0.90) 
 trans.top <- gene.names[topological.data$trans > trans.threshold]
 
 closeness.threshold <- quantile(topological.data$closeness, prob=0.95)
@@ -249,6 +250,65 @@ betweeness.top <- gene.names[topological.data$betweeness > betweeness.threshold]
 
 eccentricity.threshold <- quantile(topological.data$eccentricity, prob=0.95)
 eccentricity.top <- gene.names[topological.data$eccentricity > eccentricity.threshold]
+
+#Loop to perform intersection between thisn set of genes, TF target genes and clusters. 
+
+top.genes <- list(indegree.top, outdegree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
+names(top.genes) <- c("Indegree", "Outdegree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
+
+#Initialize matrix to store the results
+intersection.table <- matrix(ncol=6)
+colnames(intersection.table) <- c("TF1", "Topological Top", "Cluster", "P value", 
+                                  "Enrichment", "Intersection Genes") 
+
+#Initialize vector to add it as row into the matrix
+current.intersection <- c()
+
+head(intersection.table)
+
+i <- 1
+j <- 2
+k <- 5
+for (i in 1:length(tf.files))
+{
+  for (j in 1: length(top.genes))
+  {
+    for (k in 1:length(gene.files))
+    {
+      tf1 <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[i]),
+                        header = TRUE, as.is = TRUE)
+      current.top <- as.vector(top.genes[j])
+      set.of.genes <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/clusters/by_peaks/",gene.files[k]),
+                                 header = FALSE, as.is = TRUE)
+      
+      if(tf.files[i] != tf.files[j])
+      {
+        print("TEST")
+        result <- intersectSets(tf1,current.top,set.of.genes,alias)
+        p.value <- result[1][[1]]
+        enrichment <- result[2][[1]]
+        intersect.genes <- result[3][[1]]
+        
+        if (length(intersect.genes) !=0 & p.value < 0.000005)
+        {
+          print("HIT")
+          current.intersection[1] <- strsplit(tf.files[i], split = "_")[[1]][1]
+          current.intersection[2] <- names(top.genes[j])
+          current.intersection[3] <- strsplit(gene.files[k], split = ".txt")[[1]][1]
+          current.intersection[4] <- p.value
+          current.intersection[5] <- enrichment
+          current.intersection[6] <- paste(intersect.genes, collapse= ",")
+          intersection.table <- rbind(intersection.table, current.intersection)
+          
+        }
+      }
+      
+      
+    }
+  }
+  write.table(intersection.table, file="all_intersections_with_topological_params.txt", sep="\t", row.names = FALSE)
+}
+
 
 
 
