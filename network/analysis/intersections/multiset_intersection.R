@@ -18,7 +18,7 @@
 # 
 # Contact: Francisco J. Romero-Campero - fran@us.es
 
-# Date: September 2018
+# Date: January 2019
 
 # Analysis of intersections among multiple sets is fundamental 
 # for in-depth understanding of their complex relationships
@@ -105,7 +105,7 @@ description[1:3]
 
 intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
   intersection.data <- list()
-  sets <- c(tf1, tf2, set.of.genes)
+  sets <- list(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
   results <- supertest(x = sets, n = 6830)
   results.table <- summary(results)
