@@ -448,20 +448,19 @@ server <- function(input, output) {
     if(p.value < 0.01)
     {
       text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
-                                         "is significant with a p-value of ", p.value,
+                                         " is significant with a p-value of ", p.value,
                                          " and an enrichment of ", round(x = enrichment,digits = 2),
                                          "<b>") 
     } else
     {
       text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
-                                         "is NOT significant with a p-value of ", p.value,
+                                         " is NOT significant with a p-value of ", round(x=p.value, digits = 2),
                                          " and an enrichment of ", round(x = enrichment,digits = 2),
-                                         "<b>") 
+                                         "<b> <br> <br>") 
     }
     
 
-    output$outputText <- renderText(expr = text.intsersection.result
-                                    , quoted = FALSE)
+    output$outputText <- renderText(expr = text.intersection.result, quoted = FALSE)
     
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
