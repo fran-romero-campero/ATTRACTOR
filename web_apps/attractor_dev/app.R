@@ -7,9 +7,9 @@ library(SuperExactTest)
 #Auxiliary functions
 intersectSets <- function(tf1,tf2,set.of.genes){
   intersection.data <- list()
-  sets <- c(tf1, tf2, set.of.genes)
+  sets <- list(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
-  results <- supertest(x = sets, n = 6830)
+  results <- supertest(x = sets, n = 5778)
   results.table <- summary(results)
   p.value <- tail(results.table$P.value, n=1) #Get the last p-value
   enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
@@ -17,12 +17,10 @@ intersectSets <- function(tf1,tf2,set.of.genes){
   intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
-  intersection.data[[3]] <- intersection.genes #hay que meter gene.table con info
-  names(intersection.data) <- c("p-value", "enrichment", "gene.table")
+  intersection.data[[3]] <- intersection.genes
+  names(intersection.data) <- c("p-value", "enrichment", "genes")
   return(intersection.data)
-  
 }
-
 
 ## Function to generate output table
 create.output.table <- function(input.gene.df,alias,tfs.names)
@@ -48,7 +46,32 @@ create.output.table <- function(input.gene.df,alias,tfs.names)
   return(output.selected.genes.df)
 }
 
+## Function to extract TF target from network representation
+extract.targets <- function(tf.name, network.specification)
+{
+  return(network.specification$names[which(network.specification[,tf.name] == 1)])
+}
 
+## Function to extract set of circadian genes
+extract.circadian.genes <- function(peak.time, trough.time, network.specification)
+{
+  if(peak.time == "Any" && trough.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names
+  } else if(peak.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names[network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))]
+  } else if(trough.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time)))]
+  } else
+  {
+    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time))) &
+                                                       network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))   ]
+  }
+  
+  return(res.circadian.genes)
+}
 
 ## Load network
 #network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -180,10 +203,10 @@ AT4G16780"),
                       multiple = FALSE, selectize = TRUE),
           tags$b("Cluster of Circadian Genes"),
           selectInput(inputId = "peak", label="Peak", 
-                      choices = c("Any",paste("ZT_",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                      choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
           selectInput(inputId = "trough", label="Trough", 
-                      choices = c("Any",paste("ZT_",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                      choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
         
         actionButton(inputId = "button_intersect", label = "Test"),
@@ -281,27 +304,7 @@ server <- function(input, output) {
     },height = 700)
     
     
-    ## Prepare output table
-    # 
-    # output.selected.genes.df <- data.frame(matrix(nrow=nrow(selected.genes.df), ncol=6))
-    # colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
-    # output.selected.genes.df$`Gene Description` <- selected.genes.df$description
-    # 
-    # for(i in 1:nrow(output.selected.genes.df))
-    # {
-    #   tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",selected.genes.df[i,1])
-    #   output.selected.genes.df[i,1] <- paste(c("<a href=\"",
-    #                                            tair.link,
-    #                                            "\" target=\"_blank\">",
-    #                                            selected.genes.df[i,1], "</a>"),
-    #                                          collapse="")
-    #   output.selected.genes.df[i,2] <- alias[selected.genes.df[i,1]]
-    #   output.selected.genes.df[i,4] <- paste(tfs.names[which(selected.genes.df[i,tfs.names] == 1)],collapse=", ")
-    #   output.selected.genes.df[i,5] <-paste0("ZT",substr(selected.genes.df[i,"peak.zt"],start=5,stop=nchar(selected.genes.df[i,"peak.zt"])))
-    #   output.selected.genes.df[i,6] <-paste0("ZT",substr(selected.genes.df[i,"trough.zt"],start=7,stop=nchar(selected.genes.df[i,"trough.zt"])))
-    # }
-    
-
+    ## Output table with gene info
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
@@ -352,8 +355,6 @@ server <- function(input, output) {
       
     }
     
-    #selected.tfs.df <- subset(network.data, names %in% tf.ids[input$selected.tfs])
-    
     selected.genes.df <- network.data[gene.selection,]
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
@@ -390,49 +391,83 @@ server <- function(input, output) {
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
-    
-    
+
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
-    
-    
   })
   
   ##Visualization of text and table with p.value, enrichment and genes.
   
   observeEvent(input$button_intersect, {
     print("Aquí llega Pedro")
-    tf1.filename <- paste0(input$tf1, "_targets_in_network.txt")
-    tf2.filename <- paste0(input$tf2, "_targets_in_network.txt")
-    set.of.genes.filename <- paste0(input$set, ".txt")
+    # tf1.filename <- paste0(input$tf1, "_targets_in_network.txt")
+    # tf2.filename <- paste0(input$tf2, "_targets_in_network.txt")
+    # set.of.genes.filename <- paste0(input$set, ".txt")
     
-    tf1 <- read.table(file=paste0("data/intersections/",tf1.filename), header = TRUE, as.is=TRUE)
-    tf2 <- read.table(file=paste0("data/intersections/",tf2.filename), header = TRUE, as.is=TRUE)
-    set.of.genes <- read.table(file=paste0("data/intersections/",set.of.genes.filename), header = TRUE, as.is=TRUE)
+    ## Extract TF targets
+    tf1.targets <- extract.targets(tf.name = input$tf1, network.specification = network.data)
+    tf2.targets <- extract.targets(tf.name = input$tf2, network.specification = network.data)
     
-    #APply the function intersectSets
-    result <- intersectSets(tf1, tf2, set.of.genes)
+    ## Extract circadian set of genes
+    circadian.genes.set <- extract.circadian.genes(peak.time = input$peak,trough.time = input$trough,network.specification = network.data)
+    
+    #tf1 <- read.table(file=paste0("data/intersections/",tf1.filename), header = TRUE, as.is=TRUE)
+    #tf2 <- read.table(file=paste0("data/intersections/",tf2.filename), header = TRUE, as.is=TRUE)
+    #set.of.genes <- read.table(file=paste0("data/intersections/",set.of.genes.filename), header = TRUE, as.is=TRUE)
+    
+    #Apply the function intersectSets
+    result <- intersectSets(tf1 = tf1.targets, tf2 = tf2.targets, set.of.genes = circadian.genes.set)
     p.value <- result[1][[1]]
     enrichment <- result[2][[1]]
     intersect.genes <- result[3][[1]]
     
+    selected.genes.df <- subset(network.data, names %in% intersect.genes)
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+      #geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+
+    
+    output$networkPlot <- renderPlot({
+      network.representation
+    },height = 700)
     
     ## Visualization of text with p value and enrichment
-    output$outputText <- renderText(expr = paste0("<b>The p-value significance
-                                                  of the intersection is ", p.value,
-                                                  " and the enrichment is ", enrichment,
-                                                  "<b>")
+    if(p.value < 0.01)
+    {
+      text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
+                                         "is significant with a p-value of ", p.value,
+                                         " and an enrichment of ", round(x = enrichment,digits = 2),
+                                         "<b>") 
+    } else
+    {
+      text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
+                                         "is NOT significant with a p-value of ", p.value,
+                                         " and an enrichment of ", round(x = enrichment,digits = 2),
+                                         "<b>") 
+    }
+    
+
+    output$outputText <- renderText(expr = text.intsersection.result
                                     , quoted = FALSE)
     
-    
-    
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
     
   })
-  
-
-  
 }
 
 # Run the application 
