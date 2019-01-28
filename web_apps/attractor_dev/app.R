@@ -1,5 +1,6 @@
 ## Load libraries
 library(shiny)
+library(DT)
 library(ggplot2)
 library(org.At.tair.db)
 library(SuperExactTest)
@@ -20,6 +21,7 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias){
   intersection.genes.primary.symbol <- alias[intersection.genes]
   names(intersection.genes.primary.symbol) <- NULL
   gene.table <- matrix(nrow=length(intersection.genes), ncol=3)
+  colnames(gene.table) <- c("AGI", "Primary Symbol", "Description")
   gene.table[,1] <- intersection.genes.agi
   gene.table[,2] <- intersection.genes.primary.symbol
   #  gene.table[,3] <- description
@@ -33,6 +35,7 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias){
   return(intersection.data)
   
 }
+
 
 ## Load network
 network.data <- read.table(file="data/attractor_network_topological_parameters.tsv",header = TRUE,as.is=TRUE)
@@ -177,7 +180,7 @@ AT4G16780"),
          tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
          tags$br(),tags$br(),tags$br(),
          htmlOutput(outputId = "outputText"),
-         dataTableOutput(outputId = "outputTable"),
+         DT::dataTableOutput("mytable"),
          
          width = 9
       )
@@ -366,7 +369,7 @@ server <- function(input, output) {
                                     , quoted = FALSE)
     
     ## Visualization of a table with genes in the intsersections
-    output$table <- renderTable(expr= gene.table, striped = FALSE)
+    output$mytable <- DT::renderDataTable({gene.table})
     
     
     
