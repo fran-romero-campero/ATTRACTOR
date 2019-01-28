@@ -224,6 +224,32 @@ for (i in 1:length(tf.files))
   write.table(intersection.table, file="all_intersections.txt", sep="\t", row.names = FALSE)
 }
 
+### Intersection between nodes (genes) with high topological values, transcription factor target genes and ####
+### genes peaking at each ZT. 
+
+topological.data <- read.table(file="../../attractor_network_topological_parameters.tsv", 
+                               sep = "\t", as.is = TRUE, row.names = NULL, header = TRUE)
+head(topological.data)
+gene.names <- topological.data$names
+
+indegree.threshold <- quantile(topological.data$indegree, prob=0.95)
+indegree.top <- gene.names[topological.data$indegree > indegree.threshold]
+
+outdegree.threshold <- quantile(topological.data$outdegree, prob=0.95)
+outdegree.top <- gene.names[topological.data$outdegree > outdegree.threshold]
+
+trans.threshold <- quantile(topological.data$transitivity, prob=0.95) ##corregir esto
+trans.top <- gene.names[topological.data$trans > trans.threshold]
+
+closeness.threshold <- quantile(topological.data$closeness, prob=0.95)
+closeness.top <- gene.names[topological.data$closeness > closeness.threshold]
+
+betweeness.threshold <- quantile(topological.data$betweeness, prob=0.95)
+betweeness.top <- gene.names[topological.data$betweeness > betweeness.threshold]
+
+eccentricity.threshold <- quantile(topological.data$eccentricity, prob=0.95)
+eccentricity.top <- gene.names[topological.data$eccentricity > eccentricity.threshold]
+
 
 
 ######------Test of intersection between beds------#######
