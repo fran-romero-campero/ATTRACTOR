@@ -13,7 +13,7 @@ library(igraph)
 ## Load ATTRACTOR network and extract gene names
 attractor.graph <- read.graph(file="../../attractor.graphml", format = "graphml")
 vertex.names <- V(attractor.graph)$name
-length(vertex.names)
+number.nodes <- length(vertex.names)
 
 ## Scale free property
 in.degree <- degree(graph = attractor.graph,mode = "in")
@@ -24,6 +24,8 @@ x.coord <- log10(as.numeric(names(in.degree.distribution)))
 y.coord <- log10(in.degree.distribution)
 lm.r <- lm(y.coord ~ x.coord)
 lm.res <- summary(lm.r)[[4]]
+
+## ATTRACTOR R-squared 0.7988 0.7787
 
 beta <- lm.res[1,1]
 alpha <- lm.res[2,1]
@@ -42,9 +44,12 @@ hist(in.degree,
      cex.main=2,cex.lab=1.5,border="darkblue",lwd=2,col="lightblue")
 
 lines(x.coord.2,y.coord.2,lwd=3,lty=4,col="darkred")
-text(x = 8,y=3000,labels = "y = ax^b",cex = 2,col="darkred",pos = 4)
-text(x = 8,y=2700,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col="darkred",pos = 4)
-text(x = 8,y=2500,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
+text(x = 8,y=3000,labels = expression(paste("y=", beta,"x"^alpha)),cex = 2,col="darkred",pos = 4)
+
+text(x = 8,y=2600,labels = expression(paste(alpha," = ")),cex = 1.4,col="darkred",pos = 4)
+text(x = 9,y=2650,labels = round(alpha,digits=2),cex = 1.4,col="darkred",pos = 4)
+text(x = 8,y=2200,labels = expression(paste(beta, " = ")),cex = 1.4,col="darkred",pos = 4)
+text(x = 9,y=2250,labels = round(10^beta,digits=2),cex = 1.4,col="darkred",pos = 4)
 
 
 ## Average path length
@@ -87,3 +92,52 @@ lines(x.coord.2,y.coord.2,lwd=3,lty=4,col="darkred")
 text(x = 8,y=1500,labels = "y = ax^b",cex = 2,col="darkred",pos = 4)
 text(x = 8,y=1300,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col="darkred",pos = 4)
 text(x = 8,y=1100,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
+
+## Generate random networks similar to attractor
+
+number.randomisation <- 1000
+
+r.square <- vector(mode = "numeric", length = number.randomisation)
+p.val <- vector(mode = "numeric", length = number.randomisation)
+
+for(j in 1:number.randomisation)
+{
+  random.network.adjacency <- matrix(nrow=number.nodes,ncol=number.nodes)
+  
+  out.degree <- degree(graph = attractor.graph,mode = "out")
+  out.degree <- out.degree[out.degree != 0]
+  
+  node.regulators <- sample(x = 1:number.nodes,size = length(out.degree),replace = FALSE)
+  
+  for(i in 1:length(out.degree))
+  {
+    random.network.adjacency[node.regulators[i],
+                             sample(x = 1:number.nodes,size = out.degree[i],replace=FALSE)] <- 1
+  }
+  
+  random.network <- graph.adjacency(adjmatrix = random.network.adjacency,mode = "directed")
+  
+  in.degree <- degree(graph = random.network,mode = "in")
+  in.degree.distribution <- table(in.degree)
+  in.degree.distribution <- in.degree.distribution[names(in.degree.distribution) != 0]
+  
+  x.coord <- log10(as.numeric(names(in.degree.distribution)))
+  y.coord <- log10(in.degree.distribution)
+  lm.r <- lm(y.coord ~ x.coord)
+  r.square[j] <- summary(lm.r)[[9]]
+  p.val[j] <- summary(lm.r)$coefficients[2,4]
+  print(p.val[j])
+}
+
+sum(r.square > 0.7988)
+sum(r.square > 0.7787)
+sum(r.square > 0.7)
+sum(r.square > 0.6)
+
+fdr.val <- p.adjust(p = p.val, method = "BH")
+sum(fdr.val < 0.05)
+
+randomisation.result <- data.frame(r.square,p.val,fdr.val)
+colnames(randomisation.result) <- c("Rsquare","pvalues","FDR")
+
+write.table(x = randomisation.result,file = "randomisation_result.tsv",quote = F,sep = "\t",row.names = F)
