@@ -45,3 +45,40 @@ lines(x.coord.2,y.coord.2,lwd=3,lty=4,col="darkred")
 text(x = 8,y=3000,labels = "y = ax^b",cex = 2,col="darkred",pos = 4)
 text(x = 8,y=2700,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col="darkred",pos = 4)
 text(x = 8,y=2500,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
+
+
+
+
+
+
+## Scale free property
+attractor.degree <- degree(graph = atha.graph)
+
+attractor.degree.distribution <- table(attractor.degree)
+
+x.coord <- log10(as.numeric(names(attractor.degree.distribution)))
+y.coord <- log10(attractor.degree.distribution)
+lm.r <- lm(y.coord ~ x.coord)
+summary(lm.r)
+lm.res <- summary(lm.r)[[4]]
+
+beta <- lm.res[1,1]
+alpha <- lm.res[2,1]
+
+x.coord.1 <- seq(from=0,to=20,by=0.01)
+y.coord.1 <- beta + alpha*x.coord.1
+x.coord.2 <- seq(from=0,to=20,by=0.01)
+y.coord.2 <- 10^beta*x.coord.2^alpha
+
+plot(x.coord,y.coord)
+lines(x.coord.1,y.coord.1)
+
+hist(attractor.degree,breaks=seq(from=0,to=10000,by=1),
+     xlab="Degree",ylab="Frequency",
+     main="Degree Distribution",
+     cex.main=2,cex.lab=1.5,border="darkblue",lwd=2,col="lightblue",xlim=c(0,20))
+
+lines(x.coord.2,y.coord.2,lwd=3,lty=4,col="darkred")
+text(x = 8,y=1500,labels = "y = ax^b",cex = 2,col="darkred",pos = 4)
+text(x = 8,y=1300,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col="darkred",pos = 4)
+text(x = 8,y=1100,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
