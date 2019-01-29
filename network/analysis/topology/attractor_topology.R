@@ -11,12 +11,12 @@
 library(igraph)
 
 ## Load ATTRACTOR network and extract gene names
-atha.graph <- read.graph(file="../../attractor.graphml", format = "graphml")
-vertex.names <- V(atha.graph)$name
+attractor.graph <- read.graph(file="../../attractor.graphml", format = "graphml")
+vertex.names <- V(attractor.graph)$name
 length(vertex.names)
 
 ## Scale free property
-in.degree <- degree(graph = atha.graph,mode = "in")
+in.degree <- degree(graph = attractor.graph,mode = "in")
 
 in.degree.distribution <- table(in.degree)
 
@@ -47,12 +47,17 @@ text(x = 8,y=2700,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col=
 text(x = 8,y=2500,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
 
 
+## Average path length
+path.hist <- path.length.hist(graph = train.network,directed = TRUE)$res
+names(path.hist) <- 1:length(path.hist)
+barplot(as.table(path.hist),ylab="Frecuencia",xlab="Longitud de camino",border="cyan",col="blue",space = 0)
 
-
+text(x = 14 ,y = 550,
+     labels = paste("Media =",round(average.path.length(graph = train.network,directed = FALSE),digits = 2)),cex = 1.5)
 
 
 ## Scale free property
-attractor.degree <- degree(graph = atha.graph)
+attractor.degree <- degree(graph = attractor.graph)
 
 attractor.degree.distribution <- table(attractor.degree)
 
