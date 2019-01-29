@@ -54,12 +54,6 @@ intersectSets <- function(tf1,tf2,set.of.genes){
 ## Loop over TFs and circadian genes
 tf.names <- colnames(network.data)[6:21]
 
-i <- 1
-j <- 2
-k <- 0
-l <- 4
-
-
 number.of.test <- 6*5*(length(tf.names) -1)*length(tf.names)/2
 
 tfs.1 <- vector(mode="character",length=number.of.test)
@@ -95,6 +89,9 @@ for(i in 1:(length(tf.names)-1))
 
           tfs.1[n] <- tf.i
           tfs.2[n] <- tf.j
+          
+          peaks[n] <- paste0("ZT",k)
+          troughs[n] <- paste0("ZT",l)
                     
           pvalues[n] <- intersection.result$`p-value`
           enrichments[n] <- intersection.result$enrichment
@@ -113,9 +110,6 @@ for(i in 1:(length(tf.names)-1))
 
 fdr.values <- p.adjust(p = pvalues,method = "BH")
 
-sum(fdr.values < 0.01)
-
-
 
 significance.intersection <- data.frame(tf1 = tfs.1,
                                         tf2 = tfs.2,
@@ -126,4 +120,15 @@ significance.intersection <- data.frame(tf1 = tfs.1,
                                         enrichment = enrichments,
                                         genes = genes.in.intersection)
 
+head(significance.intersection)
+
 write.table(x = significance.intersection,file = "significance_intersection.tsv",quote = F,sep = "\t",row.names = F)
+
+significance.results <- read.table(file="significance_intersection.tsv",header = T,sep = "\t",as.is=T)
+
+
+filtered.significant.results.1 <- subset(significance.results, fdr < 0.01 & enrichment > 2)
+write.table(x = filtered.significant.results.1,file = "filtered_significant_results_1.tsv",quote = F,sep = "\t",row.names = F)
+
+filtered.significant.results.2 <- subset(significance.results, fdr < 0.001 & enrichment > 10)
+write.table(x = filtered.significant.results.2,file = "filtered_significant_results_2.tsv",quote = F,sep = "\t",row.names = F)
