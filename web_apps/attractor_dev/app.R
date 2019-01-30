@@ -1,12 +1,11 @@
 ## Load libraries
 library(shiny)
-library(DT)
 library(ggplot2)
 library(org.At.tair.db)
 library(SuperExactTest)
 
 #Auxiliary functions
-intersectSets <- function(tf1,tf2,set.of.genes, alias){
+intersectSets <- function(tf1,tf2,set.of.genes){
   intersection.data <- list()
   sets <- list(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
@@ -16,22 +15,10 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias){
   enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
   intersection.genes <- (results.table$Table)[["Elements"]][nrow(results.table$Table)]
   intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
-  
-  intersection.genes.agi <- intersection.genes
-  intersection.genes.primary.symbol <- alias[intersection.genes]
-  names(intersection.genes.primary.symbol) <- NULL
-  gene.table <- matrix(nrow=length(intersection.genes), ncol=3)
-  colnames(gene.table) <- c("AGI", "Primary Symbol", "Description")
-  gene.table[,1] <- intersection.genes.agi
-  gene.table[,2] <- intersection.genes.primary.symbol
-  #  gene.table[,3] <- description
-  
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
-
   intersection.data[[3]] <- intersection.genes
   names(intersection.data) <- c("p-value", "enrichment", "genes")
-
   return(intersection.data)
 }
 
@@ -41,7 +28,6 @@ create.output.table <- function(input.gene.df,alias,tfs.names)
   output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
   colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
   output.selected.genes.df$`Gene Description` <- input.gene.df$description
-
   
   for(i in 1:nrow(output.selected.genes.df))
   {
@@ -81,40 +67,11 @@ extract.circadian.genes <- function(peak.time, trough.time, network.specificatio
   } else
   {
     res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time))) &
-                                                       network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))   ]
-  }
-  
-  return(res.circadian.genes)
-
-}
-
-## Function to extract TF target from network representation
-extract.targets <- function(tf.name, network.specification)
-{
-  return(network.specification$names[which(network.specification[,tf.name] == 1)])
-}
-
-## Function to extract set of circadian genes
-extract.circadian.genes <- function(peak.time, trough.time, network.specification)
-{
-  if(peak.time == "Any" && trough.time == "Any")
-  {
-    res.circadian.genes <- network.specification$names
-  } else if(peak.time == "Any")
-  {
-    res.circadian.genes <- network.specification$names[network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))]
-  } else if(trough.time == "Any")
-  {
-    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time)))]
-  } else
-  {
-    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time))) &
-                                                       network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))   ]
+                                                         network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))   ]
   }
   
   return(res.circadian.genes)
 }
-
 
 ## Load network
 #network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -135,7 +92,7 @@ rotated.pos <- t(rotation.matrix %*% pos.data)
 
 network.data$x.pos <- rotated.pos[,1]
 network.data$y.pos <- rotated.pos[,2]
- 
+
 selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
@@ -158,11 +115,11 @@ genes.selectize <- paste(names(alias), alias, sep=" - ")
 
 ## Transcription factors AGI ids and names
 tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
-         "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
+               "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
 
 tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
-             "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
-             "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+            "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
+            "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
 
 names(tf.ids) <- tfs.names
 
@@ -172,41 +129,41 @@ names(gene.description) <- network.data$names
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
-   # Application title
+  
+  # Application title
   titlePanel(tags$b("ATTRACTOR, an Arabidopsis Thaliana TRanscriptionAl Circadian neTwORk")),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-        
-        tags$h3(tags$b("Gene Selection:")),
-        
-        radioButtons(inputId = "gene_selection_mode",
-                     label = "Gene Selection Mode", 
-                     choices = c("Individual Genes", 
-                                 "Gene List", 
-                                 "Common TF target genes",
-                                 "Topological parameter"),
-                     selected = "Individual Genes"),
-        
-        ## Dynamic panel for selecting single genes
-        conditionalPanel(condition = "input.gene_selection_mode == 'Individual Genes'",
-          ## Select a few genes
-          selectizeInput(inputId = "selected.genes",
-                         label = "Gene ID",
-                         choices = genes.selectize,
-                         selected = "AT1G22770",
-                         multiple = TRUE),
-          ## Button to trigger selections based on gene ID
-          actionButton(inputId = "button_gene_id",label="Select Genes")
-        ),
-        
-        ## Dynamic panel for selecting gene list
-        conditionalPanel(condition = "input.gene_selection_mode == 'Gene List'",
-                         textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
-                                       height = "200px",placeholder = "Insert set of genes",
-                                       value= "AT2G23290
+  
+  # Sidebar with a slider input for number of bins 
+  sidebarLayout(
+    sidebarPanel(
+      
+      tags$h3(tags$b("Gene Selection:")),
+      
+      radioButtons(inputId = "gene_selection_mode",
+                   label = "Gene Selection Mode", 
+                   choices = c("Individual Genes", 
+                               "Gene List", 
+                               "Common TF target genes",
+                               "Topological parameter"),
+                   selected = "Individual Genes"),
+      
+      ## Dynamic panel for selecting single genes
+      conditionalPanel(condition = "input.gene_selection_mode == 'Individual Genes'",
+                       ## Select a few genes
+                       selectizeInput(inputId = "selected.genes",
+                                      label = "Gene ID",
+                                      choices = genes.selectize,
+                                      selected = "AT1G22770",
+                                      multiple = TRUE),
+                       ## Button to trigger selections based on gene ID
+                       actionButton(inputId = "button_gene_id",label="Select Genes")
+      ),
+      
+      ## Dynamic panel for selecting gene list
+      conditionalPanel(condition = "input.gene_selection_mode == 'Gene List'",
+                       textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
+                                     height = "200px",placeholder = "Insert set of genes",
+                                     value= "AT2G23290
 AT2G40900
 AT2G40890
 AT2G47450
@@ -215,66 +172,63 @@ AT2G45400
 AT2G33230
 AT5G12440
 AT4G17245
-AT4G16780"),
-                         actionButton(inputId = "button_select_gene_list",label = "Select Genes")
-        ),
-
-        conditionalPanel(condition = "input.gene_selection_mode == 'Common TF target genes'",        
-          checkboxGroupInput(inputId = "selected.tfs",
-                             label = "Select Transcription Factors:",
-                             choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
-                                            "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3","ELF4"),
-                             inline = TRUE,width = "100%"),
-          checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
-          actionButton(inputId = "button_tfs",label = "Select Genes")
-        ),
-
-        conditionalPanel(condition = "input.gene_selection_mode == 'Topological parameter'",
-          sliderInput(inputId = "degree_range", label = h3("Degree Range"), min = 0, 
-                      max = 11, value = c(2, 4)),
-          actionButton(inputId = "button_degree",label = "Select Genes")
-        ),
-        
-        
-          tags$h3(tags$b("Multiset Intersections:")),
-          
-          selectInput(inputId = "tf1", label="Transcription Factor 1", 
-
-                      choices = tfs.names, selected = NULL,
-                      multiple = FALSE, selectize = TRUE),
-          selectInput(inputId = "tf2", label="Transcription Factor 2", 
-                      choices = tfs.names, selected = NULL,
-                      multiple = FALSE, selectize = TRUE),
-          tags$b("Cluster of Circadian Genes"),
-          selectInput(inputId = "peak", label="Peak", 
-                      choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-
-                      multiple = FALSE, selectize = TRUE),
-          selectInput(inputId = "trough", label="Trough", 
-                      choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-                      multiple = FALSE, selectize = TRUE),
-
-        
-        actionButton(inputId = "button_intersect", label = "Test"),
-          
-          
-
-        width = 3 
+                                     AT4G16780"),
+                       actionButton(inputId = "button_select_gene_list",label = "Select Genes")
+                       ),
+      
+      conditionalPanel(condition = "input.gene_selection_mode == 'Common TF target genes'",        
+                       checkboxGroupInput(inputId = "selected.tfs",
+                                          label = "Select Transcription Factors:",
+                                          choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+                                                         "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3","ELF4"),
+                                          inline = TRUE,width = "100%"),
+                       checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
+                       actionButton(inputId = "button_tfs",label = "Select Genes")
+      ),
+      
+      conditionalPanel(condition = "input.gene_selection_mode == 'Topological parameter'",
+                       sliderInput(inputId = "degree_range", label = h3("Degree Range"), min = 0, 
+                                   max = 11, value = c(2, 4)),
+                       actionButton(inputId = "button_degree",label = "Select Genes")
       ),
       
       
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("networkPlot"),
-         tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
-         tags$br(),tags$br(),tags$br(),
-         htmlOutput(outputId = "outputText"),
-         DT::dataTableOutput("mytable"),
-         
-         width = 9
+      tags$h3(tags$b("Multiset Intersections:")),
+      
+      selectInput(inputId = "tf1", label="Transcription Factor 1", 
+                  choices = tfs.names, selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      selectInput(inputId = "tf2", label="Transcription Factor 2", 
+                  choices = tfs.names, selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      tags$b("Cluster of Circadian Genes"),
+      selectInput(inputId = "peak", label="Peak", 
+                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      selectInput(inputId = "trough", label="Trough", 
+                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      
+      actionButton(inputId = "button_intersect", label = "Test"),
+      
+      
+      
+      width = 3 
+      ),
+    
+    
+    # Show a plot of the generated distribution
+    mainPanel(
+      plotOutput("networkPlot"),
+      tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+      tags$br(),tags$br(),tags$br(),
+      htmlOutput(outputId = "outputText"),
+      dataTableOutput(outputId = "outputTable"),
+      
+      width = 9
+    )
       )
-   )
-)
+    )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -296,7 +250,7 @@ server <- function(input, output) {
     selected.genes.agi <- as.vector(unlist(as.data.frame(strsplit(input$selected.genes," - "))[1,]))
     selected.genes.df <- subset(network.data, names %in% selected.genes.agi)
     print(selected.genes.df)
-#    return(selected.genes.df)
+    #    return(selected.genes.df)
   })
   
   
@@ -313,17 +267,17 @@ server <- function(input, output) {
     output$networkPlot <- renderPlot({
       ggplot(network.data, aes(x.pos,y.pos)) + 
         theme(panel.background = element_blank(), 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks.y = element_blank()) + 
+              panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              axis.title = element_blank(),
+              axis.text = element_blank(),
+              axis.ticks.y = element_blank()) + 
         geom_point(color=node.colors,size=1) +
         geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=3, fill=selected.nodes.colors,colour="black",pch=21)
-      },height = 700)
+    },height = 700)
   })
-
-
+  
+  
   ## Visualization of selected gene list
   observeEvent(input$button_select_gene_list, {
     print("aquí llego 2")
@@ -384,13 +338,13 @@ server <- function(input, output) {
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
-
+    
   })
-
+  
   ## Visualization of selected genes according to their degree
   observeEvent(input$button_tfs, {
     print("aquí llego 4")
-
+    
     if(length(input$selected.tfs) == 1)
     {
       gene.selection <- network.data[,input$selected.tfs] == 1
@@ -415,9 +369,9 @@ server <- function(input, output) {
             axis.text = element_blank(),
             axis.ticks.y = element_blank()) + 
       geom_point(color=node.colors,size=1) +
-     # geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      # geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
       geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
-
+    
     if(input$edges)
     {
       for(i in 1:length(input$selected.tfs))
@@ -433,11 +387,11 @@ server <- function(input, output) {
                    color="grey", arrow=arrow(type="closed",length=unit(0.1, "cm")))
       }
     }
-
+    
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
-
+    
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
@@ -454,7 +408,6 @@ server <- function(input, output) {
     ## Extract TF targets
     tf1.targets <- extract.targets(tf.name = input$tf1, network.specification = network.data)
     tf2.targets <- extract.targets(tf.name = input$tf2, network.specification = network.data)
-
     
     ## Extract circadian set of genes
     circadian.genes.set <- extract.circadian.genes(peak.time = input$peak,trough.time = input$trough,network.specification = network.data)
@@ -465,10 +418,9 @@ server <- function(input, output) {
     
     #Apply the function intersectSets
     result <- intersectSets(tf1 = tf1.targets, tf2 = tf2.targets, set.of.genes = circadian.genes.set)
-
     p.value <- result[1][[1]]
     enrichment <- result[2][[1]]
-    gene.table <- result[3][[1]]
+    intersect.genes <- result[3][[1]]
     
     selected.genes.df <- subset(network.data, names %in% intersect.genes)
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
@@ -476,14 +428,6 @@ server <- function(input, output) {
     print(selected.genes.df)
     print(selected.nodes.colors)
     
-
-    selected.genes.df <- subset(network.data, names %in% intersect.genes)
-    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
-    
-    print(selected.genes.df)
-    print(selected.nodes.colors)
-    
-
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
       theme(panel.background = element_blank(), 
             panel.grid.major = element_blank(), 
@@ -494,14 +438,13 @@ server <- function(input, output) {
       geom_point(color=node.colors,size=1) +
       #geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
       geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
-
+    
     
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
     
     ## Visualization of text with p value and enrichment
-
     if(p.value < 0.01)
     {
       text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
@@ -516,10 +459,9 @@ server <- function(input, output) {
                                          "<b> <br> <br>") 
     }
     
-
+    
     output$outputText <- renderText(expr = text.intersection.result, quoted = FALSE)
     
-
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)

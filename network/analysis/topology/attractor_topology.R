@@ -11,37 +11,18 @@
 library(igraph)
 
 ## Load ATTRACTOR network and extract gene names
-<<<<<<< HEAD
-atha.graph <- read.graph(file="../../attractor.graphml", format = "graphml")
-vertex.names <- V(atha.graph)$name
-length(vertex.names)
-
-## Scale free property
-in.degree <- degree(graph = atha.graph,mode = "in")
-=======
 attractor.graph <- read.graph(file="../../attractor.graphml", format = "graphml")
 vertex.names <- V(attractor.graph)$name
 number.nodes <- length(vertex.names)
 
 ## Scale free property
 in.degree <- degree(graph = attractor.graph,mode = "in")
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
 
 in.degree.distribution <- table(in.degree)
 
 x.coord <- log10(as.numeric(names(in.degree.distribution)))
 y.coord <- log10(in.degree.distribution)
 lm.r <- lm(y.coord ~ x.coord)
-<<<<<<< HEAD
-summary(lm.r)
-
-beta <- 4.0432
-alpha <- -2.8508
-
-x.coord.1 <- seq(from=0,to=2,by=0.01)
-y.coord.1 <- beta + alpha*x.coord.1
-y.coord.2 <- beta*x.coord^alpha
-=======
 lm.res <- summary(lm.r)[[4]]
 
 ## ATTRACTOR R-squared 0.7988 0.7787
@@ -53,15 +34,10 @@ x.coord.1 <- seq(from=0,to=2,by=0.01)
 y.coord.1 <- beta + alpha*x.coord.1
 x.coord.2 <- seq(from=0,to=20,by=0.01)
 y.coord.2 <- 10^beta*x.coord.2^alpha
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
 
 plot(x.coord,y.coord)
 lines(x.coord.1,y.coord.1)
 
-<<<<<<< HEAD
-hist(in.degree)
-lines(x.coord,y.coord.2)
-=======
 hist(in.degree,
      xlab="In Degree",ylab="Frequency",
      main="In Degree Distribution",
@@ -99,6 +75,7 @@ out.degree <- out.degree[out.degree != 0]
 
 for(j in 1:number.randomisation)
 {
+  print(j)
   random.network.adjacency <- matrix(nrow=number.nodes,ncol=number.nodes)
   node.regulators <- sample(x = 1:number.nodes,size = length(out.degree),replace = FALSE)
   
@@ -112,10 +89,10 @@ for(j in 1:number.randomisation)
   
   diameter.values[j] <- diameter(random.network)
   average.min.path.length[j] <- average.path.length(graph = random.network,directed = TRUE)
-
-#  print(diameter.values[j])
-#  print(average.min.path.length[j])
-#  print("------------")
+  
+  print(diameter.values[j])
+  #  print(average.min.path.length[j])
+  print("------------")
 }
 
 sum(average.min.path.length < 2.13) / 1000
@@ -201,4 +178,3 @@ randomisation.result <- data.frame(r.square,p.val,fdr.val)
 colnames(randomisation.result) <- c("Rsquare","pvalues","FDR")
 
 write.table(x = randomisation.result,file = "randomisation_result.tsv",quote = F,sep = "\t",row.names = F)
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
