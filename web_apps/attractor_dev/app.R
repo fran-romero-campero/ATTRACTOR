@@ -41,6 +41,7 @@ create.output.table <- function(input.gene.df,alias,tfs.names)
   output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
   colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
   output.selected.genes.df$`Gene Description` <- input.gene.df$description
+
   
   for(i in 1:nrow(output.selected.genes.df))
   {
@@ -57,6 +58,34 @@ create.output.table <- function(input.gene.df,alias,tfs.names)
   }
   
   return(output.selected.genes.df)
+}
+
+## Function to extract TF target from network representation
+extract.targets <- function(tf.name, network.specification)
+{
+  return(network.specification$names[which(network.specification[,tf.name] == 1)])
+}
+
+## Function to extract set of circadian genes
+extract.circadian.genes <- function(peak.time, trough.time, network.specification)
+{
+  if(peak.time == "Any" && trough.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names
+  } else if(peak.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names[network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))]
+  } else if(trough.time == "Any")
+  {
+    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time)))]
+  } else
+  {
+    res.circadian.genes <- network.specification$names[network.specification$peak.zt == paste0("peak",substr(peak.time,start=3,stop=nchar(peak.time))) &
+                                                       network.specification$trough.zt == paste0("trough",substr(trough.time,start=3,stop=nchar(trough.time)))   ]
+  }
+  
+  return(res.circadian.genes)
+
 }
 
 ## Function to extract TF target from network representation
@@ -224,6 +253,7 @@ AT4G16780"),
           selectInput(inputId = "trough", label="Trough", 
                       choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                       multiple = FALSE, selectize = TRUE),
+
         
         actionButton(inputId = "button_intersect", label = "Test"),
           
@@ -424,6 +454,7 @@ server <- function(input, output) {
     ## Extract TF targets
     tf1.targets <- extract.targets(tf.name = input$tf1, network.specification = network.data)
     tf2.targets <- extract.targets(tf.name = input$tf2, network.specification = network.data)
+
     
     ## Extract circadian set of genes
     circadian.genes.set <- extract.circadian.genes(peak.time = input$peak,trough.time = input$trough,network.specification = network.data)
@@ -433,8 +464,6 @@ server <- function(input, output) {
     #set.of.genes <- read.table(file=paste0("data/intersections/",set.of.genes.filename), header = TRUE, as.is=TRUE)
     
     #Apply the function intersectSets
-
-
     result <- intersectSets(tf1 = tf1.targets, tf2 = tf2.targets, set.of.genes = circadian.genes.set)
 
     p.value <- result[1][[1]]
@@ -447,6 +476,14 @@ server <- function(input, output) {
     print(selected.genes.df)
     print(selected.nodes.colors)
     
+
+    selected.genes.df <- subset(network.data, names %in% intersect.genes)
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
       theme(panel.background = element_blank(), 
             panel.grid.major = element_blank(), 
@@ -465,11 +502,6 @@ server <- function(input, output) {
     
     ## Visualization of text with p value and enrichment
 
-    
-
-
-    
-
     if(p.value < 0.01)
     {
       text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
@@ -483,11 +515,11 @@ server <- function(input, output) {
                                          " and an enrichment of ", round(x = enrichment,digits = 2),
                                          "<b> <br> <br>") 
     }
-
     
 
     output$outputText <- renderText(expr = text.intersection.result, quoted = FALSE)
-    ## Visualization of a table with genes in the intsersections
+    
+
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
