@@ -57,8 +57,47 @@ names(path.hist) <- 1:length(path.hist)
 barplot(as.table(path.hist),ylab="Frequency",xlab="Path Length",border="cyan",col="blue",space = 0,cex.lab=1.3,lwd=2,main="Minimal Path Length Distribution",cex.main=1.5)
 
 text(x = 3.1 ,y = 40000,
-     labels = paste("Average Path Length ",round(average.path.length(graph = attractor.graph,directed = TRUE),digits = 2)),cex = 1.2)
+     labels = paste("Diameter ",diameter(graph = attractor.graph,directed = T)),cex = 1.2)
 
+diameter(graph = attractor.graph,directed = TRUE)
+max(eccentricity(graph = attractor.graph,mode = "all"))
+## 4
+
+## Randomisation to test the significance of the average minimal path length
+## and diameter
+number.randomisation <- 1000
+
+average.min.path.length <- vector(mode = "numeric", length = number.randomisation)
+diameter.values <- vector(mode = "numeric", length = number.randomisation)
+
+out.degree <- degree(graph = attractor.graph,mode = "out")
+out.degree <- out.degree[out.degree != 0]
+
+for(j in 1:number.randomisation)
+{
+  random.network.adjacency <- matrix(nrow=number.nodes,ncol=number.nodes)
+  node.regulators <- sample(x = 1:number.nodes,size = length(out.degree),replace = FALSE)
+  
+  for(i in 1:length(out.degree))
+  {
+    random.network.adjacency[node.regulators[i],
+                             sample(x = 1:number.nodes,size = out.degree[i],replace=FALSE)] <- 1
+  }
+  
+  random.network <- graph.adjacency(adjmatrix = random.network.adjacency,mode = "directed")
+  
+  diameter.values[j] <- diameter(random.network)
+  average.min.path.length[j] <- average.path.length(graph = random.network,directed = TRUE)
+
+#  print(diameter.values[j])
+#  print(average.min.path.length[j])
+#  print("------------")
+}
+
+sum(average.min.path.length < 2.13) / 1000
+## 
+sum(diameter.values < 4) / 1000
+## 
 ## Scale free property
 attractor.degree <- degree(graph = attractor.graph)
 
@@ -92,7 +131,6 @@ text(x = 8,y=1300,labels = paste0("a = ",round(10^beta,digits=2)),cex = 1.4,col=
 text(x = 8,y=1100,labels = paste0("b = ",round(alpha,digits=2)),cex = 1.4,col="darkred",pos = 4)
 
 ## Generate random networks similar to attractor
-
 number.randomisation <- 1000
 
 r.square <- vector(mode = "numeric", length = number.randomisation)
