@@ -57,7 +57,7 @@ names(path.hist) <- 1:length(path.hist)
 barplot(as.table(path.hist),ylab="Frequency",xlab="Path Length",border="cyan",col="blue",space = 0,cex.lab=1.3,lwd=2,main="Minimal Path Length Distribution",cex.main=1.5)
 
 text(x = 3.1 ,y = 40000,
-     labels = paste("Diameter ",diameter(graph = attractor.graph,directed = T)),cex = 1.2)
+     labels = paste("Diameter ",diameter(graph = attractor.graph,directed = T)),cex = 1.3)
 
 diameter(graph = attractor.graph,directed = TRUE)
 max(eccentricity(graph = attractor.graph,mode = "all"))
@@ -90,15 +90,21 @@ for(j in 1:number.randomisation)
   diameter.values[j] <- diameter(random.network)
   average.min.path.length[j] <- average.path.length(graph = random.network,directed = TRUE)
   
-  print(diameter.values[j])
+  #  print(diameter.values[j])
   #  print(average.min.path.length[j])
-  print("------------")
+  #  print("------------")
 }
 
 sum(average.min.path.length < 2.13) / 1000
 ## 
+mean(diameter.values)
+sd(diameter.values)
 sum(diameter.values < 4) / 1000
+## 5.59 +-1.08
 ## 
+
+transitivity(graph = attractor.graph)
+
 ## Scale free property
 attractor.degree <- degree(graph = attractor.graph)
 
