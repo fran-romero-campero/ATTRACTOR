@@ -51,15 +51,13 @@ text(x = 9,y=2650,labels = round(alpha,digits=2),cex = 1.4,col="darkred",pos = 4
 text(x = 8,y=2200,labels = expression(paste(beta, " = ")),cex = 1.4,col="darkred",pos = 4)
 text(x = 9,y=2250,labels = round(10^beta,digits=2),cex = 1.4,col="darkred",pos = 4)
 
-
 ## Average path length
-path.hist <- path.length.hist(graph = train.network,directed = TRUE)$res
+path.hist <- path.length.hist(graph = attractor.graph,directed = TRUE)$res
 names(path.hist) <- 1:length(path.hist)
-barplot(as.table(path.hist),ylab="Frecuencia",xlab="Longitud de camino",border="cyan",col="blue",space = 0)
+barplot(as.table(path.hist),ylab="Frequency",xlab="Path Length",border="cyan",col="blue",space = 0,cex.lab=1.3,lwd=2,main="Minimal Path Length Distribution",cex.main=1.5)
 
-text(x = 14 ,y = 550,
-     labels = paste("Media =",round(average.path.length(graph = train.network,directed = FALSE),digits = 2)),cex = 1.5)
-
+text(x = 3.1 ,y = 40000,
+     labels = paste("Average Path Length ",round(average.path.length(graph = attractor.graph,directed = TRUE),digits = 2)),cex = 1.2)
 
 ## Scale free property
 attractor.degree <- degree(graph = attractor.graph)
