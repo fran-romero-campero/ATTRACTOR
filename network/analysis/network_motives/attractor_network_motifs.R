@@ -32,6 +32,9 @@ attractor.graph
 
 diameter(random.network)
 
+in.degree <- degree(graph = random.network,mode = "in")
+hist(in.degree)
+
 ## Network motif with a single node: autoregulation
 autorregulation.in.random <- sum(diag(as.matrix(get.adjacency(random.network))))
 autorregulation.in.random
@@ -64,16 +67,16 @@ sum(autorregulation.random.graphs > autorregulation.in.attractor)/1000
 
 ## Network motif with three nodes
 
-## La función graph.motifs recibe como entrada una red y un tamaño de subgrafo k
-## (en la actualidad sólo puede recibir tamaños 3 o 4) y devuelve el número de
-## veces que se encuentra cada subgrafo con k nodos en la red. 
+## graph.motifs inputs consists of a network and a subgraph size k
+## (only k= 3 or 4 are supported). It outputs the number of occurencies
+## of any subgraph of size k in the given network.
 
 occurrency.subgraph.three.nodes.in.attractor <- graph.motifs(attractor.graph, size=3)
 occurrency.subgraph.three.nodes.in.attractor
 length(occurrency.subgraph.three.nodes.in.attractor)
+write(occurrency.subgraph.three.nodes.in.attractor,file="occurency_subgraph_three_nodes_in_attractor.txt",ncolumns = 1)
 
-## La función graph.isocreate genera todos los grafos posibles de un tamaño dado
-## empezando a enumerarlos por 0. 
+## Subgraphs of size 3
 plot.igraph(graph.isocreate(size=3, number=0))
 plot.igraph(graph.isocreate(size=3, number=1))
 plot.igraph(graph.isocreate(size=3, number=2))
@@ -88,15 +91,19 @@ plot.igraph(graph.isocreate(size=3, number=10))
 plot.igraph(graph.isocreate(size=3, number=11))
 plot.igraph(graph.isocreate(size=3, number=12))
 plot.igraph(graph.isocreate(size=3, number=13))
+plot.igraph(graph.isocreate(size=3, number=14))
+plot.igraph(graph.isocreate(size=3, number=15))
 
-## Para ver si cada uno de los 16 posibles subgrafos es o no motivo de red
-## realizamos le procedimiento anterior basado en la generación de redes aleatorias.
-## En este caso el acumulador es matricial. 
-motifs.3.random.graph <- matrix(0,nrow=1000, ncol=16)
+## Generate randomisation
+number.randomisation <- 10
+
+motifs.3.random.graph <- matrix(0,nrow=number.randomisation, ncol=16)
 motifs.3.random.graph[1:3,]
 
-for (i in 1:1000)
+
+for (i in 1:number.randomisation)
 {
+  print(i)
   random.seq <- rep(0,number.nodes)
   points.to.add.regulation <- sample(x = (max.outdegree+1):number.nodes,
                                      size = length(out.degree),replace = FALSE)
@@ -107,3 +114,34 @@ for (i in 1:1000)
   
   motifs.3.random.graph[i,] <- graph.motifs(random.network, size=3)
 }
+
+write.table(x = motifs.3.random.graph,file = "motifs_three_random_graph.txt",quote = F,row.names = F,col.names = F,sep = "\t")
+
+## Test significance for each motif
+estimated.p.values <- vector(mode="numeric", length=16)
+for(i in 1:16)
+{
+  estimated.p.values[i] <- sum(motifs.3.random.graph[,i] > occurrency.subgraph.three.nodes.in.attractor[i])/number.randomisation
+}
+
+indeces.significant.motifs.3 <- which(estimated.p.values < 0.001) - 1
+write(x = indeces.significant.motifs.3,file = "indeces_significant_motifs_3.txt",ncolumns = 1)
+
+j <- 1
+relevant.motifs.4 <- c()
+for(i in 0:217)
+{
+  subgraph.i <- graph.isocreate(size=4,number=i)
+  if(sum(degree(subgraph.i) == 0) == 0)
+  {
+    relevant.motifs.4[j] <- i
+    j <- j + 1
+  }
+}
+
+
+length(relevant.motifs.4)
+
+i <- 1
+plot.igraph(graph.isocreate(size=4, number=relevant.motifs.4[i]))
+i <- i + 1
