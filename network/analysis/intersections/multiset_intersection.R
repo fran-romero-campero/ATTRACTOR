@@ -96,10 +96,7 @@ alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
 ## Correspondencia entre agi symbol y descripcion
 network.data <- read.table(file="../../../web_apps/attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 
@@ -120,10 +117,7 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
 
   intersection.data[[1]] <- p.value
   intersection.data[[2]] <- enrichment
-<<<<<<< HEAD
 
-=======
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
   
   intersection.genes.agi <- intersection.genes
   intersection.genes.primary.symbol <- alias[intersection.genes]
@@ -141,12 +135,11 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
   intersection.genes.description <- gene.descriptions[intersection.genes]
   names(intersection.genes.description) <- NULL
   
-<<<<<<< HEAD
-=======
+
   intersection.genes.description <- gene.descriptions[intersection.genes]
   names(intersection.genes.description) <- NULL
   
->>>>>>> c9c05f8dce0a97244d69a9e370809be8e2194677
+
   intersection.data[[3]] <- data.frame(intersection.genes,intersection.genes.primary.symbol,intersection.genes.description,stringsAsFactors = F)
   
   names(intersection.data) <- c("p-value", "enrichment", "gene.table")
