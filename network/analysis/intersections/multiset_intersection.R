@@ -240,9 +240,6 @@ eccentricity.threshold <- quantile(attractor.data$eccentricity, prob=0.90)
 eccentricity.top <- gene.names[attractor.data$eccentricity > eccentricity.threshold]
 
 
-
-
-
 ##--Function to perform an intersection of TWO sets--##
 intersect2sets <- function(set1, set2, alias, gene.descriptions){
   sets <- list(set1, set2)
@@ -279,15 +276,17 @@ intersect2sets <- function(set1, set2, alias, gene.descriptions){
 
 intersect2sets(set1=degree.top, set2 = genes.peak.zt, alias=alias, gene.descriptions = description)
 
+#####---Loop to perform all possible intersection between clusters and high top values genes---#####
+clusters.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clusters", pattern = "txt")
+
+top.genes <- list(degree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
+names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
 
 
-top.genes <- list(indegree.top, outdegree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
-names(top.genes) <- c("Indegree", "Outdegree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
 
 #Initialize matrix to store the results
-intersection.table <- matrix(ncol=6)
-colnames(intersection.table) <- c("TF1", "Topological Top", "Cluster", "P value", 
-                                  "Enrichment", "Intersection Genes") 
+intersection.table <- matrix(ncol=5)
+colnames(intersection.table) <- c("peak", "through", "p-value", "enrichment", "Intersection Genes") 
 
 #Initialize vector to add it as row into the matrix
 current.intersection <- c()
@@ -295,46 +294,37 @@ current.intersection <- c()
 head(intersection.table)
 
 i <- 1
-j <- 2
-k <- 5
-for (i in 1:length(tf.files))
+j <- 1
+
+for (i in 1:length(top.genes))
 {
-  for (j in 1: length(top.genes))
+  for (j in 1:length(clusters.files))
   {
-    for (k in 1:length(gene.files))
-    {
-      tf1 <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/targets_in_network/",tf.files[i]),
-                        header = TRUE, as.is = TRUE)
-      current.top <- as.vector(top.genes[j])
-      set.of.genes <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/clusters/by_peaks/",gene.files[k]),
-                                 header = FALSE, as.is = TRUE)
+    
+      current.top <- top.genes[i][[1]]
+      set.of.genes <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/clusters/",clusters.files[j]),
+                                 header = FALSE, as.is = TRUE)[[1]]
       
-      if(tf.files[i] != tf.files[j])
-      {
-        print("TEST")
-        result <- intersectSets(tf1,current.top,set.of.genes,alias)
-        p.value <- result[1][[1]]
-        enrichment <- result[2][[1]]
-        intersect.genes <- result[3][[1]]
+      
+      print("TEST")
+      result <- intersect2sets(set1 = current.top, set2 = set.of.genes, alias = alias, gene.descriptions = description)
+      p.value <- result[1][[1]]
+      enrichment <- result[2][[1]]
+      intersect.genes <- result[3][[1]]$intersection.genes
         
-        if (length(intersect.genes) !=0 & p.value < 0.000005)
-        {
-          print("HIT")
-          current.intersection[1] <- strsplit(tf.files[i], split = "_")[[1]][1]
-          current.intersection[2] <- names(top.genes[j])
-          current.intersection[3] <- strsplit(gene.files[k], split = ".txt")[[1]][1]
-          current.intersection[4] <- p.value
-          current.intersection[5] <- enrichment
-          current.intersection[6] <- paste(intersect.genes, collapse= ",")
-          intersection.table <- rbind(intersection.table, current.intersection)
+      circadian.info <- strsplit(clusters.files[i], split = "peak_")[[1]][2]
+      trough.info <- strsplit(circadian.info, split = "_")[[1]][3]
           
-        }
-      }
-      
-      
-    }
+      current.intersection[1]<- strsplit(circadian.info, split = "_")[[1]][1]
+      current.intersection[2] <- strsplit(trough.info, split = ".txt")[[1]][1]
+      current.intersection[3] <- p.value
+      current.intersection[4] <- enrichment
+      current.intersection[5] <- paste(intersect.genes, collapse= ",")
+      intersection.table <- rbind(intersection.table, current.intersection)
+        
   }
-  write.table(intersection.table, file="all_intersections_with_topological_params.txt", sep="\t", row.names = FALSE)
+  write.table(intersection.table, 
+              file=paste0("topvalues_clusters/intersections_", names(top.genes[i]),".txt"), sep="\t", row.names = FALSE)
 }
 
 
