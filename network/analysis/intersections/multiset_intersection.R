@@ -40,13 +40,13 @@ genes.peak.zt <- read.table(file = "../../../network/clusters/peak_ZT0.txt",
                              header = FALSE, as.is = TRUE)
 
 #EStablishing the sets to test
-sets <- c(cca1.targets, lhy.targets, genes.peak.zt)
+sets <- c(tf1, tf2, genes.peak.zt)
 names(sets) <- c("cca1", "lhy", "peakZT0")
 
 #Test and visualization of intersections
 
 #vignette("set_html")
-results <- supertest(x = sets, n = 6830)
+results <- supertest(x = sets, n = 5778)
 help("plot.msets")
 par(mar=c(3,3,3,3))
 plot(results, sort.by = "size")
@@ -108,7 +108,7 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
   intersection.data <- list()
   sets <- list(tf1, tf2, set.of.genes)
   #names(sets) <- c("cca1", "lhy", "peakZT0")
-  results <- supertest(x = sets, n = 6830)
+  results <- supertest(x = sets, n = 5778)
   results.table <- summary(results)
   p.value <- tail(results.table$P.value, n=1) #Get the last p-value
   enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
@@ -149,39 +149,6 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
 
 intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias,gene.descriptions = description)
 
-######Exploring to obtain information (AGI, description, peak time...) #####
-#-----from a list of genes.
-result <- intersectSets(tf1, tf2, genes.peak.zt)
-intersect.genes <- result[3][[1]]
-
-columns(org.At.tair.db)
-my.key <- keys(org.At.tair.db, keytype="ENTREZID")
-my.col <- c("SYMBOL", "TAIR")
-alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
-alias <- alias2symbol.table$SYMBOL
-names(alias) <- alias2symbol.table$TAIR
-alias[is.na(alias)] <- "" 
-
-
-#Read expression data table
-expression.data <- read.table(file="../../../web_apps/network_visualizer/data/athaliana_neutral_circadian_genes.txt", 
-                              as.is = TRUE, header = TRUE, row.names = NULL)
-head(expression.data)
-
-
-subset(expression.data, genes == intersect.genes)
-#AQUI ME QUEDO
-#-------------------------------------------------------------------------@
-#-------------------------------------------------------------------------@
-#-------------------------------------------------------------------------@
-#-------------------------------------------------------------------------@
-
-#Initialize table to store information about the genes in the intersection
-table.of.genes <- matrix(ncol=5, nrow = length(intersect.genes))
-colnames(table.of.genes) <- c("Primary_Symbol", "AGI", "Description", "Peak", "Trough")
-#Fill the table
-table.of.genes[,"AGI"] <- intersect.genes
-table.of.genes[,"Primary_Symbol"] <- alias[intersect.genes]
 
 
 
@@ -244,34 +211,88 @@ for (i in 1:length(tf.files))
   write.table(intersection.table, file="all_intersections.txt", sep="\t", row.names = FALSE)
 }
 
-### Intersection between nodes (genes) with high topological values, transcription factor target genes and ####
+### Intersection between nodes (genes) with high topological values and ####
 ### genes peaking at each ZT. 
 
-topological.data <- read.table(file="../../attractor_network_topological_parameters.tsv", 
+attractor.data <- read.table(file="../../attractor_network_representation.tsv", 
                                sep = "\t", as.is = TRUE, row.names = NULL, header = TRUE)
-head(topological.data)
-gene.names <- topological.data$names
+head(attractor.data)
+gene.names <- attractor.data$names
 
-indegree.threshold <- quantile(topological.data$indegree, prob=0.95)
-indegree.top <- gene.names[topological.data$indegree > indegree.threshold]
+indegree.threshold <- quantile(attractor.data$indegree, prob=0.95)
+indegree.top <- gene.names[attractor.data$indegree > indegree.threshold]
 
-outdegree.threshold <- quantile(topological.data$outdegree, prob=0.95)
-outdegree.top <- gene.names[topological.data$outdegree > outdegree.threshold]
+outdegree.threshold <- quantile(attractor.data$outdegree, prob=0.95)
+outdegree.top <- gene.names[attractor.data$outdegree > outdegree.threshold]
 
-topological.data$transitivity[is.na(topological.data$transitivity)] <- 0
-trans.threshold <- quantile(topological.data$transitivity, prob=0.90) 
-trans.top <- gene.names[topological.data$trans > trans.threshold]
+attractor.data$transitivity[is.na(attractor.data$transitivity)] <- 0
+trans.threshold <- quantile(attractor.data$transitivity, prob=0.90)
+trans.top <- gene.names[attractor.data$trans > trans.threshold]
 
-closeness.threshold <- quantile(topological.data$closeness, prob=0.95)
-closeness.top <- gene.names[topological.data$closeness > closeness.threshold]
+closeness.threshold <- quantile(attractor.data$closeness, prob=0.95)
+closeness.top <- gene.names[attractor.data$closeness > closeness.threshold]
 
-betweeness.threshold <- quantile(topological.data$betweeness, prob=0.95)
-betweeness.top <- gene.names[topological.data$betweeness > betweeness.threshold]
+betweeness.threshold <- quantile(attractor.data$betweeness, prob=0.95)
+betweeness.top <- gene.names[attractor.data$betweeness > betweeness.threshold]
 
-eccentricity.threshold <- quantile(topological.data$eccentricity, prob=0.95)
-eccentricity.top <- gene.names[topological.data$eccentricity > eccentricity.threshold]
+eccentricity.threshold <- quantile(attractor.data$eccentricity, prob=0.95)
+eccentricity.top <- gene.names[attractor.data$eccentricity > eccentricity.threshold]
 
-#Loop to perform intersection between thisn set of genes, TF target genes and clusters. 
+attractor.degree <- attractor.data$indegree + attractor.data$outdegree
+degree.threshold <- quantile(attractor.degree, prob=0.95)
+degree.top <- as.list(gene.names[attractor.degree > degree.threshold])
+
+#Loop to perform intersection between this set of genes and clusters.
+
+
+results <- supertest(x = sets, n = 5778)
+
+
+intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
+  intersection.data <- list()
+  sets <- c(tf1, tf2, set.of.genes)
+  #names(sets) <- c("cca1", "lhy", "peakZT0")
+  results <- supertest(x = sets, n = 5778)
+  results.table <- summary(results)
+  p.value <- tail(results.table$P.value, n=1) #Get the last p-value
+  enrichment <- (results.table$Table)[["FE"]][nrow(results.table$Table)]
+  intersection.genes <- (results.table$Table)[["Elements"]][nrow(results.table$Table)]
+  intersection.genes <- strsplit(intersection.genes, split = ", ")[[1]]
+  
+  intersection.data[[1]] <- p.value
+  intersection.data[[2]] <- enrichment
+  
+  
+  intersection.genes.agi <- intersection.genes
+  intersection.genes.primary.symbol <- alias[intersection.genes]
+  names(intersection.genes.primary.symbol) <- NULL
+  gene.table <- matrix(nrow=length(intersection.genes), ncol=3)
+  colnames(gene.table) <- c("AGI", "Primary Symbol", "Description")
+  gene.table[,1] <- intersection.genes.agi
+  gene.table[,2] <- intersection.genes.primary.symbol
+  #  gene.table[,3] <- description
+  
+  intersection.data[[1]] <- p.value
+  intersection.data[[2]] <- enrichment
+  intersection.data[[3]] <- gene.table
+  
+  intersection.genes.description <- gene.descriptions[intersection.genes]
+  names(intersection.genes.description) <- NULL
+  
+  
+  intersection.genes.description <- gene.descriptions[intersection.genes]
+  names(intersection.genes.description) <- NULL
+  
+  
+  intersection.data[[3]] <- data.frame(intersection.genes,intersection.genes.primary.symbol,intersection.genes.description,stringsAsFactors = F)
+  
+  names(intersection.data) <- c("p-value", "enrichment", "gene.table")
+  return(intersection.data)
+  
+}
+
+intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias,gene.descriptions = description)
+
 
 top.genes <- list(indegree.top, outdegree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
 names(top.genes) <- c("Indegree", "Outdegree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
