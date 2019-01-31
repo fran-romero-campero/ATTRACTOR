@@ -150,9 +150,7 @@ intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
 intersectSets(tf1 = tf1, tf2 = tf2, set.of.genes = genes.peak.zt, alias=alias,gene.descriptions = description)
 
 
-
-
-#####loop to perform all possible intersections####
+#####----Loop to perform all possible intersections-----####
 
 tf.files <- list.files(path = "../../../web_apps/peak_visualizer/data/targets_in_network/targets_to_intersect/", pattern = "targets")
 gene.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clusters/by_peaks", pattern = "peak")
@@ -240,12 +238,13 @@ eccentricity.top <- gene.names[attractor.data$eccentricity > eccentricity.thresh
 
 attractor.degree <- attractor.data$indegree + attractor.data$outdegree
 degree.threshold <- quantile(attractor.degree, prob=0.95)
-degree.top <- as.list(gene.names[attractor.degree > degree.threshold])
+degree.top <- gene.names[attractor.degree > degree.threshold]
 
 #Loop to perform intersection between this set of genes and clusters.
 
+sets <- c(genes.peak.zt, degree.top)
 
-results <- supertest(x = sets, n = 5778)
+
 
 
 intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
