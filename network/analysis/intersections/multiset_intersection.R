@@ -285,16 +285,16 @@ names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Ecce
 
 
 #Initialize matrix to store the results
-intersection.table <- matrix(ncol=5)
+intersection.table <- matrix(ncol=5, nrow = length(clusters.files))
 colnames(intersection.table) <- c("peak", "through", "p-value", "enrichment", "Intersection Genes") 
-
+head(intersection.table)
 #Initialize vector to add it as row into the matrix
 current.intersection <- c()
 
 head(intersection.table)
 
 i <- 1
-j <- 1
+j <- 6
 
 for (i in 1:length(top.genes))
 {
@@ -312,19 +312,20 @@ for (i in 1:length(top.genes))
       enrichment <- result[2][[1]]
       intersect.genes <- result[3][[1]]$intersection.genes
         
-      circadian.info <- strsplit(clusters.files[i], split = "peak_")[[1]][2]
+      circadian.info <- strsplit(clusters.files[j], split = "peak_")[[1]][2]
       trough.info <- strsplit(circadian.info, split = "_")[[1]][3]
           
-      current.intersection[1]<- strsplit(circadian.info, split = "_")[[1]][1]
-      current.intersection[2] <- strsplit(trough.info, split = ".txt")[[1]][1]
-      current.intersection[3] <- p.value
-      current.intersection[4] <- enrichment
-      current.intersection[5] <- paste(intersect.genes, collapse= ",")
-      intersection.table <- rbind(intersection.table, current.intersection)
+      intersection.table[j,1]<- strsplit(circadian.info, split = "_")[[1]][1]
+      intersection.table[j,2] <- strsplit(trough.info, split = ".txt")[[1]][1]
+      intersection.table[j,3] <- p.value
+      intersection.table[j,4] <- enrichment
+      intersection.table[j,5] <- paste(intersect.genes, collapse= ",")
+      # intersection.table <- rbind(intersection.table, current.intersection)
         
   }
   write.table(intersection.table, 
-              file=paste0("topvalues_clusters/intersections_", names(top.genes[i]),".txt"), sep="\t", row.names = FALSE)
+              file=paste0("topvalues_clusters/intersections_", names(top.genes[i]),".txt"), 
+              sep="\t", row.names = FALSE, quote = FALSE)
 }
 
 
