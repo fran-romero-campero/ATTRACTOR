@@ -100,7 +100,6 @@ number.randomisation <- 10
 motifs.3.random.graph <- matrix(0,nrow=number.randomisation, ncol=16)
 motifs.3.random.graph[1:3,]
 
-
 for (i in 1:number.randomisation)
 {
   print(i)
@@ -127,21 +126,40 @@ for(i in 1:16)
 indeces.significant.motifs.3 <- which(estimated.p.values < 0.001) - 1
 write(x = indeces.significant.motifs.3,file = "indeces_significant_motifs_3.txt",ncolumns = 1)
 
-j <- 1
-relevant.motifs.4 <- c()
-for(i in 0:217)
+
+## Motifs of size 4
+occurrency.subgraph.four.nodes.in.attractor <- graph.motifs(attractor.graph, size=4)
+occurrency.subgraph.four.nodes.in.attractor
+write(occurrency.subgraph.four.nodes.in.attractor,file="occurency_subgraph_four_nodes_in_attractor.txt",ncolumns = 1)
+
+## Generate randomisation
+number.randomisation <- 100
+
+motifs.4.random.graph <- matrix(0,nrow=number.randomisation, ncol=218)
+motifs.4.random.graph[1:3,]
+
+for (i in 1:number.randomisation)
 {
-  subgraph.i <- graph.isocreate(size=4,number=i)
-  if(sum(degree(subgraph.i) == 0) == 0)
-  {
-    relevant.motifs.4[j] <- i
-    j <- j + 1
-  }
+  print(paste0("motif 4 ",i))
+  random.seq <- rep(0,number.nodes)
+  points.to.add.regulation <- sample(x = (max.outdegree+1):number.nodes,
+                                     size = length(out.degree),replace = FALSE)
+  
+  random.seq[points.to.add.regulation] <- out.degree
+  
+  random.network <- barabasi.game(n = number.nodes,out.seq = random.seq,directed = TRUE)
+  
+  motifs.4.random.graph[i,] <- graph.motifs(random.network, size=4)
 }
 
+write.table(x = motifs.4.random.graph,file = "motifs_four_random_graph.txt",quote = F,row.names = F,col.names = F,sep = "\t")
 
-length(relevant.motifs.4)
+## Test significance for each motif
+estimated.p.values <- vector(mode="numeric", length=16)
+for(i in 1:218)
+{
+  estimated.p.values[i] <- sum(motifs.4.random.graph[,i] > occurrency.subgraph.four.nodes.in.attractor[i])/number.randomisation
+}
 
-i <- 1
-plot.igraph(graph.isocreate(size=4, number=relevant.motifs.4[i]))
-i <- i + 1
+indeces.significant.motifs.4 <- which(estimated.p.values < 0.001) - 1
+write(x = indeces.significant.motifs.4,file = "indeces_significant_motifs_4.txt",ncolumns = 1)
