@@ -28,19 +28,19 @@ points.to.add.regulation <- sample(x = (max.outdegree+1):number.nodes,
 random.seq[points.to.add.regulation] <- out.degree
 
 random.network <- barabasi.game(n = number.nodes,out.seq = random.seq,directed = TRUE)
-attractor.graph
+#attractor.graph
 
-diameter(random.network)
+#diameter(random.network)
 
 in.degree <- degree(graph = random.network,mode = "in")
-hist(in.degree)
+#hist(in.degree)
 
 ## Network motif with a single node: autoregulation
 autorregulation.in.random <- sum(diag(as.matrix(get.adjacency(random.network))))
-autorregulation.in.random
+#autorregulation.in.random
 
 autorregulation.in.attractor <- sum(diag(as.matrix(get.adjacency(attractor.graph))))
-autorregulation.in.attractor
+#autorregulation.in.attractor
 
 ## Generate randomisation
 number.randomisation <- 1000
