@@ -320,8 +320,8 @@ for (i in 1:length(top.genes))
       
         
   }
-  fdr.values <- p.adjust(intersection.table$p-value, method = "BH")
-  intersection.table[j,4] <- fdr.values
+  fdr.values <- p.adjust(intersection.table[,3], method = "BH")
+  intersection.table[,4] <- fdr.values
   write.table(intersection.table, 
               file=paste0("topvalues_clusters/intersections_", names(top.genes[i]),".txt"), 
               sep="\t", row.names = FALSE, quote = FALSE)
