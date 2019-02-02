@@ -242,6 +242,7 @@ eccentricity.top <- gene.names[attractor.data$eccentricity > eccentricity.thresh
 
 ##--Function to perform an intersection of TWO sets--##
 intersect2sets <- function(set1, set2, alias, gene.descriptions){
+  intersection.data <- list()
   sets <- list(set1, set2)
   results <- supertest(x = sets, n = 5778)
   results.table <- summary(results)
@@ -283,18 +284,14 @@ top.genes <- list(degree.top, trans.top, closeness.top, betweeness.top, eccentri
 names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
 
 
-
 #Initialize matrix to store the results
-intersection.table <- matrix(ncol=5, nrow = length(clusters.files))
-colnames(intersection.table) <- c("peak", "through", "p-value", "enrichment", "Intersection Genes") 
-head(intersection.table)
-#Initialize vector to add it as row into the matrix
-current.intersection <- c()
-
+intersection.table <- matrix(ncol=6, nrow = length(clusters.files))
+colnames(intersection.table) <- c("peak", "through", "p-value", "fdr", "enrichment", "Intersection Genes") 
 head(intersection.table)
 
-i <- 1
-j <- 6
+
+# i <- 1
+# j <- 6
 
 for (i in 1:length(top.genes))
 {
@@ -318,11 +315,13 @@ for (i in 1:length(top.genes))
       intersection.table[j,1]<- strsplit(circadian.info, split = "_")[[1]][1]
       intersection.table[j,2] <- strsplit(trough.info, split = ".txt")[[1]][1]
       intersection.table[j,3] <- p.value
-      intersection.table[j,4] <- enrichment
-      intersection.table[j,5] <- paste(intersect.genes, collapse= ",")
-      # intersection.table <- rbind(intersection.table, current.intersection)
+      intersection.table[j,5] <- enrichment
+      intersection.table[j,6] <- paste(intersect.genes, collapse= ",")
+      
         
   }
+  fdr.values <- p.adjust(intersection.table$p-value, method = "BH")
+  intersection.table[j,4] <- fdr.values
   write.table(intersection.table, 
               file=paste0("topvalues_clusters/intersections_", names(top.genes[i]),".txt"), 
               sep="\t", row.names = FALSE, quote = FALSE)
