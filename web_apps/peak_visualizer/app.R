@@ -112,7 +112,7 @@ bigwig.files <- c("data/bw_files/PHYA.bw",
                   "data/bw_files/PHYB_FLAG_27_1.bw",
                   "data/bw_files/PRR5_1.bw",
                   "data/bw_files/TOC1.bw",
-                  #"data/bw_files/CCA1_ZT02.bw",
+                  "data/bw_files/CCA1_ZT02.bw",
                   "data/bw_files/CCA1_ZT14_1.bw",
                   "data/bw_files/LHY_1.bw",
                   "data/bw_files/CRY2.bw",
@@ -122,15 +122,19 @@ bigwig.files <- c("data/bw_files/PHYA.bw",
                   "data/bw_files/PIF4.bw",
                   "data/bw_files/PIF5.bw",
                   "data/bw_files/PRR7.bw",
-                  "data/bw_files/PRR9_1.bw")
+                  "data/bw_files/PRR9_1.bw",
+                  "data/bw_files/ELF3_ZT0.bw",
+                  "data/bw_files/ELF3_ZT4.bw",
+                  "data/bw_files/ELF4.bw")
 
-names(bigwig.files) <- c("PHYA", "PHYB" ,"PRR5", "TOC1","CCA1","LHY","CRY2","FHY1","LUX","PIF3","PIF4","PIF5","PRR7","PRR9")
+names(bigwig.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT??","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT??","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
 
 bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
-               "data/bed_files/PHYB_FLAG_27_1_peaks.narrowPeak",
+               "data/bed_files/PHYB_peaks.narrowPeak",
                "data/bed_files/PRR5_1_peaks.narrowPeak",
                "data/bed_files/TOC1_1_peaks.narrowPeak",
-               "data/bed_files/CCA1_peaks.narrowPeak",
+               "data/bed_files/CCA1_ZT02_peaks.narrowPeak",
+               "data/bed_files/CCA1_ZT14_peaks.narrowPeak",
                "data/bed_files/LHY_1_peaks.narrowPeak",
                "data/bed_files/CRY2_peaks.narrowPeak",
                "data/bed_files/FHY1_peaks.narrowPeak",
@@ -139,10 +143,13 @@ bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
                "data/bed_files/PIF4_peaks.narrowPeak",
                "data/bed_files/PIF5_peaks.narrowPeak",
                "data/bed_files/PRR7_peaks.narrowPeak",
-               "data/bed_files/PRR9_1_peaks.narrowPeak")
+               "data/bed_files/PRR9_1_peaks.narrowPeak",
+               "data/bed_files/ELF3_ZT0_1_peaks.narrowPeak",
+               "data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
+               "data/bed_files/ELF4_1_peaks.narrowPeak")
 
-names(bed.files) <- c("PHYA", "PHYB" ,"PRR5", "TOC1","CCA1","LHY","CRY2","FHY1","LUX","PIF3","PIF4","PIF5","PRR7","PRR9")
-
+names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT??","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT??","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+                    
 ## TF binding sites colors and symbol shapes
 symbol.shapes <- c(17, 18, 19, 15)
 symbol.color <- c("blue", "red", "darkgreen", "magenta")
@@ -194,8 +201,11 @@ ui <- fluidPage(
           ## Check box for the TF peaks to represent
           checkboxGroupInput(inputId = "names.tfs",
                               label = "Select Transcription Factors:",
-                              choices = list("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
-                                             "CRY2","FHY1","LUX","PIF3","PIF4","PIF5"),
+                              choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "PRR7 ZT12", "CCA1 ZT14", "TOC1 ZT15","LUX ZT??","PRR9 ZT??"),
+                               
+                               
+                               #list("CCA1 ZT02", "CCA1 ZT14","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+                               #               "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF3 ZT00","ELF3 ZT04","ELF4"),
                               inline = TRUE,width = "100%")),width=4),
         
         column(wellPanel(
