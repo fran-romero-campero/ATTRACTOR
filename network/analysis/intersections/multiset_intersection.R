@@ -39,11 +39,11 @@ tf2 <- read.table(file="../../../web_apps/peak_visualizer/data/targets_in_networ
 genes.peak.zt <- read.table(file = "../../../network/clusters/peak_ZT0.txt",
                              header = FALSE, as.is = TRUE)[[1]]
 
-#EStablishing the sets to test
+#Establishing the list of sets to test
 sets <- list(tf1, tf2, genes.peak.zt)
 
 
-#Test and visualization of intersections
+#####Test and visualization of intersections#####
 
 #vignette("set_html")
 results <- supertest(x = sets, n = 5778)
@@ -54,7 +54,7 @@ plot(results, Layout = "landscape")
 
 results.table <- summary(results)
 
-############# Exploring the output#####
+#-- Exploring the output--#
 
 
 typeof(results.table)
@@ -86,7 +86,7 @@ cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
 ##---------Function that returns p-value, enrichment and the---------------------------#
 ##---------set of genes in the intersecion (intersectSets)----------------------------------------#
 
-##Correspondencia entre agi symbols y primary symbol
+##Get translation between AGI and primary symbol
 library(org.At.tair.db)
 columns(org.At.tair.db)
 my.key <- keys(org.At.tair.db, keytype="ENTREZID")
@@ -97,13 +97,14 @@ names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 
 
-## Correspondencia entre agi symbol y descripcion
+## Get description of each AGI symbol
 network.data <- read.table(file="../../../web_apps/attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 
 description <- network.data$description
 names(description) <- network.data$names
 description[1:3]
 
+#This is the function, called intersectSets
 intersectSets <- function(tf1,tf2,set.of.genes, alias,gene.descriptions){
   intersection.data <- list()
   sets <- list(tf1, tf2, set.of.genes)
@@ -208,6 +209,7 @@ for (i in 1:length(tf.files))
 
 
 
+
 ### Intersection between nodes (genes) with high topological values and ####
 ### genes peaking at each ZT. 
 
@@ -216,7 +218,7 @@ attractor.data <- read.table(file="../../attractor_network_representation.tsv",
 head(attractor.data)
 gene.names <- attractor.data$names
 
-threshold <- 0.70
+threshold <- 0.70 #Here you can change the threshold
 
 indegree.threshold <- quantile(attractor.data$indegree, prob=threshold)
 indegree.top <- gene.names[attractor.data$indegree > indegree.threshold]
@@ -335,6 +337,8 @@ for (i in 1:length(top.genes))
 ######------Test of intersection between beds------#######
 
 
+
+#####Intersections between binding regions in DNA (BED files)####
 #Reading the bed files of the transcription factors
 peaks1 <- read.table(file = "bed.files/PRR5_1_peaks.narrowPeak")
 head(peaks1)
