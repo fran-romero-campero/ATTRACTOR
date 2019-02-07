@@ -446,9 +446,6 @@ for (i in 1:length(top.parameters))
 
 
 
-######------Test of intersection between beds------#######
-
-
 
 #####Intersections between binding regions in DNA (BED files)####
 #Reading the bed files of the transcription factors
@@ -469,7 +466,7 @@ length.sets <- sapply(X = peaks.list, FUN = nrow)
 peaks.set1 <- peaks1
 peaks.set2 <- peaks2
 
-
+#---Loop to get the intersection between two set of beds---#
 i <- 89
 
 #Initialize matrix
@@ -511,12 +508,7 @@ for (i in 1:nrow(peaks.set1))
 
 
 
-
-
-
-
-  
-#intersectBed function
+#intersectBed function (contains the previous loop)
 intersectBed <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=0 )
@@ -557,12 +549,13 @@ intersectBed <- function(peaks.set1, peaks.set2)
   return(intersection)
 }
 
-# The intersectBed function allow to get the intersections betwwen to bed files. If you want to perform the
+# The intersectBed function allow to get the intersections between two bed files. If you want to perform the
 # the intersection between three bed files, you can do it in a consecutive manner. 
 
 first <- intersectBed(peaks1, peaks2)
 second <- intersectBed(first, peaks3)
 second
 
-cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
+cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
+
 
