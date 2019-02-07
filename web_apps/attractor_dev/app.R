@@ -257,8 +257,9 @@ AT4G17245
       selectInput(inputId = "topological_parameter", label = "Topological parameter", 
                   choices = c("Degree","Betweeness", "Closeness", "Eccentricity","Transitivity"), selected = NULL,
                   multiple = FALSE, selectize = TRUE),
-      sliderInput(inputId = "threshold", label = "Parameter threshold", min = 0, 
-                  max = 1, value = 0.9),
+      selectInput(inputId = "threshold", label = "Parameter threshold",
+                  choices = c(0.75,0.90,0.95), selected = NULL, multiple = FALSE, selectize = TRUE),
+                  
       
       actionButton(inputId = "top_intersect", label = "Test"),
       
@@ -527,28 +528,28 @@ server <- function(input, output) {
     if (input$topological_parameter == "Degree")
     {
       attractor.degree <- network.data$indegree + network.data$outdegree
-      degree.threshold <- quantile(attractor.degree, prob=input$threshold)
+      degree.threshold <- quantile(attractor.degree, prob=as.numeric(input$threshold))
       top.genes <- gene.names[attractor.degree > degree.threshold]
     } else if (input$topological_parameter == "Transitivity")
     {
       network.data$transitivity[is.na(network.data$transitivity)] <- 0
       attractor.trans <- network.data$transitivity
-      trans.threshold <- quantile(attractor.trans, prob= input$threshold)
+      trans.threshold <- quantile(attractor.trans, prob=as.numeric(input$threshold))
       top.genes <- gene.names[attractor.trans > trans.threshold]
     } else if (input$topological_parameter == "Closeness")
     {
       attractor.closeness <- network.data$closeness
-      closeness.threshold <- quantile(attractor.closeness, prob= input$threshold)
+      closeness.threshold <- quantile(attractor.closeness, prob=as.numeric(input$threshold))
       top.genes <- gene.names[attractor.closeness > closeness.threshold]
     } else if (input$topological_parameter == "Betweeness")
     {
       attractor.bet <- network.data$betweeness
-      bet.threshold <- quantile(attractor.bet, prob= input$threshold)
+      bet.threshold <- quantile(attractor.bet, prob=as.numeric(input$threshold))
       top.genes <- gene.names[attractor.bet > bet.threshold]
     } else if (input$topological_parameter == "Eccentricity")
     {
       attractor.eccen <- network.data$eccentricity
-      eccen.threshold <- quantile(attractor.eccen, prob= input$threshold)
+      eccen.threshold <- quantile(attractor.eccen, prob=as.numeric(input$threshold))
       top.genes <- gene.names[attractor.eccen > eccen.threshold]
     } 
     
