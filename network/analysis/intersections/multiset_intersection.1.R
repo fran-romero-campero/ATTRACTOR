@@ -214,8 +214,9 @@ for (i in 1:length(tf.files))
 ### genes peaking at each ZT. 
 
 attractor.data <- read.table(file="../../attractor_network_representation.tsv", 
-                               sep = "\t", as.is = TRUE, row.names = NULL, header = TRUE)
+                               sep = "\t", as.is = TRUE, header = TRUE, quote = "")
 head(attractor.data)
+nrow(attractor.data)
 gene.names <- attractor.data$names
 
 threshold <- 0.90 #Here you can change the threshold
@@ -281,20 +282,7 @@ intersect2sets <- function(set1, set2, alias, gene.descriptions){
 
 intersect2sets(set1=degree.top, set2 = genes.peak.zt, alias=alias, gene.descriptions = description)
 
-#####---Loop to perform all possible intersection between clusters and high top values genes---#####
-clusters.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clusters", pattern = "txt")
-
-top.genes <- list(degree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
-names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
-attractor.network <- read.table(file="../../../web_apps/attractor_dev/data/attractor_network_representation.tsv",
-           header=TRUE, sep="\t", quote = "", as.is = TRUE)
-head(attractor.network)
-
-#Initialize matrix to store the results
-intersection.table <- matrix(ncol=6, nrow = length(clusters.files))
-colnames(intersection.table) <- c("peak", "through", "p-value", "fdr", "enrichment", "Intersection Genes") 
-head(intersection.table)
-
+#####---Several if loops to selectize (in the app) the topological parameter and the set of genes---#####
 
 input <- list(peak="ZT0", trough="Any", topological_parameter="Degree", threshold="0.90")
 
@@ -358,14 +346,66 @@ enrichment <- result[2][[1]]
 intersect.genes <- result[3][[1]]$intersection.genes
 
 
+##Loop to classify genes according to their peak/trough and then use them for intersections####
+top.parameters <- c("Degree","Betweeness", "Closeness", "Eccentricity","Transitivity")
+zts <- c("Any",paste("ZT",seq(from=0,to=20,by=4),sep=""))
+possible.zts <- expand.grid(zts, zts)
 
-for (i in 1:length(top.genes))
+for (i in 1:nrow(possible.zts))
+{
+  
+    if (possible.zts[i, "Var1"] == "Any")
+    {
+      if (possible.zts[i, "Var2"] == "Any")
+      {
+        zt.genes <- attractor.network$names
+      } else
+      {
+
+        zt.genes <- subset(attractor.network, trough.zt == paste0("trough", substr(x = possible.zts[i, "Var2"], start = 3, stop = nchar(as.character(possible.zts[i, "Var2"])))))$names
+
+      }
+
+    } else
+    {
+      if (possible.zts[i, "Var2"] == "Any")
+      {
+        peak.selection <- paste0("peak", substr(x = possible.zts[i, "Var1"], start = 3, stop = nchar(as.character(possible.zts[i, "Var1"]))))
+        zt.genes <- subset(attractor.network, peak.zt == peak.selection)$names
+      } else
+      {
+        trough.selection <- paste0("trough", substr(x = possible.zts[i, "Var2"], start = 3, stop = nchar(as.character(possible.zts[i, "Var2"]))))
+        peak.selection <- paste0("peak", substr(x = possible.zts[i, "Var1"], start = 3, stop = nchar(as.character(possible.zts[i, "Var1"]))))
+        zt.genes <- subset(attractor.network, trough.zt == trough.selection & peak.zt == peak.selection)$names
+      }
+    }
+  
+  if (length(zt.genes) == 0)
+  {
+    zt.genes <- NA
+  }
+  file.name <- paste0("peak_",possible.zts[i, "Var1"], "_trough_", possible.zts[i, "Var2"])
+  write.table(zt.genes, file =paste0("clusters_ok/", file.name, ".txt"), sep= "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+  
+}
+
+##Loop to intersect the previous classified genes and high topological values genes####
+clusters.files <- list.files(path = "clusters_ok/", pattern = "txt")
+top.genes <- list(degree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
+names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
+#Initialize matrix to store the results
+intersection.table <- matrix(ncol=6, nrow = length(clusters.files))
+colnames(intersection.table) <- c("peak", "through", "p-value", "fdr", "enrichment", "Intersection Genes") 
+head(intersection.table)
+i <- 1
+j <- 2    
+for (i in 1:length(top.parameters))
 {
   for (j in 1:length(clusters.files))
   {
     
       current.top <- top.genes[i][[1]]
-      set.of.genes <- read.table(file=paste0("../../../web_apps/peak_visualizer/data/clusters/",clusters.files[j]),
+      set.of.genes <- read.table(file=paste0("clusters_ok/",clusters.files[j]),
                                  header = FALSE, as.is = TRUE)[[1]]
       
       
@@ -389,20 +429,21 @@ for (i in 1:length(top.genes))
   fdr.values <- p.adjust(intersection.table[,3], method = "BH")
   intersection.table[,4] <- fdr.values
   write.table(intersection.table, 
-              file=paste0("topvalues_clusters/intersections_", names(top.genes[i]), as.character(threshold),".txt"), 
+              file=paste0("topvalues_clusters_OK/intersections_", names(top.genes[i]), as.character(threshold),".txt"), 
               sep="\t", row.names = FALSE, quote = FALSE)
 }
 
 
-degree.intersections <- read.table(file="topvalues_clusters/intersections_Degree0.9.txt", header = TRUE, sep = "\t")
-head(degree.intersections)
-degree.intersections$fdr
-degree.intersections$p.value
+# degree.intersections <- read.table(file="topvalues_clusters/intersections_Degree0.9.txt", header = TRUE, sep = "\t")
+# head(degree.intersections)
+# degree.intersections$fdr
+# degree.intersections$p.value
+# 
+# degree.intersections <- read.table(file="topvalues_clusters/intersections_Degree0.7.txt", header = TRUE, sep = "\t")
+# head(degree.intersections)
+# degree.intersections$fdr
+# degree.intersections$p.value
 
-degree.intersections <- read.table(file="topvalues_clusters/intersections_Degree0.7.txt", header = TRUE, sep = "\t")
-head(degree.intersections)
-degree.intersections$fdr
-degree.intersections$p.value
 
 
 ######------Test of intersection between beds------#######
