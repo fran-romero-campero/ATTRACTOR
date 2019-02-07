@@ -531,6 +531,7 @@ server <- function(input, output) {
       top.genes <- gene.names[attractor.degree > degree.threshold]
     } else if (input$topological_parameter == "Transitivity")
     {
+      network.data$transitivity[is.na(network.data$transitivity)] <- 0
       attractor.trans <- network.data$transitivity
       trans.threshold <- quantile(attractor.trans, prob= input$threshold)
       top.genes <- gene.names[attractor.trans > trans.threshold]
@@ -605,21 +606,28 @@ server <- function(input, output) {
     },height = 700)
     
     ## Visualization of text with p value and enrichment
-    if(p.value < 0.01)
+    if (length(top.genes) == 0)
     {
-      text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
-                                         " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
-                                         " is significant with a p-value of ", p.value,
-                                         " and an enrichment of ", round(x = enrichment,digits = 2),
-                                         "<b>") 
+      text.intersection.result <- "<b>There is no genes with this restriction<b>"
+    } else 
+    {
+      if(p.value < 0.01)
+      {
+        text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
+                                           " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
+                                           " is significant with a p-value of ", p.value,
+                                           " and an enrichment of ", round(x = enrichment,digits = 2),
+                                           "<b>") 
+        
+      } else
+      {
+        text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
+                                           " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
+                                           " is NOT significant with a p-value of ", round(x=p.value, digits = 2),
+                                           " and an enrichment of ", round(x = enrichment,digits = 2),
+                                           "<b> <br> <br>") 
+      }
       
-    } else
-    {
-      text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
-                                         " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
-                                         " is NOT significant with a p-value of ", round(x=p.value, digits = 2),
-                                         " and an enrichment of ", round(x = enrichment,digits = 2),
-                                         "<b> <br> <br>") 
     }
     
     

@@ -218,7 +218,7 @@ attractor.data <- read.table(file="../../attractor_network_representation.tsv",
 head(attractor.data)
 gene.names <- attractor.data$names
 
-threshold <- 0.70 #Here you can change the threshold
+threshold <- 0.90 #Here you can change the threshold
 
 indegree.threshold <- quantile(attractor.data$indegree, prob=threshold)
 indegree.top <- gene.names[attractor.data$indegree > indegree.threshold]
