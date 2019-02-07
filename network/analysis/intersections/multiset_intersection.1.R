@@ -82,9 +82,8 @@ cpsets(x = 43 -1, L = length.gene.sets, n = 6830, lower.tail = FALSE)
 
 
 
-###########################################################################################
-##---------Function that returns p-value, enrichment and the---------------------------#
-##---------set of genes in the intersecion (intersectSets)----------------------------------------#
+
+###### ---- Function that returns p-value, enrichment and the set of genes in the intersecion (intersectSets)#####
 
 ##Get translation between AGI and primary symbol
 library(org.At.tair.db)
@@ -210,8 +209,7 @@ for (i in 1:length(tf.files))
 
 
 
-### Intersection between nodes (genes) with high topological values and ####
-### genes peaking at each ZT. 
+### Intersection between nodes (genes) with high topological values and genes peaking at each ZT####
 
 attractor.data <- read.table(file="../../attractor_network_representation.tsv", 
                                sep = "\t", as.is = TRUE, header = TRUE, quote = "")
