@@ -247,18 +247,18 @@ AT4G17245
       
       
       
-      tags$h4(tags$b("Topological Intersections")),
+      tags$h3(tags$b("Topological Intersections")),
       selectInput(inputId = "peak_top", label="Peak",
                   choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                   multiple = FALSE, selectize = TRUE), 
       selectInput(inputId = "trough_top", label = "Trough", 
                   choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                   multiple = FALSE, selectize = TRUE), 
-      selectInput(inputId = "trough_top", label = "Topological parameter", 
+      selectInput(inputId = "topological_parameter", label = "Topological parameter", 
                   choices = c("Degree","Betweeness", "Closeness", "Eccentricity","Transitivity"), selected = NULL,
                   multiple = FALSE, selectize = TRUE),
-      sliderInput(inputId = "threshold", label = h3("Parameter threshold"), min = 0, 
-                  max = 1, value = 0.90),
+      sliderInput(inputId = "threshold", label = "Parameter threshold", min = 0, 
+                  max = 1, value = 0.9),
       
       actionButton(inputId = "top_intersect", label = "Test"),
       
@@ -551,28 +551,27 @@ server <- function(input, output) {
       top.genes <- gene.names[attractor.eccen > eccen.threshold]
     } 
     
-    if (input$peak == "Any")
+    if (input$peak_top == "Any")
     {
-      if (input$trough == "Any") 
+      if (input$trough_top == "Any") 
       {
         zt.genes <- network.data$names
       } else
       {
         
-        zt.genes <- subset(network.data, trough.zt == paste0("trough", substr(x = input$trough, start = 3, stop = nchar(input$trough))))$names
-        
+        zt.genes <- subset(network.data, trough.zt == paste0("trough", substr(x = input$trough_top, start = 3, stop = nchar(input$trough_top))))$names
       }
       
     } else 
     {
-      if (input$trough == "Any")
+      if (input$trough_top == "Any")
       {
-        peak.selection <- paste0("peak", substr(x = input$peak, start = 3, stop = nchar(input$peak)))
+        peak.selection <- paste0("peak", substr(x = input$peak_top, start = 3, stop = nchar(input$peak_top)))
         zt.genes <- subset(network.data, peak.zt == peak.selection)$names
       } else 
       {
-        trough.selection <- paste0("trough", substr(x = input$trough, start = 3, stop = nchar(input$trough)))
-        peak.selection <- paste0("peak", substr(x = input$peak, start = 3, stop = nchar(input$peak)))
+        trough.selection <- paste0("trough", substr(x = input$trough_top, start = 3, stop = nchar(input$trough_top)))
+        peak.selection <- paste0("peak", substr(x = input$peak_top, start = 3, stop = nchar(input$peak_top)))
         zt.genes <- subset(network.data, trough.zt == trough.selection & peak.zt == peak.selection)$names
       }
       
@@ -609,14 +608,15 @@ server <- function(input, output) {
     if(p.value < 0.01)
     {
       text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
-                                         " and genes with a", input$peak, " peak and", input$trough, " trough ",
+                                         " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
                                          " is significant with a p-value of ", p.value,
                                          " and an enrichment of ", round(x = enrichment,digits = 2),
                                          "<b>") 
       
     } else
     {
-      text.intersection.result <- paste0("<b>The intersection between the targets of ", input$tf1, " and ", input$tf2,
+      text.intersection.result <- paste0("<b>The intersection between the genes with high ", input$topological_parameter,
+                                         " and genes that show a ", input$peak_top, " peak and ", input$trough_top, " trough ",
                                          " is NOT significant with a p-value of ", round(x=p.value, digits = 2),
                                          " and an enrichment of ", round(x = enrichment,digits = 2),
                                          "<b> <br> <br>") 
