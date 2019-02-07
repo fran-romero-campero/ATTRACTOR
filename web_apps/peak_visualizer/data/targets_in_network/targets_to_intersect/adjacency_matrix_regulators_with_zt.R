@@ -117,3 +117,13 @@ adjacency.matrix[elf3.zt00,"ELF3_ZT00"] <- 1
 ## ELF3_ZT04
 elf3.zt04 <- read.table(file="ELF3_ZT04_targets_in_network.txt", as.is=T, header=F)[[1]]
 adjacency.matrix[elf3.zt04,"ELF3_ZT04"] <- 1
+
+## Add columns to network representation and write new version
+network.representation.with.zts <- cbind(network.data,adjacency.matrix)
+head(network.representation.with.zts)
+
+rownames(network.representation.with.zts) <- NULL
+head(network.representation.with.zts)
+
+write.table(network.representation.with.zts, file="attractor_network_representation.tsv", sep = "\t", quote = FALSE,
+            row.names = FALSE)
