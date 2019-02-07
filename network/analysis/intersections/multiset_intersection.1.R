@@ -287,7 +287,7 @@ clusters.files <- list.files(path = "../../../web_apps/peak_visualizer/data/clus
 top.genes <- list(degree.top, trans.top, closeness.top, betweeness.top, eccentricity.top)
 names(top.genes) <- c("Degree", "Transitivity", "Closeness", "Betweeness", "Eccentricity")
 attractor.network <- read.table(file="../../../web_apps/attractor_dev/data/attractor_network_representation.tsv",
-           header=TRUE, sep="\t", quote = "")
+           header=TRUE, sep="\t", quote = "", as.is = TRUE)
 head(attractor.network)
 
 #Initialize matrix to store the results
@@ -296,8 +296,68 @@ colnames(intersection.table) <- c("peak", "through", "p-value", "fdr", "enrichme
 head(intersection.table)
 
 
-# i <- 1
-# j <- 6
+input <- list(peak="ZT0", trough="Any", topological_parameter="Degree", threshold="0.90")
+
+if (topological_parameter == "Degree")
+{
+  attractor.degree <- attractor.network$indegree + attractor.network$outdegree
+  degree.threshold <- quantile(attractor.degree, prob=input$threshold)
+  top.genes <- gene.names[attractor.degree > degree.threshold]
+} else if (topological.parameter == "Transitivity")
+{
+  attractor.trans <- attractor.network$transitivity
+  trans.threshold <- quantile(attractor.trans, prob= input$threshold)
+  top.genes <- gene.names[attractor.trans > trans.threshold]
+} else if (topological.parameter == "Closeness")
+{
+  attractor.closeness <- attractor.network$closeness
+  closeness.threshold <- quantile(attractor.closeness, prob= input$threshold)
+  top.genes <- gene.names[attractor.closeness > closeness.threshold]
+} else if (topological.parameter == "Betweeness")
+{
+  attractor.bet <- attractor.network$betweeness
+  bet.threshold <- quantile(attractor.bet, prob= input$threshold)
+  top.genes <- gene.names[attractor.bet > bet.threshold]
+} else if (topological.parameter == "Eccentricity")
+{
+  attractor.eccen <- attractor.network$eccentricity
+  eccen.threshold <- quantile(attractor.eccen, prob= input$threshold)
+  top.genes <- gene.names[attractor.eccen > eccen.threshold]
+} 
+
+if (input$peak == "Any")
+{
+  if (input$trough == "Any") 
+  {
+    zt.genes <- attractor.network$names
+  } else
+  {
+    
+    zt.genes <- subset(attractor.network, trough.zt == paste0("trough", substr(x = input$trough, start = 3, stop = nchar(input$trough))))$names
+    
+  }
+
+} else 
+{
+  if (input$trough == "Any")
+  {
+    peak.selection <- paste0("peak", substr(x = input$peak, start = 3, stop = nchar(input$peak)))
+    zt.genes <- subset(attractor.network, peak.zt == peak.selection)$names
+  } else 
+  {
+    trough.selection <- paste0("trough", substr(x = input$trough, start = 3, stop = nchar(input$trough)))
+    peak.selection <- paste0("peak", substr(x = input$peak, start = 3, stop = nchar(input$peak)))
+    zt.genes <- subset(attractor.network, trough.zt == trough.selection & peak.zt == peak.selection)$names
+  }
+  
+}
+
+result <- intersect2sets(set1 = top.genes, set2 = zt.genes, alias = alias, gene.descriptions = description)
+p.value <- result[1][[1]]
+enrichment <- result[2][[1]]
+intersect.genes <- result[3][[1]]$intersection.genes
+
+
 
 for (i in 1:length(top.genes))
 {
