@@ -524,27 +524,27 @@ server <- function(input, output) {
     print("Test top intersection")
     gene.names <- network.data$names
     
-    if (topological_parameter == "Degree")
+    if (input$topological_parameter == "Degree")
     {
       attractor.degree <- network.data$indegree + network.data$outdegree
       degree.threshold <- quantile(attractor.degree, prob=input$threshold)
       top.genes <- gene.names[attractor.degree > degree.threshold]
-    } else if (topological_parameter == "Transitivity")
+    } else if (input$topological_parameter == "Transitivity")
     {
       attractor.trans <- network.data$transitivity
       trans.threshold <- quantile(attractor.trans, prob= input$threshold)
       top.genes <- gene.names[attractor.trans > trans.threshold]
-    } else if (topological_parameter == "Closeness")
+    } else if (input$topological_parameter == "Closeness")
     {
       attractor.closeness <- network.data$closeness
       closeness.threshold <- quantile(attractor.closeness, prob= input$threshold)
       top.genes <- gene.names[attractor.closeness > closeness.threshold]
-    } else if (topological_parameter == "Betweeness")
+    } else if (input$topological_parameter == "Betweeness")
     {
       attractor.bet <- network.data$betweeness
       bet.threshold <- quantile(attractor.bet, prob= input$threshold)
       top.genes <- gene.names[attractor.bet > bet.threshold]
-    } else if (topological_parameter == "Eccentricity")
+    } else if (input$topological_parameter == "Eccentricity")
     {
       attractor.eccen <- network.data$eccentricity
       eccen.threshold <- quantile(attractor.eccen, prob= input$threshold)
