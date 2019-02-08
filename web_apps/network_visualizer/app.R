@@ -51,7 +51,7 @@ radian.conversion <- function(alpha)
   return(rad)
 }
 
-##Draw a circle and plot it
+## Draw a circle and plot it
 angle <- seq(from=0, to=2*pi, by=0.01)
 x.circle.1 <- radius.1*sin(angle)
 y.circle.1 <- radius.1*cos(angle)
@@ -60,7 +60,11 @@ radius.2 <- radius.1 - radius.1/12
 x.circle.2 <- radius.2 * sin(angle)
 y.circle.2 <- radius.2 * cos(angle)
 
-#Read graph adjacency matrix
+## Read graph adjacency matrix
+network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+
+
+
 adj.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed_only_tfs.txt"))
 is.matrix(adj.matrix)
 dim(adj.matrix)
@@ -143,18 +147,22 @@ ui <- fluidPage(
                     choices = list("Yes", "No"), 
                     selected = "Yes", multiple = FALSE),
         
-        actionButton(inputId = "button", label = "GO")
+        actionButton(inputId = "button", label = "GO"),
         
         
-        
+        width = 3
 
       ),
       
       #Plot the generated network
       
       mainPanel(
-         plotOutput(outputId = "network", width = "400px", height = "400px"),
-         plotOutput(outputId = "expression")
+         plotOutput(outputId = "network"),
+         tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+         tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+         plotOutput(outputId = "expression"),
+         
+         width = 9, align = "center"
       )
    )
 )
@@ -168,7 +176,8 @@ server <- function(input, output) {
       
       if (target.agi %in% row.names(adj.global.matrix)) {
         #Plot circle
-        plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="")
+        par(mar=c(0,0,0,0))
+        plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
         lines(x.circle.2, y.circle.2, lwd=3)
         x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
                        sin(seq(from=-pi, to=0, by=0.01))* radius.1)
@@ -180,7 +189,7 @@ server <- function(input, output) {
           angle.zt <- radian.conversion(alpha = 60*i)
           zt <- 4*i
           current.zt <- paste("ZT", zt,  sep = "")
-          text(x = (radius.1 + radius.1/5)*sin(angle.zt), y = (radius.1 + radius.1/5)*cos(angle.zt), labels = current.zt)
+          text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5)
           lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
                 y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
         }
@@ -253,7 +262,7 @@ server <- function(input, output) {
         text(x=0.5, y = 0.5, paste("The", target.agi, "gene does not present a circadian expression pattern"), cex = 0.7)
       }
       
-       })
+       }, height = 650, width = 650)
     
   })
   
