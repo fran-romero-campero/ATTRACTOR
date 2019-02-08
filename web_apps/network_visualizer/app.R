@@ -62,8 +62,13 @@ y.circle.2 <- radius.2 * cos(angle)
 
 ## Read graph adjacency matrix
 network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790","AT1G09570",
+             "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530", "AT2G43010", "AT3G59060",
+             "AT2G40080", "AT2G25930")
 
-
+adj.matrix <- as.matrix(network.data[,35:53])
+rownames(adj.matrix) <- network.data$names
+adj.matrix <- adj.matrix[agi.tfs,]
 
 adj.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed_only_tfs.txt"))
 is.matrix(adj.matrix)
@@ -71,26 +76,43 @@ dim(adj.matrix)
 rownames(adj.matrix) == colnames(adj.matrix)
 adj.global.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed.txt"))
 
+adj.global.matrix <- as.matrix(network.data[,35:53])
+rownames(adj.global.matrix) <- network.data$names
+
 #Read expression data table
-expression.data <- read.table(file="data/athaliana_neutral_circadian_genes.txt", 
-                              as.is = TRUE, header = TRUE, row.names = NULL)
-head(expression.data)
+expression.data <- network.data[,29:34]
+rownames(expression.data) <- network.data$names
+
+# expression.data <- read.table(file="data/athaliana_neutral_circadian_genes.txt", 
+#                               as.is = TRUE, header = TRUE, row.names = NULL)
+#head(expression.data)
 
 #Read mean expression data
-mean.expression <- read.table(file="data/athaliana_neutral_mean_expression.txt", header = TRUE)
-atha.genes <- as.vector(mean.expression$gene)
-mean.expression <- as.matrix(mean.expression[,2:ncol(mean.expression)])
-rownames(mean.expression) <- atha.genes
+#mean.expression <- read.table(file="data/athaliana_neutral_mean_expression.txt", header = TRUE)
+#atha.genes <- as.vector(mean.expression$gene)
+#mean.expression <- as.matrix(mean.expression[,2:ncol(mean.expression)])
+#rownames(mean.expression) <- atha.genes
+mean.expression <- expression.data
+
 
 #Generating the network
 tfs.network <- graph.adjacency(adjmatrix = adj.matrix, mode = "directed")
 
-#Set the angle to each transcription factor. The position (angle) in the network depends on the
-#peak expression
-tfs.angles <- radian.conversion(c(2*15, 8*15, 8*15, 0, 0, 0, 4*15, 8*15, 10*15, 12*15, 
-                                  16*15, 20*15, 4*15, 10*15, 4*15, 4*15, 2*15, 14*15, 8*15, 10*15, 12*15, 
-                                  4*15, 12*15, 10*15, 15*15))
-length(tfs.angles)
+## Set the angle to each transcription factor. The position (angle) in the network depends on the
+## time point at which the ChIP-seq data were collected
+# tfs.angles <- radian.conversion(c(2*15, 8*15, 8*15, 0, 0, 0, 4*15, 8*15, 10*15, 12*15, 
+#                                   16*15, 20*15, 4*15, 10*15, 4*15, 4*15, 2*15, 14*15, 8*15, 10*15, 12*15, 
+#                                   4*15, 12*15, 10*15, 15*15))
+# length(tfs.angles)
+
+tfs.names <- colnames(adj.global.matrix)
+splitted.tfs.names <- strsplit(tfs.names,split="_")
+tfs.angles <- vector(mode="numeric",length=length(tfs.names))
+
+for(i in 1:length(splitted.tfs.names))
+{
+  tfs.angles[i] <- radian.conversion(15*as.numeric(substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))))
+}
 
 #Set a radius to each TF to avoid the overlap
 radius.to.multiply <- c(rep((radius.1*0.8),2), radius.1*0.7,radius.1*0.8,radius.1*0.7,
