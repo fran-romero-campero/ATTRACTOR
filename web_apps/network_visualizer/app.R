@@ -70,11 +70,36 @@ adj.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.matrix) <- network.data$names
 adj.matrix <- adj.matrix[agi.tfs,]
 
-adj.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed_only_tfs.txt"))
-is.matrix(adj.matrix)
-dim(adj.matrix)
-rownames(adj.matrix) == colnames(adj.matrix)
-adj.global.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed.txt"))
+cca1.tf.targets <- adj.matrix[,"CCA1_ZT02"] + adj.matrix[,"CCA1_ZT14"]
+lhy.tf.targets <- adj.matrix[,"LHY_ZT02"]
+toc1.tf.targets <- adj.matrix[,"TOC1_ZT15"]
+prr5.tf.targets <- adj.matrix[,"PRR5_ZT10"]
+prr7.tf.targets <- adj.matrix[,"PRR7_ZT12"]
+prr9.tf.targets <- adj.matrix[,"PRR9_ZT04"]
+phya.tf.targets <- adj.matrix[,"PHYA_ZT00"]
+phyb.tf.targets <- adj.matrix[,"PHYB_ZT00"]
+cry2.tf.targets <- adj.matrix[,"CRY2_ZT08"]
+fhy1.tf.targets <- adj.matrix[,"FHY1_ZT04"]
+lux.tf.targets <- adj.matrix[,"LUX_ZT10"] + adj.matrix[,"LUX_ZT12"]
+pif3.tf.targets <- adj.matrix[,"PIF3_ZT08"]
+pif4.tf.targets <- adj.matrix[,"PIF4_ZT04"]
+pif5.tf.targets <- adj.matrix[,"PIF5_ZT04"]
+elf4.tf.targets <- adj.matrix[,"ELF4_ZT10"]
+elf3.tf.targets <- adj.matrix[,"ELF3_ZT00"] + adj.matrix[,"ELF3_ZT04"]
+
+
+adj.matrix <- matrix(c(cca1.tf.targets, lhy.tf.targets, toc1.tf.targets, prr5.tf.targets, prr7.tf.targets,
+         prr9.tf.targets, phya.tf.targets, phyb.tf.targets, cry2.tf.targets, fhy1.tf.targets,
+         lux.tf.targets, pif3.tf.targets, pif4.tf.targets, pif5.tf.targets, elf4.tf.targets,
+         elf3.tf.targets),ncol=16,nrow=16)
+colnames(adj.matrix) <- agi.tfs
+rownames(adj.matrix) <- agi.tfs
+
+# adj.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed_only_tfs.txt"))
+# is.matrix(adj.matrix)
+# dim(adj.matrix)
+# rownames(adj.matrix) == colnames(adj.matrix)
+# adj.global.matrix <- as.matrix(read.table(file = "data/adjacency_matrix_compressed.txt"))
 
 adj.global.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.global.matrix) <- network.data$names
@@ -108,19 +133,35 @@ tfs.network <- graph.adjacency(adjmatrix = adj.matrix, mode = "directed")
 tfs.names <- colnames(adj.global.matrix)
 splitted.tfs.names <- strsplit(tfs.names,split="_")
 tfs.angles <- vector(mode="numeric",length=length(tfs.names))
+tfs.zts <- vector(mode="numeric",length=length(tfs.names))
 
 for(i in 1:length(splitted.tfs.names))
 {
   tfs.angles[i] <- radian.conversion(15*as.numeric(substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))))
+  tfs.zts[i] <- substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))
 }
 
+zt.multiplicity <- table(tfs.zts)
+
 #Set a radius to each TF to avoid the overlap
-radius.to.multiply <- c(rep((radius.1*0.8),2), radius.1*0.7,radius.1*0.8,radius.1*0.7,
-                        radius.1*0.6, radius.1*0.8,radius.1*0.6,rep((radius.1*0.8),4), 
-                        rep((radius.1*0.7),2), radius.1*0.6, 
-                        radius.1*0.5, radius.1*0.7,radius.1*0.8, 
-                        radius.1*0.5, radius.1*0.6, radius.1*0.7,
-                        radius.1*0.4, radius.1*0.6, radius.1*0.5, radius.1*0.8)
+
+radius.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+node.labels <- vector(mode="numeric",length=length(splitted.tfs.names))
+for(i in 1:length(splitted.tfs.names))
+{
+  node.labels[i] <- splitted.tfs.names[i][[1]][1]
+  current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
+  current.multiplicity <- zt.multiplicity[current.zt]
+  radius.to.multiply[i] <- (1 - 0.2*current.multiplicity)*radius.1
+  zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
+}
+
+# radius.to.multiply <- c(rep((radius.1*0.8),2), radius.1*0.7,radius.1*0.8,radius.1*0.7,
+#                         radius.1*0.6, radius.1*0.8,radius.1*0.6,rep((radius.1*0.8),4), 
+#                         rep((radius.1*0.7),2), radius.1*0.6, 
+#                         radius.1*0.5, radius.1*0.7,radius.1*0.8, 
+#                         radius.1*0.5, radius.1*0.6, radius.1*0.7,
+#                         radius.1*0.4, radius.1*0.6, radius.1*0.5, radius.1*0.8)
 # tfs.x <- (radius.2 - 3) * sin(tfs.angles)
 # tfs.y <- (radius.2 - 3) * cos(tfs.angles)
 
@@ -129,10 +170,10 @@ tfs.x <- radius.to.multiply * sin(tfs.angles)
 tfs.y <- radius.to.multiply * cos(tfs.angles)
 
 #Generatin a positions matrix 
-matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(adj.matrix), ncol = 2)
+matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(adj.matrix), ncol = ncol((adj.global.matrix)))
 
-node.labels <- c("LHY1","CRY2", "PIF3", "PHYA", "PHYB", rep(x = "ELF3", times=7), "FHY1", 
-                 "ELF4", "PIF4", "PRR9", rep(x = "CCA1", times=5), "PIF5", "PRR7", "PRR5", "TOC1")
+# node.labels <- c("LHY1","CRY2", "PIF3", "PHYA", "PHYB", rep(x = "ELF3", times=7), "FHY1", 
+#                  "ELF4", "PIF4", "PRR9", rep(x = "CCA1", times=5), "PIF5", "PRR7", "PRR5", "TOC1")
 
 
 
@@ -226,18 +267,18 @@ server <- function(input, output) {
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
        
         rows.cols.to.keep <- unlist(sapply(to.keep, grep, row.names(adj.matrix)))
-        adj.matrix <- adj.matrix[rows.cols.to.keep,rows.cols.to.keep]
+        tf.adj.matrix <- adj.matrix[rows.cols.to.keep,rows.cols.to.keep]
         
         #Modify adj.matrix and matrix.pos to add the target.gene
-        gene.peak <- expression.data[expression.data$genes==target.agi,"peaks"]
-        gene.peak <- as.numeric(strsplit(gene.peak, split = "ZT")[[1]][2])
-        gene.row <- adj.global.matrix[target.agi,] 
+        gene.peak.str <- subset(network.data, names == target.agi)$peak.zt 
+        gene.peak <- as.numeric(substr(x=gene.peak.str,start=5,stop=nchar(gene.peak.str)))
+        gene.row.complete <- adj.global.matrix[target.agi,] 
         gene.row <- gene.row[rows.cols.to.keep] #remove non selected tfs from the added row
         
         if (input$interactions == "Yes")
         {
           #To show the interactions between the TFs too
-          new.matrix <- cbind(adj.matrix, gene.row)
+          new.matrix <- cbind(tf.adj.matrix, gene.row)
           new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
         } else {
           #To show only the interactions between the TFs and the selected gene.
@@ -275,7 +316,7 @@ server <- function(input, output) {
         plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
                     vertex.color = c(rep(x = "firebrick1",times=nrow(new.matrix)-1),"chartreuse3"), vertex.label=new.node.labels, edge.arrow.size = 0.6, 
                     edge.arrow.width=1, edge.curved= TRUE, edge.width = 1, vertex.label.dist = 0,
-                    vertex.label.cex=0.4, vertex.label.font=2)
+                    vertex.label.cex=1, vertex.label.font=2)
         
         
       } else {
