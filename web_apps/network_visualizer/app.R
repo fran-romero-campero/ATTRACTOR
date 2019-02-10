@@ -27,6 +27,8 @@ library(igraph)
 ##Parameters
 radius.1 <- 100 #Outer circle radius
 
+## Read graph adjacency matrix
+network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 
 # columns(org.At.tair.db)
 my.key <- keys(org.At.tair.db, keytype="ENTREZID")
@@ -35,7 +37,9 @@ alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytyp
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 #target.alias <- alias[target.genes]
-alias[is.na(alias)] <- "" 
+alias[is.na(alias)] <- ""
+## Filtering only gene in network
+alias <- alias[network.data$names]
 genes <- paste(names(alias), alias, sep=" - ")
 
 agis <-alias2symbol.table$TAIR
@@ -61,10 +65,20 @@ x.circle.2 <- radius.2 * sin(angle)
 y.circle.2 <- radius.2 * cos(angle)
 
 ## Read graph adjacency matrix
-network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790","AT1G09570",
              "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530", "AT2G43010", "AT3G59060",
              "AT2G40080", "AT2G25930")
+name.tfs <- c("CCA1", "LHY",  "TOC1", "PRR5", "PRR7", "PRR9", "PHYA", "PHYB", "CRY2", "FHY1", "LUX", "PIF3",
+              "PIF4", "PIF5", "ELF4", "ELF3")
+agi.tfs.zts <- list(c("ZT02","ZT14"),
+                    c("ZT02"),c("ZT15"),c("ZT10"),c("ZT12"),c("ZT04"),c("ZT00"),c("ZT00"),
+                    c("ZT08"),c("ZT04"),c("ZT10","ZT12"),c("ZT08"),c("ZT04"),c("ZT04"),
+                    c("ZT10"),c("ZT00","ZT04"))
+
+agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
+names(agi.tfs.zts) <- agi.tfs
+names(agi.tfs.zts.multiplicity) <- agi.tfs
+names(name.tfs) <- agi.tfs
 
 adj.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.matrix) <- network.data$names
@@ -105,8 +119,8 @@ adj.global.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.global.matrix) <- network.data$names
 
 #Read expression data table
-expression.data <- network.data[,29:34]
-rownames(expression.data) <- network.data$names
+#expression.data <- network.data[,29:34]
+#rownames(expression.data) <- network.data$names
 
 # expression.data <- read.table(file="data/athaliana_neutral_circadian_genes.txt", 
 #                               as.is = TRUE, header = TRUE, row.names = NULL)
@@ -117,11 +131,14 @@ rownames(expression.data) <- network.data$names
 #atha.genes <- as.vector(mean.expression$gene)
 #mean.expression <- as.matrix(mean.expression[,2:ncol(mean.expression)])
 #rownames(mean.expression) <- atha.genes
-mean.expression <- expression.data
+
+mean.expression <- network.data[,29:34]
+rownames(mean.expression) <- network.data$names
+#mean.expression <- expression.data
 
 
 #Generating the network
-tfs.network <- graph.adjacency(adjmatrix = adj.matrix, mode = "directed")
+#tfs.network <- graph.adjacency(adjmatrix = adj.matrix, mode = "directed")
 
 ## Set the angle to each transcription factor. The position (angle) in the network depends on the
 ## time point at which the ChIP-seq data were collected
@@ -152,7 +169,7 @@ for(i in 1:length(splitted.tfs.names))
   node.labels[i] <- splitted.tfs.names[i][[1]][1]
   current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
   current.multiplicity <- zt.multiplicity[current.zt]
-  radius.to.multiply[i] <- (1 - 0.2*current.multiplicity)*radius.1
+  radius.to.multiply[i] <- (1 - (0.2*current.multiplicity))*radius.1
   zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
 }
 
@@ -170,7 +187,7 @@ tfs.x <- radius.to.multiply * sin(tfs.angles)
 tfs.y <- radius.to.multiply * cos(tfs.angles)
 
 #Generatin a positions matrix 
-matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(adj.matrix), ncol = ncol((adj.global.matrix)))
+matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
 
 # node.labels <- c("LHY1","CRY2", "PIF3", "PHYA", "PHYB", rep(x = "ELF3", times=7), "FHY1", 
 #                  "ELF4", "PIF4", "PRR9", rep(x = "CCA1", times=5), "PIF5", "PRR7", "PRR5", "TOC1")
@@ -237,7 +254,7 @@ server <- function(input, output) {
     output$network <- renderPlot({
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       
-      if (target.agi %in% row.names(adj.global.matrix)) {
+#      if (target.agi %in% row.names(adj.global.matrix)) {
         #Plot circle
         par(mar=c(0,0,0,0))
         plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
@@ -262,33 +279,70 @@ server <- function(input, output) {
           to.keep <- agis[sel.tfs]
           
         } else {
-          to.keep <- agis[input$selected.tfs]
+          selected.tfs.agi <- agis[input$selected.tfs]
+          to.keep <- rep(FALSE,ncol(adj.global.matrix))
+          for(i in 1:length(input$selected.tfs))
+          {
+            to.keep <- (to.keep | grepl(input$selected.tfs[i],colnames(adj.global.matrix)))
+          }
         }
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
-       
-        rows.cols.to.keep <- unlist(sapply(to.keep, grep, row.names(adj.matrix)))
-        tf.adj.matrix <- adj.matrix[rows.cols.to.keep,rows.cols.to.keep]
+        adj.matrix.to.represent <- adj.global.matrix[selected.tfs.agi,to.keep]
+        
+        new.row.names <- c()
+        updated.adj.matrix.to.represent <- c()
+        for(i in 1:nrow(adj.matrix.to.represent))
+        {
+          current.tf.name <- name.tfs[rownames(adj.matrix.to.represent)[i]]
+          current.tf.zts <- agi.tfs.zts[[rownames(adj.matrix.to.represent)[i]]]
+          current.tf.name.zt <- paste(current.tf.name,current.tf.zts,sep="_")
+          new.row.names <- c(new.row.names,current.tf.name.zt)
+          if(length(current.tf.zts) > 1)
+          {
+            updated.adj.matrix.to.represent <- rbind(
+              rbind(updated.adj.matrix.to.represent,
+                   adj.matrix.to.represent[i,]),
+              adj.matrix.to.represent[i,])
+          } else
+          {
+            updated.adj.matrix.to.represent <-rbind(updated.adj.matrix.to.represent,
+                                                    adj.matrix.to.represent[i,])
+          }
+        }
+        
+        rownames(updated.adj.matrix.to.represent) <- new.row.names
+        updated.adj.matrix.to.represent <- rbind(updated.adj.matrix.to.represent,adj.global.matrix[target.agi,to.keep])
+        updated.adj.matrix.to.represent <- cbind(updated.adj.matrix.to.represent,rep(0,nrow(updated.adj.matrix.to.represent)))
+        
+        #rows.cols.to.keep <- unlist(sapply(to.keep, grep, row.names(adj.matrix)))
+        #tf.adj.matrix <- adj.matrix[rows.cols.to.keep,rows.cols.to.keep]
         
         #Modify adj.matrix and matrix.pos to add the target.gene
         gene.peak.str <- subset(network.data, names == target.agi)$peak.zt 
         gene.peak <- as.numeric(substr(x=gene.peak.str,start=5,stop=nchar(gene.peak.str)))
-        gene.row.complete <- adj.global.matrix[target.agi,] 
-        gene.row <- gene.row[rows.cols.to.keep] #remove non selected tfs from the added row
+        #gene.row.complete <- adj.global.matrix[target.agi,] 
+        #gene.row <- gene.row[rows.cols.to.keep] #remove non selected tfs from the added row
         
         if (input$interactions == "Yes")
         {
           #To show the interactions between the TFs too
-          new.matrix <- cbind(tf.adj.matrix, gene.row)
-          new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
+          #new.matrix <- cbind(tf.adj.matrix, gene.row)
+          #new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
+          new.matrix <- updated.adj.matrix.to.represent
         } else {
           #To show only the interactions between the TFs and the selected gene.
-          rownames.matrix <- row.names(adj.matrix)
-          null.matrix <- matrix(data = rep(x = 0, times=length(rownames.matrix)^2),
-                                byrow = TRUE, ncol = length(rownames.matrix), nrow = length(rownames.matrix))
-          rownames(null.matrix) <- rownames.matrix
-          colnames(null.matrix) <- rownames.matrix
-          new.matrix <- cbind(null.matrix, gene.row)
-          new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
+          number.tfs <- nrow(updated.adj.matrix.to.represent) - 1
+          new.matrix <- updated.adj.matrix.to.represent
+          new.matrix[1:number.tfs,] <- 0
+          new.matrix <- t(new.matrix)
+          
+          # rownames.matrix <- row.names(adj.matrix)
+          # null.matrix <- matrix(data = rep(x = 0, times=length(rownames.matrix)^2),
+          #                       byrow = TRUE, ncol = length(rownames.matrix), nrow = length(rownames.matrix))
+          # rownames(null.matrix) <- rownames.matrix
+          # colnames(null.matrix) <- rownames.matrix
+          # new.matrix <- cbind(null.matrix, gene.row)
+          # new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
           
         }
 
@@ -298,9 +352,9 @@ server <- function(input, output) {
         
         #First, modify the angles, radius, and labels positions to keep only 
         #the selected tfs
-        tfs.angles <- tfs.angles[rows.cols.to.keep]
-        radius.to.multiply <- radius.to.multiply[rows.cols.to.keep]
-        node.labels <- node.labels[rows.cols.to.keep]
+        tfs.angles <- tfs.angles[to.keep]
+        radius.to.multiply <- radius.to.multiply[to.keep]
+        node.labels <- node.labels[to.keep]
         
         #Modify the angles, the radius and the positions to add the new node
         new.tfs.angles <- c(tfs.angles, radian.conversion(gene.peak*15))
@@ -319,12 +373,12 @@ server <- function(input, output) {
                     vertex.label.cex=1, vertex.label.font=2)
         
         
-      } else {
-        #par(mar = c(0,0,0,0))
-        plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
-        text(x=0.5, y = 0.5, paste("The", target.agi, "gene does not present a circadian expression pattern"), cex = 0.7)
-      }
-      
+      # } else {
+      #   #par(mar = c(0,0,0,0))
+      #   plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+      #   text(x=0.5, y = 0.5, paste("The", target.agi, "gene does not present a circadian expression pattern"), cex = 0.7)
+      # }
+      # 
        }, height = 650, width = 650)
     
   })
