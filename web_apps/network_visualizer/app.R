@@ -31,21 +31,22 @@ radius.1 <- 100 #Outer circle radius
 network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 
 # columns(org.At.tair.db)
+## Extract gene ids
+genes <- sort(network.data$name)
+
+## Load all and circadian genes
 my.key <- keys(org.At.tair.db, keytype="ENTREZID")
 my.col <- c("SYMBOL", "TAIR")
 alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
-#target.alias <- alias[target.genes]
-alias[is.na(alias)] <- ""
-## Filtering only gene in network
-alias <- alias[network.data$names]
+alias[is.na(alias)] <- "" 
 genes <- paste(names(alias), alias, sep=" - ")
 
 agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
 agis[is.na(agis)] <- ""
-
 
 ##Functions
 #Function for radian conversion
@@ -74,6 +75,9 @@ agi.tfs.zts <- list(c("ZT02","ZT14"),
                     c("ZT02"),c("ZT15"),c("ZT10"),c("ZT12"),c("ZT04"),c("ZT00"),c("ZT00"),
                     c("ZT08"),c("ZT04"),c("ZT10","ZT12"),c("ZT08"),c("ZT04"),c("ZT04"),
                     c("ZT10"),c("ZT00","ZT04"))
+
+tfs.selectize <- c("CCA1", "LHY",  "TOC1", "PRR5", "PRR7", "PRR9", "PHYA", "PHYB", "CRY2", "FHY1", "LUX", "PIF3",
+                   "PIF4", "PIF5", "ELF4", "ELF3")
 
 agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
 names(agi.tfs.zts) <- agi.tfs
@@ -169,7 +173,7 @@ for(i in 1:length(splitted.tfs.names))
   node.labels[i] <- splitted.tfs.names[i][[1]][1]
   current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
   current.multiplicity <- zt.multiplicity[current.zt]
-  radius.to.multiply[i] <- (1 - (0.2*current.multiplicity))*radius.1
+  radius.to.multiply[i] <- (1 - (0.16*current.multiplicity))*radius.1
   zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
 }
 
@@ -214,9 +218,9 @@ ui <- fluidPage(
         
         checkboxGroupInput(inputId = "selected.tfs",
                            label = "Select Transcription Factors:",
-                           choices = list("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3",
-                                          "FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5",
-                                          "PRR7","PRR5","TOC1"), 
+                           choices = tfs.selectize,#list("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3",
+                                          #"FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5",
+                                          #"PRR7","PRR5","TOC1"), 
                            inline = TRUE, 
                            width = "100%"),
         

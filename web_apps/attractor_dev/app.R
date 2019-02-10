@@ -139,7 +139,6 @@ genes <- sort(network.data$name)
 ## Load all and circadian genes
 my.key <- keys(org.At.tair.db, keytype="ENTREZID")
 my.col <- c("SYMBOL", "TAIR")
-columns(org.At.tair.db)
 alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
 alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
