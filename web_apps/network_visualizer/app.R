@@ -17,7 +17,7 @@
 #          Francisco J. Romero-Campero
 # 
 # Contact: Francisco J. Romero-Campero - fran@us.es 
-# Date: September 2018
+# Date: February 2019
 
 
 library(shiny)
@@ -136,8 +136,9 @@ rownames(adj.global.matrix) <- network.data$names
 #mean.expression <- as.matrix(mean.expression[,2:ncol(mean.expression)])
 #rownames(mean.expression) <- atha.genes
 
-mean.expression <- network.data[,29:34]
+mean.expression <- as.matrix(network.data[,29:34])
 rownames(mean.expression) <- network.data$names
+
 #mean.expression <- expression.data
 
 
@@ -196,7 +197,9 @@ matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
 # node.labels <- c("LHY1","CRY2", "PIF3", "PHYA", "PHYB", rep(x = "ELF3", times=7), "FHY1", 
 #                  "ELF4", "PIF4", "PRR9", rep(x = "CCA1", times=5), "PIF5", "PRR7", "PRR5", "TOC1")
 
-
+selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
+names(selected.colors) <- peak.times
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -213,7 +216,7 @@ ui <- fluidPage(
         selectizeInput(inputId="target.gene", 
                        label="Target gene", 
                        choices=genes, 
-                       selected = "AT1G22770", 
+                       selected = "AT1G22770 - GI", 
                        multiple = FALSE),
         
         checkboxGroupInput(inputId = "selected.tfs",
@@ -327,12 +330,14 @@ server <- function(input, output) {
         #gene.row.complete <- adj.global.matrix[target.agi,] 
         #gene.row <- gene.row[rows.cols.to.keep] #remove non selected tfs from the added row
         
+        target.color <- selected.colors[paste0("peak",gene.peak)]
+        
         if (input$interactions == "Yes")
         {
           #To show the interactions between the TFs too
           #new.matrix <- cbind(tf.adj.matrix, gene.row)
           #new.matrix <- rbind(new.matrix, rep(0,ncol(new.matrix)))
-          new.matrix <- updated.adj.matrix.to.represent
+          new.matrix <- t(updated.adj.matrix.to.represent)
         } else {
           #To show only the interactions between the TFs and the selected gene.
           number.tfs <- nrow(updated.adj.matrix.to.represent) - 1
@@ -372,9 +377,9 @@ server <- function(input, output) {
         #Plot the network
         #par(mar = c(4,4,4,4))
         plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
-                    vertex.color = c(rep(x = "firebrick1",times=nrow(new.matrix)-1),"chartreuse3"), vertex.label=new.node.labels, edge.arrow.size = 0.6, 
-                    edge.arrow.width=1, edge.curved= TRUE, edge.width = 1, vertex.label.dist = 0,
-                    vertex.label.cex=1, vertex.label.font=2)
+                    vertex.color = c(rep(x = "firebrick1",times=nrow(new.matrix)-1),target.color), vertex.label=new.node.labels, edge.arrow.size = 0.6, 
+                    edge.arrow.width=1, edge.curved= TRUE, edge.width = 2, vertex.label.dist = 0,
+                    vertex.label.cex=1, vertex.label.font=2,vertex.label.color="black")
         
         
       # } else {
@@ -390,10 +395,11 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$button, handlerExpr = {
     output$expression <- renderPlot({
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
-      gene.expression <- scale(mean.expression[target.agi,])
+      gene.expression <- as.vector(scale(mean.expression[target.agi,]))
+      gene.expression <- c(gene.expression, gene.expression[1])
       
-      plot(x=seq(from=0,to=20,by=4),gene.expression,
-           type="o",lwd=3,cex=1.5,
+      plot(x=seq(from=0,to=24,by=4),gene.expression,
+           type="o",lwd=5,cex=1.5,
            ylim=c(-2.5,2),xlim=c(0,24),
            col="darkgreen",axes=FALSE,xlab="",ylab="", 
            main=paste(target.agi, alias[target.agi],sep=" - "))
@@ -405,7 +411,7 @@ server <- function(input, output) {
       mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.3,at = 0)
       axis(side = 1,at=seq(from=0,to=24,by=2),line=-1,las=2,labels = paste("ZT",seq(from=0,to=24,by=2),sep=""),lwd=2)
       
-    })
+    }, height = 600)
     
   })
   
