@@ -25,15 +25,71 @@ network.representation <- read.table(file="../web_apps/attractor_dev/data/attrac
 head(network.representation)
 
 ## Extract gene expression profiles
-expression.profiles <- as.matrix(network.representation[,c("ZT0","ZT4","ZT8","ZT12","ZT16","ZT20")])
+expression.profiles <- as.matrix(network.representation[,c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")])
 rownames(expression.profiles) <- network.representation$names
 head(expression.profiles)
 
 ## Extract regulatory matrix
-regularoty.matrix <- network.representation[,35:53]
-rownames(regularoty.matrix) <- network.representation$names
-head(regularoty.matrix)
+regulatory.matrix <- network.representation[,35:53]
+rownames(regulatory.matrix) <- network.representation$names
+head(regulatory.matrix)
 
-target.gene <- "AT1G22770"
+## Auxiliary function to determine surronding ZTs
+zts.to.consider <- function(zt.point)
+{
+  zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
+  zts.numeric <- seq(from=0,to=20,by=4)
+  
+  if(zt.point %in% zts)
+  {
+    return(c(zt.point, zts[which(zts == zt.point) + 1]))
+  } else
+  {
+    current.zt.numeric <- as.numeric(substr(zt.point,start=3,stop=nchar(current.regulator.zt)))
+    next.zt <- zts[which(zts.numeric >= current.zt.numeric)[1]]
+    previous.zt <- zts[which(zts.numeric >= current.zt.numeric)[1] - 1]
+    return(c(previous.zt, next.zt))
+  }
+}
 
-gene.expression.profile <- expression.profiles[target.gene,]
+gene.names <- network.representation$names
+
+for(i in 1:length(gene.names))
+{
+  target.gene <- gene.names[i]
+  gene.expression.profile <- expression.profiles[target.gene,]
+  
+  if(sum(is.na(gene.expression.profile)) == 0)
+  {
+    gene.regulators <- regulatory.matrix[target.gene,]
+    gene.regulators.names <- names(gene.regulators)
+    
+    for(j in 1:length(gene.regulators))
+    {
+      if(gene.regulators[j] != 0)
+      {
+        current.regulator <- gene.regulators.names[j]
+        current.regulator.zt <- strsplit(current.regulator, split="_")[[1]][2]
+        zts.to.check <- zts.to.consider(zt.point = current.regulator.zt)
+        
+        increment <- gene.expression.profile[zts.to.check[2]] - gene.expression.profile[zts.to.check[1]]
+        relative.increment <- increment / gene.expression.profile[zts.to.check[1]]
+        
+        if(relative.increment > 0)
+        {
+          regulatory.matrix[target.gene,current.regulator] <- 1
+        } else 
+        {
+          regulatory.matrix[target.gene,current.regulator] <- -1
+        }
+      }
+    }
+  }
+}
+
+head(regulatory.matrix)
+
+network.representation[,35:53] <- regulatory.matrix
+
+write.table(network.representation, file="attractor_network_representation.tsv", sep = "\t", quote = FALSE,
+            row.names = FALSE)

@@ -343,6 +343,8 @@ server <- function(input, output) {
           number.tfs <- nrow(updated.adj.matrix.to.represent) - 1
           new.matrix <- updated.adj.matrix.to.represent
           new.matrix[1:number.tfs,] <- 0
+          colnames(new.matrix)[number.tfs+1] <- alias[target.agi]
+          rownames(new.matrix)[number.tfs+1] <- alias[target.agi]
           new.matrix <- t(new.matrix)
           
           # rownames.matrix <- row.names(adj.matrix)
@@ -357,7 +359,19 @@ server <- function(input, output) {
 
                 
         #Generating the complete network
-        tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed")
+        tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
+        edge.weights <- E(tfs.network)$weight
+        
+        for(k in 1:length(edge.weights))
+        {
+          if(edge.weights[k] == 1)
+          {
+            E(tfs.network)$color[k] <- "darkgreen"
+          } else if(edge.weights[k] == -1)
+          {
+            E(tfs.network)$color[k] <- "darkred"
+          }
+        }
         
         #First, modify the angles, radius, and labels positions to keep only 
         #the selected tfs
