@@ -562,13 +562,13 @@ total.randomisation <- number.randomisation*nrow(combinations) #just to see the 
 i <- 5
 for (i in 1:nrow(combinations))
 {
-  peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
+  peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
   real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
   random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
   for(j in 1:number.randomisation)
   {
-    print(paste0(((i-1*number.randomisation)+j)/total.randomisation, " %"))
+    print(paste0((((i-1)*number.randomisation)+j)/total.randomisation, " %"))
     random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
     for(k in 1:nrow(peaks2))
     {
