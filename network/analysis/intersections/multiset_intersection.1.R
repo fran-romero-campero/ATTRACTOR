@@ -513,7 +513,7 @@ nrow(first)
 second <- intersectBed(first, peaks3)
 nrow(second)
 
-## Permutation of mark regions
+## Permutation of peaks.set2 (random.peaks2) and comparing with peaks.set1 ####
 chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
 number.randomisation <- 20 #100000
 
@@ -539,7 +539,6 @@ for(j in 1:number.randomisation)
     random.peaks2[i,3] <- random.end
   }
   
-  #Saving random mark data in a file and counting REAL TF binding sites in random marks
   
   random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
   
@@ -548,6 +547,58 @@ for(j in 1:number.randomisation)
 
 }
 
+
+##Loop to check the intersection of binding regions (bed files) between all the transcription factors together and store the results in a table####
+number.randomisation <- 5
+bed.files <- list.files(path = "../../../web_apps/peak_visualizer/data/bed_files/", pattern = "peaks.narrowPeak")
+
+combinations <- expand.grid(bed.files, bed.files)
+bed.intersections <- matrix(ncol = 5, nrow = nrow(combinations))
+colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "Genes")
+
+i <- 5
+for (i in 1:nrow(combinations))
+{
+  peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
+  peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
+  real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
+  random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
+  for(j in 1:number.randomisation)
+  {
+    print(paste0("randomisation number ",j, " of combination number ", i))
+    random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
+    for(k in 1:nrow(peaks2))
+    {
+        current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
+        current.start <- peaks2[k,2] #Start de la iésima marca real
+        current.end <- peaks2[k,3] #End de la iésima marca real
+        current.length <- current.end - current.start #Longitud de la iésima marca real
+        
+        chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
+        #Ahora genero los mismos datos para regiones aleatorias
+        random.start <- floor(runif(n = 1,min = 1,max = chr.length))
+        random.end <- random.start + current.length
+        
+        random.peaks2[k,1] <- current.chr
+        random.peaks2[k,2] <- random.start
+        random.peaks2[k,3] <- random.end
+      }
+    
+    
+    random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
+    
+    
+  }
+  
+  p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
+  
+  bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
+  bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
+  bed.intersections[i,3] <- p.value
+
+}
+
+write.table(bed.intersections, file = "bed_intersections.txt", sep = "\t")
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
