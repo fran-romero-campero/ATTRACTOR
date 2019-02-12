@@ -447,10 +447,10 @@ for (i in 1:length(top.parameters))
 
 #####Intersections between binding regions in DNA (BED files)####
 #Reading the bed files of the transcription factors
-peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR5_1_peaks.narrowPeak")
+peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/CCA1_ZT02_peaks.narrowPeak")
 head(peaks1)
 
-peaks2 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR7_peaks.narrowPeak")
+peaks2 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/CCA1_peaks.narrowPeak")
 head(peaks2)
 
 peaks3 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR9_1_peaks.narrowPeak")
@@ -462,7 +462,7 @@ length.sets <- sapply(X = peaks.list, FUN = nrow)
 
 
 peaks.set1 <- peaks1
-peaks.set2 <- random.peaks2
+peaks.set2 <- peaks2
 
 #intersectBed function 
 intersectBed <- function(peaks.set1, peaks.set2)
@@ -472,7 +472,7 @@ intersectBed <- function(peaks.set1, peaks.set2)
   for (i in 1:nrow(peaks.set1))
   {
     #Set the current peak values of set1
-    current.chr <- peaks.set1[i,1]
+    current.chr <- as.numeric(peaks.set1[i,1])
     current.start <- peaks.set1[i,2]
     current.end <- peaks.set1[i,3]
     #Checking if there is intersection between the current peak and any peak of set2
@@ -512,6 +512,7 @@ first <- intersectBed(peaks1, peaks2)
 nrow(first)
 second <- intersectBed(first, peaks3)
 nrow(second)
+
 
 ## Permutation of peaks.set2 (random.peaks2) and comparing with peaks.set1 ####
 chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
@@ -556,6 +557,8 @@ combinations <- expand.grid(bed.files, bed.files)
 bed.intersections <- matrix(ncol = 5, nrow = nrow(combinations))
 colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "Genes")
 
+total.randomisation <- number.randomisation*nrow(combinations) #just to see the progress
+
 i <- 5
 for (i in 1:nrow(combinations))
 {
@@ -565,7 +568,7 @@ for (i in 1:nrow(combinations))
   random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
   for(j in 1:number.randomisation)
   {
-    print(paste0("randomisation number ",j, " of combination number ", i))
+    print(paste0(((i-1*number.randomisation)+j)/total.randomisation, " %"))
     random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
     for(k in 1:nrow(peaks2))
     {
