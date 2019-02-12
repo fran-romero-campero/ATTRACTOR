@@ -463,6 +463,7 @@ length.sets <- sapply(X = peaks.list, FUN = nrow)
 
 peaks.set1 <- peaks1
 peaks.set2 <- peaks2
+peaks.set2 <- random.peaks2
 
 #intersectBed function 
 intersectBed <- function(peaks.set1, peaks.set2)
@@ -489,13 +490,13 @@ intersectBed <- function(peaks.set1, peaks.set2)
         hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start)
         current.intersection[1,1] <- current.chr
         current.intersection[1,2] <- current.start
-        current.intersection[1,3] <- hit.peak2[,3]
+        current.intersection[1,3] <- hit.peak2[1,3]
         
       }else
       {
         hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end)
         current.intersection[1,1] <- current.chr
-        current.intersection[1,2] <- hit.peak2[,2]
+        current.intersection[1,2] <- hit.peak2[1,2]
         current.intersection[1,3] <- current.end
       }
       
@@ -559,7 +560,7 @@ colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "Genes")
 
 total.randomisation <- number.randomisation*nrow(combinations) #just to see the progress
 
-i <- 5
+i <- 9
 for (i in 1:nrow(combinations))
 {
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
