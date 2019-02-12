@@ -515,7 +515,7 @@ nrow(second)
 
 ## Permutation of mark regions
 chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
-number.randomisation <- 5 #100000
+number.randomisation <- 20 #100000
 
 random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
 for(j in 1:number.randomisation)
@@ -543,12 +543,9 @@ for(j in 1:number.randomisation)
   
   random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
   
-  
-  # #Read the file and save the average number of REAL TF binding sites in random marks
-  # tfs.binding.sites.in.random.marks <- read.table(file="tf_binding_sites_in_random_mark.txt",header = FALSE,as.is=TRUE)
-  # head(tfs.binding.sites.in.random.marks)
-  # 
-  # random.tfs[j] <- mean(tfs.binding.sites.in.random.marks$V4) 
+  p.value <- sum(random.intersections > nrow(first)) / number.randomisation
+  p.value 
+
 }
 
 
