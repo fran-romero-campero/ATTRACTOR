@@ -217,7 +217,7 @@ head(attractor.data)
 nrow(attractor.data)
 gene.names <- attractor.data$names
 
-threshold <- 0.90 #Here you can change the threshold
+threshold <- 0.75 #Here you can change the threshold
 
 indegree.threshold <- quantile(attractor.data$indegree, prob=threshold)
 indegree.top <- gene.names[attractor.data$indegree > indegree.threshold]
@@ -447,13 +447,13 @@ for (i in 1:length(top.parameters))
 
 #####Intersections between binding regions in DNA (BED files)####
 #Reading the bed files of the transcription factors
-peaks1 <- read.table(file = "bed.files/PRR5_1_peaks.narrowPeak")
+peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR5_1_peaks.narrowPeak")
 head(peaks1)
 
-peaks2 <- read.table(file = "bed.files/PRR7_peaks.narrowPeak")
+peaks2 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR7_peaks.narrowPeak")
 head(peaks2)
 
-peaks3 <- read.table(file = "bed.files/PRR9_1_peaks.narrowPeak")
+peaks3 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR9_1_peaks.narrowPeak")
 head(peaks3)
 
 peaks.list <- list(peaks1, peaks2, peaks3)
@@ -462,51 +462,9 @@ length.sets <- sapply(X = peaks.list, FUN = nrow)
 
 
 peaks.set1 <- peaks1
-peaks.set2 <- peaks2
+peaks.set2 <- random.peaks2
 
-#---Loop to get the intersection between two set of beds---#
-i <- 89
-
-#Initialize matrix
-intersection <- matrix(ncol = 3, nrow=0 )
-current.intersection <- matrix(ncol = 3 )
-for (i in 1:nrow(peaks.set1))
-{
-  #Set the current peak values of set1
-  current.chr <- peaks.set1[i,1]
-  current.start <- peaks.set1[i,2]
-  current.end <- peaks.set1[i,3]
-  #Checking if there is intersection between the current peak and any peak of set2
-  option1 <- nrow(subset(peaks.set2, V1==current.chr & V2<=current.start & V3>=current.start))
-  option2 <- nrow(subset(peaks.set2, V1==current.chr & V2<=current.end & V3>=current.end))
- 
-  print(i)
-  
-  if(option1+option2 > 0)
-  {
-    print("HIT")
-    if(option1>0)
-    {
-      hit.peak2 <- subset(peaks.set2, V1==current.chr & V2<=current.start & V3>=current.start)
-      current.intersection[1,1] <- current.chr
-      current.intersection[1,2] <- current.start
-      current.intersection[1,3] <- hit.peak2$V3
-      
-    }else
-    {
-      hit.peak2 <- subset(peaks.set2, V1==current.chr & V2<=current.end & V3>=current.end)
-      current.intersection[1,1] <- current.chr
-      current.intersection[1,2] <- hit.peak2$V2
-      current.intersection[1,3] <- current.end
-    }
-    
-    intersection <- rbind(intersection, current.intersection)
-  }
-}
-
-
-
-#intersectBed function (contains the previous loop)
+#intersectBed function 
 intersectBed <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=0 )
@@ -518,26 +476,26 @@ intersectBed <- function(peaks.set1, peaks.set2)
     current.start <- peaks.set1[i,2]
     current.end <- peaks.set1[i,3]
     #Checking if there is intersection between the current peak and any peak of set2
-    option1 <- nrow(subset(peaks.set2, V1==current.chr & V2<=current.start & V3>=current.start))
-    option2 <- nrow(subset(peaks.set2, V1==current.chr & V2<=current.end & V3>=current.end))
+    option1 <- nrow(subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start))
+    option2 <- nrow(subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end))
     
-    print(i)
+    # print(i)
     
     if(option1+option2 > 0)
     {
-      print("HIT")
+      # print("HIT")
       if(option1>0)
       {
-        hit.peak2 <- subset(peaks.set2, V1==current.chr & V2<=current.start & V3>=current.start)
+        hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start)
         current.intersection[1,1] <- current.chr
         current.intersection[1,2] <- current.start
-        current.intersection[1,3] <- hit.peak2$V3
+        current.intersection[1,3] <- hit.peak2[,3]
         
       }else
       {
-        hit.peak2 <- subset(peaks.set2, V1==current.chr & V2<=current.end & V3>=current.end)
+        hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end)
         current.intersection[1,1] <- current.chr
-        current.intersection[1,2] <- hit.peak2$V2
+        current.intersection[1,2] <- hit.peak2[,2]
         current.intersection[1,3] <- current.end
       }
       
@@ -551,9 +509,49 @@ intersectBed <- function(peaks.set1, peaks.set2)
 # the intersection between three bed files, you can do it in a consecutive manner. 
 
 first <- intersectBed(peaks1, peaks2)
+nrow(first)
 second <- intersectBed(first, peaks3)
-second
+nrow(second)
 
-cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
+## Permutation of mark regions
+chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
+number.randomisation <- 5 #100000
+
+random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
+for(j in 1:number.randomisation)
+{
+  print(j)
+  random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la marca aleatoria.
+  for(i in 1:nrow(peaks2))
+  {
+    current.chr <- peaks2[i,1][[1]] #Chr de la iésima marca real
+    current.start <- peaks2[i,2] #Start de la iésima marca real
+    current.end <- peaks2[i,3] #End de la iésima marca real
+    current.length <- current.end - current.start #Longitud de la iésima marca real
+    
+    chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
+    #Ahora genero los mismos datos para marcas aleatorias
+    random.start <- floor(runif(n = 1,min = 1,max = chr.length))
+    random.end <- random.start + current.length
+    
+    random.peaks2[i,1] <- current.chr
+    random.peaks2[i,2] <- random.start
+    random.peaks2[i,3] <- random.end
+  }
+  
+  #Saving random mark data in a file and counting REAL TF binding sites in random marks
+  
+  random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
+  
+  
+  # #Read the file and save the average number of REAL TF binding sites in random marks
+  # tfs.binding.sites.in.random.marks <- read.table(file="tf_binding_sites_in_random_mark.txt",header = FALSE,as.is=TRUE)
+  # head(tfs.binding.sites.in.random.marks)
+  # 
+  # random.tfs[j] <- mean(tfs.binding.sites.in.random.marks$V4) 
+}
+
+
+# cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
 
