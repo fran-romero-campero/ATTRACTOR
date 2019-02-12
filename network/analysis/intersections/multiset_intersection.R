@@ -602,7 +602,7 @@ for (i in 1:nrow(combinations))
 
 }
 
-write.table(bed.intersections, file = "bed_intersections.txt", sep = "\t")
+write.table(bed.intersections, file = "bed_intersections.txt", sep = "\t", row.names = FALSE)
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
