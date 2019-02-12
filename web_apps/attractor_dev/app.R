@@ -578,7 +578,7 @@ server <- function(input, output) {
       
     }
     
-    result <- intersect2sets(set1 = top.genes, set2 = zt.genes, alias = alias, gene.descriptions = description)
+    result <- intersect2sets(set1 = top.genes, set2 = zt.genes, alias = alias, gene.descriptions = gene.description)
     p.value <- result[1][[1]]
     enrichment <- result[2][[1]]
     intersect.genes <- result[3][[1]]$intersection.genes
