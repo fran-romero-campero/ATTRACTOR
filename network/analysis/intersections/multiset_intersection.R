@@ -559,18 +559,21 @@ combinations <- expand.grid(bed.files, bed.files)
 bed.intersections <- matrix(ncol = 6, nrow = nrow(combinations))
 colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "number of intersections", "Genes" )
 
-total.randomisation <- number.randomisation*nrow(combinations) #just to see the progress
+
+txdb <- TxDb.Athaliana.BioMart.plantsmart28
 
 i <- 9
-for (i in 1:5)#nrow(combinations))
+# for (i in 1:5)
+for (i in 1:nrow(combinations))
 {
+  # print(paste0("test number ", i, " of ", nrow(combinations)))
+  print(paste0((i/nrow(combinations))*100, " %"))
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
   peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
   real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
   random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
   for(j in 1:number.randomisation)
   {
-    print(paste0((((i-1)*number.randomisation)+j)/total.randomisation, " %"))
     random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
     for(k in 1:nrow(peaks2))
     {
@@ -597,10 +600,30 @@ for (i in 1:5)#nrow(combinations))
   
   p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
   
+  colnames(real.intersection) <- c("chromosome", "start", "end")
+  granges.intersection <- makeGRangesFromDataFrame(real.intersection,
+                                                   keep.extra.columns=FALSE,
+                                                   ignore.strand=FALSE,
+                                                   seqinfo=NULL,
+                                                   seqnames.field="chromosome",
+                                                   start.field="start",
+                                                   end.field="end",
+                                                   starts.in.df.are.0based=FALSE)
+  
+  
+  
+  peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+                           TxDb=txdb, annoDb="org.At.tair.db")
+  
+  annot.peaks <- as.data.frame(peakAnno)
+  target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+  target.genes <- paste(target.genes, collapse = ",")
+  
   bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
   bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
   bed.intersections[i,3] <- p.value
   bed.intersections[i,5] <- nrow(real.intersection)
+  bed.intersections[i,6] <- target.genes
   
   
 
@@ -630,6 +653,7 @@ peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
 
 annot.peaks <- as.data.frame(peakAnno)
 target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+target.genes <- paste(target.genes, collapse = ",")
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
