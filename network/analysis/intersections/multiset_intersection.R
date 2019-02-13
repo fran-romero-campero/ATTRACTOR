@@ -551,17 +551,18 @@ for(j in 1:number.randomisation)
 
 
 ##Loop to check the intersection of binding regions (bed files) between all the transcription factors together and store the results in a table####
+chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
 number.randomisation <- 5
 bed.files <- list.files(path = "../../../web_apps/peak_visualizer/data/bed_files/", pattern = "peaks.narrowPeak")
 
 combinations <- expand.grid(bed.files, bed.files)
-bed.intersections <- matrix(ncol = 5, nrow = nrow(combinations))
-colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "Genes")
+bed.intersections <- matrix(ncol = 6, nrow = nrow(combinations))
+colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "number of intersections", "Genes" )
 
 total.randomisation <- number.randomisation*nrow(combinations) #just to see the progress
 
 i <- 9
-for (i in 1:nrow(combinations))
+for (i in 1:5)#nrow(combinations))
 {
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
   peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
@@ -599,10 +600,36 @@ for (i in 1:nrow(combinations))
   bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
   bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
   bed.intersections[i,3] <- p.value
+  bed.intersections[i,5] <- nrow(real.intersection)
+  
+  
 
 }
 
 write.table(bed.intersections, file = "bed_intersections.txt", sep = "\t", row.names = FALSE)
+
+library(TxDb.Athaliana.BioMart.plantsmart28)
+library(org.At.tair.db)
+library(ChIPseeker)
+
+txdb <- TxDb.Athaliana.BioMart.plantsmart28
+colnames(real.intersection) <- c("chromosome", "start", "end")
+granges.intersection <- makeGRangesFromDataFrame(real.intersection,
+                         keep.extra.columns=FALSE,
+                         ignore.strand=FALSE,
+                         seqinfo=NULL,
+                         seqnames.field="chromosome",
+                         start.field="start",
+                         end.field="end",
+                         starts.in.df.are.0based=FALSE)
+
+
+
+peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+                         TxDb=txdb, annoDb="org.At.tair.db")
+
+annot.peaks <- as.data.frame(peakAnno)
+target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
