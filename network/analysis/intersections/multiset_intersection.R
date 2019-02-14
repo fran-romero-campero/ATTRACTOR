@@ -552,7 +552,7 @@ for(j in 1:number.randomisation)
 
 ##Loop to check the intersection of binding regions (bed files) between all the transcription factors together and store the results in a table####
 chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
-number.randomisation <- 2
+number.randomisation <- 1000
 bed.files <- list.files(path = "../../../web_apps/peak_visualizer/data/bed_files/", pattern = "peaks.narrowPeak")
 
 combinations <- expand.grid(bed.files, bed.files)
@@ -581,7 +581,7 @@ for (i in 1:total.tests)
     random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
     for(j in 1:number.randomisation)
     {
-      # print(j)
+      print(j)
       random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
       for(k in 1:nrow(peaks2))
       {
