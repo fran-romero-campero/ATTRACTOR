@@ -552,7 +552,7 @@ for(j in 1:number.randomisation)
 
 ##Loop to check the intersection of binding regions (bed files) between all the transcription factors together and store the results in a table####
 chromosomes.length <- read.table(file="../../../web_apps/peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
-number.randomisation <- 100
+number.randomisation <- 2
 bed.files <- list.files(path = "../../../web_apps/peak_visualizer/data/bed_files/", pattern = "peaks.narrowPeak")
 
 combinations <- expand.grid(bed.files, bed.files)
@@ -561,27 +561,30 @@ colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "number of inte
 
 
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
-
-i <- 9
+i <- 26
+total.tests <- nrow(combinations)
+# total.tests <- 50
 
 # Start the clock!
 ptm <- proc.time()
 
-for (i in 1:4)
+for (i in 1:total.tests)
 # for (i in 1:nrow(combinations))
 {
   # print(paste0("test number ", i, " of ", nrow(combinations)))
-  print(paste0((i/nrow(combinations))*100, " %"))
+  print(paste0((i/total.tests)*100, " %"))
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
   peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
   real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
-  random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
-  for(j in 1:number.randomisation)
+  if (nrow(real.intersection) > 0)
   {
-    # print(j)
-    random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
-    for(k in 1:nrow(peaks2))
+    random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
+    for(j in 1:number.randomisation)
     {
+      # print(j)
+      random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
+      for(k in 1:nrow(peaks2))
+      {
         current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
         current.start <- peaks2[k,2] #Start de la iésima marca real
         current.end <- peaks2[k,3] #End de la iésima marca real
@@ -596,39 +599,52 @@ for (i in 1:4)
         random.peaks2[k,2] <- random.start
         random.peaks2[k,3] <- random.end
       }
+      
+      
+      random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
+      
+      
+    }
+    
+    p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
+    if( p.value == 0)
+    {
+      p.value <- 1/number.randomisation
+    }
+    
+    colnames(real.intersection) <- c("chromosome", "start", "end")
+    granges.intersection <- makeGRangesFromDataFrame(real.intersection,
+                                                     keep.extra.columns=FALSE,
+                                                     ignore.strand=FALSE,
+                                                     seqinfo=NULL,
+                                                     seqnames.field="chromosome",
+                                                     start.field="start",
+                                                     end.field="end",
+                                                     starts.in.df.are.0based=FALSE)
     
     
-    random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
     
+    peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+                             TxDb=txdb, annoDb="org.At.tair.db")
     
+    annot.peaks <- as.data.frame(peakAnno)
+    target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+    target.genes <- paste(target.genes, collapse = ",")
+    
+    bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
+    bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
+    bed.intersections[i,3] <- p.value
+    bed.intersections[i,5] <- nrow(real.intersection)
+    bed.intersections[i,6] <- target.genes
+    
+  } else 
+  {
+    bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
+    bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
+    bed.intersections[i,3] <- NA
+    bed.intersections[i,5] <- "No intersection"
+    bed.intersections[i,6] <- NA
   }
-  
-  p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
-  
-  colnames(real.intersection) <- c("chromosome", "start", "end")
-  granges.intersection <- makeGRangesFromDataFrame(real.intersection,
-                                                   keep.extra.columns=FALSE,
-                                                   ignore.strand=FALSE,
-                                                   seqinfo=NULL,
-                                                   seqnames.field="chromosome",
-                                                   start.field="start",
-                                                   end.field="end",
-                                                   starts.in.df.are.0based=FALSE)
-  
-  
-  
-  peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
-                           TxDb=txdb, annoDb="org.At.tair.db")
-  
-  annot.peaks <- as.data.frame(peakAnno)
-  target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
-  target.genes <- paste(target.genes, collapse = ",")
-  
-  bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
-  bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
-  bed.intersections[i,3] <- p.value
-  bed.intersections[i,5] <- nrow(real.intersection)
-  bed.intersections[i,6] <- target.genes
   
   
 
