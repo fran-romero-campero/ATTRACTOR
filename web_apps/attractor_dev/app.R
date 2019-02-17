@@ -1,8 +1,12 @@
 ## Load libraries
 library(shiny)
+library(shinycssloaders)
 library(ggplot2)
 library(org.At.tair.db)
 library(SuperExactTest)
+library(TxDb.Athaliana.BioMart.plantsmart28)
+library(ChIPseeker)
+txdb <- TxDb.Athaliana.BioMart.plantsmart28
 
 #Auxiliary functions
 intersectSets <- function(tf1,tf2,set.of.genes){
@@ -222,6 +226,7 @@ bed.files <- c("../peak_visualizer/data/bed_files/PHYA_peaks.narrowPeak",
                "../peak_visualizer/data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
                "../peak_visualizer/data/bed_files/ELF4_1_peaks.narrowPeak")
 
+chromosomes.length <- read.table(file="../peak_visualizer/data/bed_files/atha_chr_lengths.txt",as.is=T)[[1]]
 
 
 bed.names  <-c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT??","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
@@ -720,9 +725,12 @@ server <- function(input, output) {
     
   })
   
+  
   ##Intersection between bed files 
   observeEvent(input$button_bed, {
     print("Test bed intersection")
+    
+    
     number.randomisation <- input$number_random
     bed1 <- bed.files[input$tf1_bed] #Set the bed to read
     bed2 <- bed.files[input$tf2_bed] #Set the bed to read
@@ -784,7 +792,7 @@ server <- function(input, output) {
       
       annot.peaks <- as.data.frame(peakAnno)
       target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
-      target.genes <- paste(target.genes, collapse = ",")
+      # target.genes <- paste(target.genes, collapse = ",")
       
 
       text.bed <- paste0("The estimated p-value is ", p.value)
@@ -793,7 +801,38 @@ server <- function(input, output) {
       text.bed <- "No intersection"
     }
     
+    
+    selected.genes.df <- subset(network.data, names %in% target.genes)
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+      #geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    
+
+    output$networkPlot <- renderPlot({
+      # req(input$button_bed)
+      # Sys.sleep(time = 5)
+      network.representation
+    },height = 700)
+    
+    
     output$outputText <- renderText(expr = text.bed, quoted = FALSE)
+    
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
+    
   })
   
   
