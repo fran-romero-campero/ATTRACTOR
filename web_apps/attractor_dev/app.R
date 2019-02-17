@@ -1,5 +1,6 @@
 ## Load libraries
 library(shiny)
+library(shinycssloaders)
 library(ggplot2)
 library(org.At.tair.db)
 library(SuperExactTest)
@@ -724,9 +725,12 @@ server <- function(input, output) {
     
   })
   
+  
   ##Intersection between bed files 
   observeEvent(input$button_bed, {
     print("Test bed intersection")
+    
+    
     number.randomisation <- input$number_random
     bed1 <- bed.files[input$tf1_bed] #Set the bed to read
     bed2 <- bed.files[input$tf2_bed] #Set the bed to read
@@ -817,6 +821,8 @@ server <- function(input, output) {
     
 
     output$networkPlot <- renderPlot({
+      # req(input$button_bed)
+      # Sys.sleep(time = 5)
       network.representation
     },height = 700)
     
