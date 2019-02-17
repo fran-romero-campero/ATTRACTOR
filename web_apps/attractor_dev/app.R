@@ -56,6 +56,47 @@ intersect2sets <- function(set1, set2, alias, gene.descriptions){
   
 }
 
+#intersectBed function 
+intersectBed <- function(peaks.set1, peaks.set2)
+{
+  intersection <- matrix(ncol = 3, nrow=0 )
+  current.intersection <- matrix(ncol = 3 )
+  for (i in 1:nrow(peaks.set1))
+  {
+    #Set the current peak values of set1
+    current.chr <- as.numeric(peaks.set1[i,1])
+    current.start <- peaks.set1[i,2]
+    current.end <- peaks.set1[i,3]
+    #Checking if there is intersection between the current peak and any peak of set2
+    option1 <- nrow(subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start))
+    option2 <- nrow(subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end))
+    
+    # print(i)
+    
+    if(option1+option2 > 0)
+    {
+      # print("HIT")
+      if(option1>0)
+      {
+        hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start)
+        current.intersection[1,1] <- current.chr
+        current.intersection[1,2] <- current.start
+        current.intersection[1,3] <- hit.peak2[1,3]
+        
+      }else
+      {
+        hit.peak2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end)
+        current.intersection[1,1] <- current.chr
+        current.intersection[1,2] <- hit.peak2[1,2]
+        current.intersection[1,3] <- current.end
+      }
+      
+      intersection <- rbind(intersection, current.intersection)
+    }
+  }
+  return(intersection)
+}
+
 ## Function to generate output table
 create.output.table <- function(input.gene.df,alias,tfs.names)
 {
@@ -160,6 +201,33 @@ names(tf.ids) <- tfs.names
 gene.description <- network.data$description
 names(gene.description) <- network.data$names
 
+#Bed files
+bed.files <- c("../peak_visualizer/data/bed_files/PHYA_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PHYB_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PRR5_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/TOC1_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/CCA1_ZT02_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/CCA1_ZT14_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/LHY_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/CRY2_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/FHY1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/LUX_ZT10_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/LUX_ZT12_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PIF3_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PIF4_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PIF5_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PRR7_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/PRR9_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/ELF3_ZT0_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
+               "../peak_visualizer/data/bed_files/ELF4_1_peaks.narrowPeak")
+
+
+
+bed.names  <-c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT??","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+names(bed.files) <- bed.names
+number.randomisation <- 5 #provisional
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -262,6 +330,19 @@ AT4G17245
       
       actionButton(inputId = "top_intersect", label = "Test"),
       
+      
+      tags$h3(tags$b("Intersections of binding regions:")),
+      
+      selectInput(inputId = "tf1_bed", label="Transcription Factor 1", 
+                  choices = bed.names, selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      selectInput(inputId = "tf2_bed", label="Transcription Factor 2", 
+                  choices = bed.names, selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      numericInput(inputId = "number_random", label = "Number of randomisations", 
+                   value = 1000, min = 5, max = 1000000, step = NA,
+                   width = NULL),
+      actionButton(inputId = "button_bed", label = "Test"),
       
       
       width = 3 
@@ -578,7 +659,7 @@ server <- function(input, output) {
       
     }
     
-    result <- intersect2sets(set1 = top.genes, set2 = zt.genes, alias = alias, gene.descriptions = description)
+    result <- intersect2sets(set1 = top.genes, set2 = zt.genes, alias = alias, gene.descriptions = gene.description)
     p.value <- result[1][[1]]
     enrichment <- result[2][[1]]
     intersect.genes <- result[3][[1]]$intersection.genes
@@ -637,6 +718,82 @@ server <- function(input, output) {
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
     
+  })
+  
+  ##Intersection between bed files 
+  observeEvent(input$button_bed, {
+    print("Test bed intersection")
+    number.randomisation <- input$number_random
+    bed1 <- bed.files[input$tf1_bed] #Set the bed to read
+    bed2 <- bed.files[input$tf2_bed] #Set the bed to read
+    peaks1 <- read.table(file=bed1,header = F, as.is = T) #Read the selected bed
+    peaks2 <- read.table(file=bed2,header = F, as.is = T) #Read the selected bed
+    
+    real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
+    if (nrow(real.intersection) > 0)
+    {
+      print("Hay intersección")
+      random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
+      for(j in 1:number.randomisation)
+      {
+        print(j)
+        random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
+        for(k in 1:nrow(peaks2))
+        {
+          current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
+          current.start <- peaks2[k,2] #Start de la iésima marca real
+          current.end <- peaks2[k,3] #End de la iésima marca real
+          current.length <- current.end - current.start #Longitud de la iésima marca real
+          
+          chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
+          #Ahora genero los mismos datos para regiones aleatorias
+          random.start <- floor(runif(n = 1,min = 1,max = chr.length))
+          random.end <- random.start + current.length
+          
+          random.peaks2[k,1] <- current.chr
+          random.peaks2[k,2] <- random.start
+          random.peaks2[k,3] <- random.end
+        }
+        
+        
+        random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
+        
+        
+      }
+      
+      p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
+      if( p.value == 0)
+      {
+        p.value <- 1/number.randomisation
+      }
+      
+      colnames(real.intersection) <- c("chromosome", "start", "end")
+      granges.intersection <- makeGRangesFromDataFrame(real.intersection,
+                                                       keep.extra.columns=FALSE,
+                                                       ignore.strand=FALSE,
+                                                       seqinfo=NULL,
+                                                       seqnames.field="chromosome",
+                                                       start.field="start",
+                                                       end.field="end",
+                                                       starts.in.df.are.0based=FALSE)
+      
+      
+      
+      peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+                               TxDb=txdb, annoDb="org.At.tair.db")
+      
+      annot.peaks <- as.data.frame(peakAnno)
+      target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+      target.genes <- paste(target.genes, collapse = ",")
+      
+
+      text.bed <- paste0("The estimated p-value is ", p.value)
+    } else 
+    {
+      text.bed <- "No intersection"
+    }
+    
+    output$outputText <- renderText(expr = text.bed, quoted = FALSE)
   })
   
   
