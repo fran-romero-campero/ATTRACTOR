@@ -93,3 +93,29 @@ network.representation[,35:53] <- regulatory.matrix
 
 write.table(network.representation, file="attractor_network_representation.tsv", sep = "\t", quote = FALSE,
             row.names = FALSE)
+
+network.representation <- read.table(file="../web_apps/attractor_dev/data/attractor_network_representation.tsv",header=T,sep = "\t",as.is = T,quote = "")
+head(network.representation)
+
+tf.name <- "CCA1_ZT02"
+
+percent.tf <- function(tf.name)
+{
+  freq.act.rep <- table(network.representation[,tf.name])
+  number.rep <- freq.act.rep["-1"]
+  number.act <- freq.act.rep["1"]
+  total.targets <- number.act + number.rep
+  return(list(activated=100*number.act/total.targets, repressed=100*number.rep/total.targets))
+}
+
+percent.tf(tf.name = "CCA1_ZT02")
+percent.tf(tf.name = "CCA1_ZT14")
+percent.tf(tf.name = "PHYA_ZT00")
+percent.tf(tf.name = "PHYB_ZT00")
+percent.tf(tf.name = "PIF5_ZT04")
+
+table(network.representation$CCA1_ZT02)
+table(network.representation$CCA1_ZT14)
+table(network.representation$TOC1_ZT15)
+table(network.representation$PRR5_ZT10)
+table(network.representation$PHYA_ZT00)
