@@ -61,7 +61,7 @@ intersect2sets <- function(set1, set2, alias, gene.descriptions){
 }
 
 #intersectBed function 
-intersectBed <- function(peaks.set1, peaks.set2)
+intersectBed.1 <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=0 )
   current.intersection <- matrix(ncol = 3 )
@@ -100,6 +100,55 @@ intersectBed <- function(peaks.set1, peaks.set2)
   }
   return(intersection)
 }
+
+intersectBed <- function(peaks.set1, peaks.set2)
+{
+  intersection <- matrix(ncol = 3, nrow=min(nrow(peaks.set1),nrow(peaks.set2)) )
+  j <- 0
+  for (i in 1:nrow(peaks.set1))
+  {
+    #Set the current peak values of set1
+    current.chr <- as.numeric(peaks.set1[i,1])
+    current.start <- peaks.set1[i,2]
+    current.end <- peaks.set1[i,3]
+    #Checking if there is intersection between the current peak and any peak of set2
+    hit.1 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.start & peaks.set2[,3]>=current.start)
+    option1 <- nrow(hit.1)
+    
+    if(option1>0)
+    {
+      j <- j + 1
+      intersection[j,1] <- current.chr
+      intersection[j,2] <- current.start
+      intersection[j,3] <- hit.1[1,3]
+    } else 
+    {
+      hit.2 <- subset(peaks.set2, peaks.set2[,1]==current.chr & peaks.set2[,2]<=current.end & peaks.set2[,3]>=current.end)    
+      option2 <- nrow(hit.2)
+      
+      if(option2 > 0)
+      {
+        j <- j + 1
+        intersection[j,1] <- current.chr
+        intersection[j,2] <- hit.2[1,2]
+        intersection[j,3] <- current.end
+      }
+    }
+  }
+  return(list(intersection=intersection[1:j,],size=j))
+}
+
+randomize.peaks <- function(input.peaks,chr.lengths)
+{
+  random.numbers <- runif(n = nrow(input.peaks))
+  random.starts <- ceiling(random.numbers * chr.lengths[input.peaks$V1])
+  random.ends <- random.starts + (input.peaks$V3 - input.peaks$V2)
+  
+  random.peaks <- matrix(c(input.peaks$V1,random.starts,random.ends),ncol=3) 
+  return(random.peaks)
+}
+
+
 
 ## Function to generate output table
 create.output.table <- function(input.gene.df,alias,tfs.names)
@@ -737,34 +786,35 @@ server <- function(input, output) {
     peaks1 <- read.table(file=bed1,header = F, as.is = T) #Read the selected bed
     peaks2 <- read.table(file=bed2,header = F, as.is = T) #Read the selected bed
     
-    real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
+    real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)[[1]]
     if (nrow(real.intersection) > 0)
     {
       print("Hay intersección")
       random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
       for(j in 1:number.randomisation)
       {
-        print(j)
-        random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
-        for(k in 1:nrow(peaks2))
-        {
-          current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
-          current.start <- peaks2[k,2] #Start de la iésima marca real
-          current.end <- peaks2[k,3] #End de la iésima marca real
-          current.length <- current.end - current.start #Longitud de la iésima marca real
-          
-          chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
-          #Ahora genero los mismos datos para regiones aleatorias
-          random.start <- floor(runif(n = 1,min = 1,max = chr.length))
-          random.end <- random.start + current.length
-          
-          random.peaks2[k,1] <- current.chr
-          random.peaks2[k,2] <- random.start
-          random.peaks2[k,3] <- random.end
-        }
+        # print(j)
+        # random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
+        # for(k in 1:nrow(peaks2))
+        # {
+        #   current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
+        #   current.start <- peaks2[k,2] #Start de la iésima marca real
+        #   current.end <- peaks2[k,3] #End de la iésima marca real
+        #   current.length <- current.end - current.start #Longitud de la iésima marca real
+        #   
+        #   chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
+        #   #Ahora genero los mismos datos para regiones aleatorias
+        #   random.start <- floor(runif(n = 1,min = 1,max = chr.length))
+        #   random.end <- random.start + current.length
+        #   
+        #   random.peaks2[k,1] <- current.chr
+        #   random.peaks2[k,2] <- random.start
+        #   random.peaks2[k,3] <- random.end
+        # }
+        # 
         
-        
-        random.intersections[j] <- nrow(intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2 )) 
+        random.peaks2 <- randomize.peaks(input.peaks = peaks2, chr.lengths = chromosomes.length)
+        random.intersections[j] <- intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2)[[2]] 
         
         
       }
@@ -787,11 +837,14 @@ server <- function(input, output) {
       
       
       
-      peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+      peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 0),
                                TxDb=txdb, annoDb="org.At.tair.db")
       
       annot.peaks <- as.data.frame(peakAnno)
-      target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+      # target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+      target.genes <- subset(annot.peaks, annotation != "Downstream (<1kb)" & annotation != "Downstream (1-2kb)"
+                             & annotation != "Distal Intergenic" & annotation != "Downstream (2-3kb)")$geneId
+      
       # target.genes <- paste(target.genes, collapse = ",")
       
 

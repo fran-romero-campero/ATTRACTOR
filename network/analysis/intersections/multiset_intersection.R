@@ -466,7 +466,7 @@ peaks.set2 <- peaks2
 peaks.set2 <- random.peaks2
 
 #intersectBed function 
-intersectBed <- function(peaks.set1, peaks.set2)
+intersectBed.1 <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=0 )
   current.intersection <- matrix(ncol = 3 )
@@ -671,11 +671,15 @@ granges.intersection <- makeGRangesFromDataFrame(real.intersection,
 
 
 
-peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 2000),
+peakAnno <- annotatePeak(granges.intersection, tssRegion=c(-2000, 0),
                          TxDb=txdb, annoDb="org.At.tair.db")
 
 annot.peaks <- as.data.frame(peakAnno)
-target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+# head(annot.peaks)
+# unique(annot.peaks$annotation)
+# target.genes <- subset(annot.peaks, distanceToTSS >= 2000 | distanceToTSS <= -2000)$geneId
+target.genes <- subset(annot.peaks, annotation != "Downstream (<1kb)" & annotation != "Downstream (1-2kb)"
+                       & annotation != "Distal Intergenic" & annotation != "Downstream (2-3kb)")$geneId
 target.genes <- paste(target.genes, collapse = ",")
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
