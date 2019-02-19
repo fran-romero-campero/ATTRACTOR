@@ -24,8 +24,28 @@ library(shiny)
 library(org.At.tair.db)
 library(igraph)
 
+## Auxiliary function to determine surronding ZTs
+zts.to.consider <- function(zt.point)
+{
+  zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
+  zts.numeric <- seq(from=0,to=20,by=4)
+  
+  if(zt.point %in% zts.numeric)
+  {
+    return(c(zt.point,zt.point))
+  } else
+  {
+    #current.zt.numeric <- as.numeric(substr(zt.point,start=3,stop=nchar(current.regulator.zt)))
+    next.zt <- zts.numeric[which(zts.numeric >= zt.point)[1]]
+    previous.zt <- zts.numeric[which(zts.numeric >= zt.point)[1] - 1]
+    return(c(previous.zt, next.zt))
+  }
+}
+
+
 ##Parameters
 radius.1 <- 100 #Outer circle radius
+height <- 4 ## highest point in ylim for profile plot
 
 ## Read graph adjacency matrix
 network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -83,6 +103,9 @@ agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
 names(agi.tfs.zts) <- agi.tfs
 names(agi.tfs.zts.multiplicity) <- agi.tfs
 names(name.tfs) <- agi.tfs
+
+regulation.matrix <- as.matrix(network.data[,35:53])
+rownames(regulation.matrix) <- network.data$names
 
 adj.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.matrix) <- network.data$names
@@ -165,9 +188,10 @@ for(i in 1:length(splitted.tfs.names))
 
 zt.multiplicity <- table(tfs.zts)
 
-#Set a radius to each TF to avoid the overlap
+#Set a radius and hight to each TF to avoid the overlap
 
 radius.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+height.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
 node.labels <- vector(mode="numeric",length=length(splitted.tfs.names))
 for(i in 1:length(splitted.tfs.names))
 {
@@ -175,8 +199,11 @@ for(i in 1:length(splitted.tfs.names))
   current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
   current.multiplicity <- zt.multiplicity[current.zt]
   radius.to.multiply[i] <- (1 - (0.16*current.multiplicity))*radius.1
+  height.to.multiply[i] <- (1 - (0.1*current.multiplicity))*height
   zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
 }
+
+names(height.to.multiply) <- tfs.names
 
 # radius.to.multiply <- c(rep((radius.1*0.8),2), radius.1*0.7,radius.1*0.8,radius.1*0.7,
 #                         radius.1*0.6, radius.1*0.8,radius.1*0.6,rep((radius.1*0.8),4), 
@@ -414,9 +441,40 @@ server <- function(input, output) {
       
       plot(x=seq(from=0,to=24,by=4),gene.expression,
            type="o",lwd=5,cex=1.5,
-           ylim=c(-2.5,2),xlim=c(0,24),
-           col="darkgreen",axes=FALSE,xlab="",ylab="", 
+           ylim=c(-2.5,height),xlim=c(0,24),
+           col="darkgrey",axes=FALSE,xlab="",ylab="", 
            main=paste(target.agi, alias[target.agi],sep=" - "))
+      
+      ## Add TFs to expression profile
+      selected.tfs.agi <- agis[input$selected.tfs]
+      
+      for(i in 1:length(selected.tfs.agi))
+      {
+        current.tf.name <- names(selected.tfs.agi[i])
+        current.tf.zts <- agi.tfs.zts[selected.tfs.agi[i]][[1]]
+        current.time.points <- vector(mode="numeric",length=length(current.tf.zts))
+        for(j in 1:length(current.tf.zts))
+        {
+          current.time.point <- as.numeric(substr(x = current.tf.zts[j], start = 3, stop = nchar(current.tf.zts[j])))
+          current.tf.zt <- paste(current.tf.name,current.tf.zts[j],sep="_")
+          current.regulation <- regulation.matrix[target.agi,current.tf.zt]
+          
+          if(current.regulation == 1)
+          {
+            point.color <- "darkgreen"
+            
+          } else if (current.regulation == -1)
+          {
+            point.color <- "darkred"
+          }
+          
+          
+          
+          arrows(x0 = current.time.point, y0 = height.to.multiply[current.tf.zt],x1 = current.time.point ,y1=mean(gene.expression[zts.to.consider(zt.point = current.time.point) %in% seq(from=,to=24,by=4)]))
+          points(x = current.time.point,y=height.to.multiply[current.tf.zt],lwd=4,cex=4, col=point.color, pch = 19)  
+          text(x = current.time.point,y=height.to.multiply[current.tf.zt],labels = current.tf.name, cex=1.5, font=2 )
+        }
+      }
       
       polygon(x=c(0,12,12,0),y=c(-2,-2,-2.3,-2.3),lwd=2)
       polygon(x=c(12,24,24,12),y=c(-2,-2,-2.3,-2.3),col = "black",lwd=2)
