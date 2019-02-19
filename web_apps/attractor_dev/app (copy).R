@@ -319,14 +319,14 @@ ui <- fluidPage(
                        textAreaInput(inputId = "gene.list", label= "Set of genes", width="90%", 
                                      height = "200px",placeholder = "Insert set of genes",
                                      value= "AT2G23290
-                                     AT2G40900
-                                     AT2G40890
-                                     AT2G47450
-                                     AT2G45190
-                                     AT2G45400
-                                     AT2G33230
-                                     AT5G12440
-                                     AT4G17245
+AT2G40900
+AT2G40890
+AT2G47450
+AT2G45190
+AT2G45400
+AT2G33230
+AT5G12440
+AT4G17245
                                      AT4G16780"),
                        actionButton(inputId = "button_select_gene_list",label = "Select Genes")
                        ),
@@ -380,7 +380,7 @@ ui <- fluidPage(
                   multiple = FALSE, selectize = TRUE),
       selectInput(inputId = "threshold", label = "Parameter threshold",
                   choices = c(0.75,0.90,0.95), selected = NULL, multiple = FALSE, selectize = TRUE),
-      
+                  
       
       actionButton(inputId = "top_intersect", label = "Test"),
       
@@ -394,7 +394,7 @@ ui <- fluidPage(
                   choices = bed.names, selected = NULL,
                   multiple = FALSE, selectize = TRUE),
       numericInput(inputId = "number_random", label = "Number of randomisations", 
-                   value = 100, min = 5, max = 1000000, step = NA,
+                   value = 1000, min = 5, max = 1000000, step = NA,
                    width = NULL),
       actionButton(inputId = "button_bed", label = "Test"),
       
@@ -792,38 +792,38 @@ server <- function(input, output) {
       print("Hay intersección")
       random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
       withProgress(message = "Computing:", value = 0, {
-        for(j in 1:number.randomisation)
-        {
-          # print(j)
-          # Increment the progress bar, and update the detail text (for the progress bar!!)
-          incProgress(1/number.randomisation, detail = paste("Performing randomisation number", j))
-          
-          # random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
-          # for(k in 1:nrow(peaks2))
-          # {
-          #   current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
-          #   current.start <- peaks2[k,2] #Start de la iésima marca real
-          #   current.end <- peaks2[k,3] #End de la iésima marca real
-          #   current.length <- current.end - current.start #Longitud de la iésima marca real
-          #   
-          #   chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
-          #   #Ahora genero los mismos datos para regiones aleatorias
-          #   random.start <- floor(runif(n = 1,min = 1,max = chr.length))
-          #   random.end <- random.start + current.length
-          #   
-          #   random.peaks2[k,1] <- current.chr
-          #   random.peaks2[k,2] <- random.start
-          #   random.peaks2[k,3] <- random.end
-          # }
-          # 
-          
-          random.peaks2 <- randomize.peaks(input.peaks = peaks2, chr.lengths = chromosomes.length)
-          random.intersections[j] <- intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2)[[2]] 
-          
-          
-        }#close the for loop
+      for(j in 1:number.randomisation)
+      {
+        # print(j)
+        # Increment the progress bar, and update the detail text (for the progress bar!!)
+        incProgress(1/number.randomisation, detail = paste("Performing randomisation number", j))
+        
+        # random.peaks2 <- matrix(nrow=nrow(peaks2),ncol=3) #Matriz con 3 columnas, una para el cromosoma, otra para el comienzo y otra para el final de la región aleatoria.
+        # for(k in 1:nrow(peaks2))
+        # {
+        #   current.chr <- peaks2[k,1][[1]] #Chr de la iésima marca real
+        #   current.start <- peaks2[k,2] #Start de la iésima marca real
+        #   current.end <- peaks2[k,3] #End de la iésima marca real
+        #   current.length <- current.end - current.start #Longitud de la iésima marca real
+        #   
+        #   chr.length <- chromosomes.length[current.chr] #Length del actual cromosoma
+        #   #Ahora genero los mismos datos para regiones aleatorias
+        #   random.start <- floor(runif(n = 1,min = 1,max = chr.length))
+        #   random.end <- random.start + current.length
+        #   
+        #   random.peaks2[k,1] <- current.chr
+        #   random.peaks2[k,2] <- random.start
+        #   random.peaks2[k,3] <- random.end
+        # }
+        # 
+        
+        random.peaks2 <- randomize.peaks(input.peaks = peaks2, chr.lengths = chromosomes.length)
+        random.intersections[j] <- intersectBed(peaks.set1 = peaks1, peaks.set2 = random.peaks2)[[2]] 
+        
+        
+      }#close the for loop
       }) #Close the withProgress
-      
+
       p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
       if( p.value == 0)
       {
@@ -852,7 +852,7 @@ server <- function(input, output) {
       
       # target.genes <- paste(target.genes, collapse = ",")
       
-      
+
       text.bed <- paste0("The estimated p-value is <", p.value)
     } else 
     {
@@ -865,7 +865,7 @@ server <- function(input, output) {
     
     print(selected.genes.df)
     print(selected.nodes.colors)
-    
+
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
       theme(panel.background = element_blank(), 
             panel.grid.major = element_blank(), 
@@ -877,9 +877,9 @@ server <- function(input, output) {
       #geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
       geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
     
-    
+
     output$networkPlot <- renderPlot({
-      
+
       network.representation
     },height = 700)
     
@@ -890,7 +890,7 @@ server <- function(input, output) {
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
     
-    
+
     
   })
   
