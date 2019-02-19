@@ -75,7 +75,7 @@ for(i in 1:length(gene.names))
         increment <- gene.expression.profile[zts.to.check[2]] - gene.expression.profile[zts.to.check[1]]
         relative.increment <- increment / gene.expression.profile[zts.to.check[1]]
         
-        if(relative.increment > 0)
+        if(relative.increment > 0.1)
         {
           regulatory.matrix[target.gene,current.regulator] <- 1
         } else 
