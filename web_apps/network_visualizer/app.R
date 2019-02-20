@@ -438,7 +438,10 @@ server <- function(input, output) {
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       gene.expression <- as.vector(scale(mean.expression[target.agi,]))
       gene.expression <- c(gene.expression, gene.expression[1])
-      
+      extended.gene.expression <- approx(x = seq(from=0,to=24,by=4), y = gene.expression, xout=c(0,2,4,8,10,12,14,15,16,20,24))
+      extended.gene.expression.values <- extended.gene.expression$y
+      names(extended.gene.expression.values) <- c("ZT00", "ZT02", "ZT04", "ZT08", "ZT10", "ZT12", "ZT14", "ZT15", "ZT16", "ZT20", "ZT24")
+
       plot(x=seq(from=0,to=24,by=4),gene.expression,
            type="o",lwd=5,cex=1.5,
            ylim=c(-2.5,height),xlim=c(0,24),
@@ -452,7 +455,7 @@ server <- function(input, output) {
       {
         current.tf.name <- names(selected.tfs.agi[i])
         current.tf.zts <- agi.tfs.zts[selected.tfs.agi[i]][[1]]
-        current.time.points <- vector(mode="numeric",length=length(current.tf.zts))
+        # current.time.points <- vector(mode="numeric",length=length(current.tf.zts))
         for(j in 1:length(current.tf.zts))
         {
           current.time.point <- as.numeric(substr(x = current.tf.zts[j], start = 3, stop = nchar(current.tf.zts[j])))
@@ -462,17 +465,25 @@ server <- function(input, output) {
           if(current.regulation == 1)
           {
             point.color <- "darkgreen"
-            
+            arrow.angle <- 45
+            draw.tf <- TRUE
           } else if (current.regulation == -1)
           {
             point.color <- "darkred"
+            arrow.angle <- 90
+            draw.tf <- TRUE
+          } else if (current.regulation == 0)
+          {
+            draw.tf <- FALSE
           }
           
-          
-          
-          arrows(x0 = current.time.point, y0 = height.to.multiply[current.tf.zt],x1 = current.time.point ,y1=mean(gene.expression[zts.to.consider(zt.point = current.time.point) %in% seq(from=,to=24,by=4)]))
-          points(x = current.time.point,y=height.to.multiply[current.tf.zt],lwd=4,cex=4, col=point.color, pch = 19)  
-          text(x = current.time.point,y=height.to.multiply[current.tf.zt],labels = current.tf.name, cex=1.5, font=2 )
+          if(draw.tf)
+          {
+            arrows(x0 = current.time.point, y0 = height.to.multiply[current.tf.zt],
+                   x1 = current.time.point ,y1= extended.gene.expression.values[current.tf.zts[j]] + 0.3,lwd=4,angle=arrow.angle,length=0.05,col=point.color)
+            points(x = current.time.point,y=height.to.multiply[current.tf.zt],lwd=4,cex=4, col=point.color, pch = 19)  
+            text(x = current.time.point,y=height.to.multiply[current.tf.zt],labels = current.tf.name, cex=1.5, font=2 )
+          }
         }
       }
       
