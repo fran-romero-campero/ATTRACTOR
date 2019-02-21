@@ -24,6 +24,11 @@ library(shiny)
 library(org.At.tair.db)
 library(igraph)
 
+## Colors used to represent repression/activation/neutrality
+repressor.color <- "firebrick1"
+activator.color <- "seagreen3"
+neutral.color <- "lightgrey"
+
 ## Auxiliary function to determine surronding ZTs
 zts.to.consider <- function(zt.point)
 {
@@ -287,7 +292,7 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$button, handlerExpr = {
     output$network <- renderPlot({
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
-      
+
 #      if (target.agi %in% row.names(adj.global.matrix)) {
         #Plot circle
         par(mar=c(0,0,0,0))
@@ -303,7 +308,7 @@ server <- function(input, output) {
           angle.zt <- radian.conversion(alpha = 60*i)
           zt <- 4*i
           current.zt <- paste("ZT", zt,  sep = "")
-          text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5)
+          text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
           lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
                 y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
         }
@@ -320,31 +325,46 @@ server <- function(input, output) {
             to.keep <- (to.keep | grepl(input$selected.tfs[i],colnames(adj.global.matrix)))
           }
         }
+
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
-        adj.matrix.to.represent <- adj.global.matrix[selected.tfs.agi,to.keep]
+        adj.matrix.to.represent <- as.matrix(adj.global.matrix[selected.tfs.agi,to.keep])
+        
+        if(nrow(adj.matrix.to.represent) == 1)
+        {
+          rownames(adj.matrix.to.represent) <- selected.tfs.agi
+          colnames(adj.matrix.to.represent) <- colnames(adj.global.matrix)[to.keep]
+        }
         
         new.row.names <- c()
         updated.adj.matrix.to.represent <- c()
-        for(i in 1:nrow(adj.matrix.to.represent))
-        {
-          current.tf.name <- name.tfs[rownames(adj.matrix.to.represent)[i]]
-          current.tf.zts <- agi.tfs.zts[[rownames(adj.matrix.to.represent)[i]]]
-          current.tf.name.zt <- paste(current.tf.name,current.tf.zts,sep="_")
-          new.row.names <- c(new.row.names,current.tf.name.zt)
-          if(length(current.tf.zts) > 1)
+        # if(nrow(adj.matrix.to.represent) > 0)
+        # {
+        #   print("hey hey")
+          for(i in 1:nrow(adj.matrix.to.represent))
           {
-            updated.adj.matrix.to.represent <- rbind(
-              rbind(updated.adj.matrix.to.represent,
-                   adj.matrix.to.represent[i,]),
-              adj.matrix.to.represent[i,])
-          } else
-          {
-            updated.adj.matrix.to.represent <-rbind(updated.adj.matrix.to.represent,
-                                                    adj.matrix.to.represent[i,])
-          }
-        }
-        
-        rownames(updated.adj.matrix.to.represent) <- new.row.names
+            current.tf.name <- name.tfs[rownames(adj.matrix.to.represent)[i]]
+            current.tf.zts <- agi.tfs.zts[[rownames(adj.matrix.to.represent)[i]]]
+            current.tf.name.zt <- paste(current.tf.name,current.tf.zts,sep="_")
+            new.row.names <- c(new.row.names,current.tf.name.zt)
+            if(length(current.tf.zts) > 1)
+            {
+              updated.adj.matrix.to.represent <- rbind(
+                rbind(updated.adj.matrix.to.represent,
+                      adj.matrix.to.represent[i,]),
+                adj.matrix.to.represent[i,])
+            } else
+            {
+              updated.adj.matrix.to.represent <- rbind(updated.adj.matrix.to.represent,
+                                                      adj.matrix.to.represent[i,])
+            }
+          } 
+          
+          rownames(updated.adj.matrix.to.represent) <- new.row.names
+        # } else
+        # {
+        #   updated.adj.matrix.to.represent <- adj.matrix.to.represent
+        # }
+
         updated.adj.matrix.to.represent <- rbind(updated.adj.matrix.to.represent,adj.global.matrix[target.agi,to.keep])
         updated.adj.matrix.to.represent <- cbind(updated.adj.matrix.to.represent,rep(0,nrow(updated.adj.matrix.to.represent)))
         
@@ -389,16 +409,35 @@ server <- function(input, output) {
         tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
         edge.weights <- E(tfs.network)$weight
         
+        ## Edge colors
         for(k in 1:length(edge.weights))
         {
           if(edge.weights[k] == 1)
           {
-            E(tfs.network)$color[k] <- "darkgreen"
+            E(tfs.network)$color[k] <- activator.color #"darkgreen"
           } else if(edge.weights[k] == -1)
           {
-            E(tfs.network)$color[k] <- "darkred"
+            E(tfs.network)$color[k] <- repressor.color  #"darkred"
           }
         }
+        
+        ## Vertex colors
+        node.colors <- vector(mode="character",length=nrow(new.matrix))
+        for(k in 1:(length(node.colors)-1))
+        {
+          if(new.matrix[k,ncol(new.matrix)] == 1)
+          {
+            node.colors[k] <- activator.color
+          } else if(new.matrix[k,ncol(new.matrix)] == -1)
+          {
+            node.colors[k] <- repressor.color
+          } else if (new.matrix[k,ncol(new.matrix)] == 0)
+          {
+            node.colors[k] <- neutral.color
+          }
+        }
+        
+        node.colors[length(node.colors)] <- target.color
         
         #First, modify the angles, radius, and labels positions to keep only 
         #the selected tfs
@@ -418,9 +457,9 @@ server <- function(input, output) {
         #Plot the network
         #par(mar = c(4,4,4,4))
         plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
-                    vertex.color = c(rep(x = "firebrick1",times=nrow(new.matrix)-1),target.color), vertex.label=new.node.labels, edge.arrow.size = 0.6, 
-                    edge.arrow.width=1, edge.curved= TRUE, edge.width = 2, vertex.label.dist = 0,
-                    vertex.label.cex=1, vertex.label.font=2,vertex.label.color="black")
+                    vertex.color = node.colors, vertex.label=new.node.labels, edge.arrow.size = 0.8, 
+                    edge.arrow.width=2, edge.curved= TRUE, edge.width = 4, vertex.label.dist = 0,
+                    vertex.label.cex=1, vertex.label.font=2,vertex.label.color="black",label.font=2)
         
         
       # } else {
@@ -464,12 +503,12 @@ server <- function(input, output) {
           
           if(current.regulation == 1)
           {
-            point.color <- "darkgreen"
+            point.color <- activator.color #"seagreen3"#"darkgreen"
             arrow.angle <- 45
             draw.tf <- TRUE
           } else if (current.regulation == -1)
           {
-            point.color <- "darkred"
+            point.color <- repressor.color # "firebrick1"
             arrow.angle <- 90
             draw.tf <- TRUE
           } else if (current.regulation == 0)
@@ -482,7 +521,7 @@ server <- function(input, output) {
             arrows(x0 = current.time.point, y0 = height.to.multiply[current.tf.zt],
                    x1 = current.time.point ,y1= extended.gene.expression.values[current.tf.zts[j]] + 0.3,lwd=4,angle=arrow.angle,length=0.05,col=point.color)
             points(x = current.time.point,y=height.to.multiply[current.tf.zt],lwd=4,cex=4, col=point.color, pch = 19)  
-            text(x = current.time.point,y=height.to.multiply[current.tf.zt],labels = current.tf.name, cex=1.5, font=2 )
+            text(x = current.time.point,y=height.to.multiply[current.tf.zt],labels = current.tf.name, cex=1.2, font=2 )
           }
         }
       }
