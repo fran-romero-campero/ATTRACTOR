@@ -1,0 +1,17 @@
+Name	Accession	Cell	Cell.Type	Treatment	Antibody	TF
+CCA1_peaks.narrowPeak	.	.	.	.	.	AT2G46830
+CCA1_ZT02_peaks.narrowPeak	.	.	.	.	.	AT2G46830
+CCA1_ZT14_peaks.narrowPeak	.	.	.	.	.	AT2G46830
+CRY2_peaks.narrowPeak	.	.	.	.	.	AT1G04400
+ELF3_ZT0_1_peaks.narrowPeak	.	.	.	.	.	AT2G25930
+ELF3_ZT4_1_peaks.narrowPeak	.	.	.	.	.	AT2G25930
+ELF4_1_peaks.narrowPeak	.	.	.	.	.	AT2G40080
+FHY1_peaks.narrowPeak	.	.	.	.	.	AT2G37678
+LHY_1_peaks.narrowPeak	.	.	.	.	.	AT1G01060
+LUX_ZT10_1_peaks.narrowPeak	.	.	.	.	.	AT3G46640
+LUX_ZT12_1_peaks.narrowPeak	.	.	.	.	.	AT3G46640
+PHYA_peaks.narrowPeak	.	.	.	.	.	AT1G09570
+PHYB_peaks.narrowPeak	.	.	.	.	.	AT2G18790
+PIF3_peaks.narrowPeak	.	.	.	.	.	AT1G09530
+PIF4_peaks.narrowPeak	.	.	.	.	.	AT2G43010
+PIF5_peaks.narrowPeak	.	.	.	.	.	AT3G59060
