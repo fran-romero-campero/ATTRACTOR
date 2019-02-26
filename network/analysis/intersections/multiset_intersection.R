@@ -611,7 +611,7 @@ colnames(bed.intersections) <- c("TF1", "TF2", "p-value", "fdr", "number of inte
 
 
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
-i <- 26
+i <- 76
 total.tests <- nrow(combinations)
 # total.tests <- 50
 
@@ -625,7 +625,7 @@ for (i in 1:total.tests)
   print(paste0((i/total.tests)*100, " %"))
   peaks1 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,1]))
   peaks2 <- read.table(file = paste0("../../../web_apps/peak_visualizer/data/bed_files/", combinations[i,2]))
-  real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)[[1]]
+  real.intersection <- intersectBed(peaks.set1 = peaks1, peaks.set2 = peaks2)
   if (real.intersection[[2]] > 0)
   {
     random.intersections <- vector(mode = "numeric",length=number.randomisation) #Creating vector
@@ -656,14 +656,14 @@ for (i in 1:total.tests)
       
     }
     
-    p.value <- sum(random.intersections > nrow(real.intersection)) / number.randomisation
+    p.value <- sum(random.intersections > real.intersection[[2]]) / number.randomisation
     if( p.value == 0)
     {
       p.value <- 1/number.randomisation
     }
     
-    colnames(real.intersection) <- c("chromosome", "start", "end")
-    granges.intersection <- makeGRangesFromDataFrame(real.intersection,
+    colnames(real.intersection[[1]]) <- c("chromosome", "start", "end")
+    granges.intersection <- makeGRangesFromDataFrame(real.intersection[[1]],
                                                      keep.extra.columns=FALSE,
                                                      ignore.strand=FALSE,
                                                      seqinfo=NULL,
