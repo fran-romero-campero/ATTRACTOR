@@ -15,3 +15,9 @@ PHYB_peaks.narrowPeak	.	.	.	.	.	AT2G18790
 PIF3_peaks.narrowPeak	.	.	.	.	.	AT1G09530
 PIF4_peaks.narrowPeak	.	.	.	.	.	AT2G43010
 PIF5_peaks.narrowPeak	.	.	.	.	.	AT3G59060
+PRR5_1_peaks.narrowPeak	.	.	.	.	.	AT5G24470
+PRR7_peaks.narrowPeak	.	.	.	.	.	AT5G02810
+PRR9_1_peaks.narrowPeak	.	.	.	.	.	AT2G46790
+TOC1_1_peaks.narrowPeak	.	.	.	.	.	AT5G61380
+
+
