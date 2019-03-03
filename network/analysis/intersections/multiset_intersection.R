@@ -662,7 +662,10 @@ for (i in 1:total.tests)
       p.value <- 1/number.randomisation
     }
     
-    
+    if (real.intersection[[2]]==1)
+    {
+      real.intersection[[1]] <- matrix(real.intersection[[1]], ncol = 3)
+    }
     
     colnames(real.intersection[[1]]) <- c("chromosome", "start", "end")
     granges.intersection <- makeGRangesFromDataFrame(real.intersection[[1]],
