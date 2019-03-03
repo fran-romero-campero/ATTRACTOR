@@ -447,10 +447,10 @@ for (i in 1:length(top.parameters))
 
 #####Intersections between binding regions in DNA (BED files)####
 #Reading the bed files of the transcription factors
-peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/CCA1_ZT02_peaks.narrowPeak")
+peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/ELF3_ZT0_1_peaks.narrowPeak")
 head(peaks1)
 
-peaks2 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/CCA1_peaks.narrowPeak")
+peaks2 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PIF3_peaks.narrowPeak")
 head(peaks2)
 
 peaks3 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/PRR9_1_peaks.narrowPeak")
@@ -661,6 +661,8 @@ for (i in 1:total.tests)
     {
       p.value <- 1/number.randomisation
     }
+    
+    
     
     colnames(real.intersection[[1]]) <- c("chromosome", "start", "end")
     granges.intersection <- makeGRangesFromDataFrame(real.intersection[[1]],
