@@ -446,6 +446,10 @@ for (i in 1:length(top.parameters))
 
 
 #####Intersections between binding regions in DNA (BED files)####
+##Load libraries
+library(TxDb.Athaliana.BioMart.plantsmart28)
+library(org.At.tair.db)
+library(ChIPseeker)
 #Reading the bed files of the transcription factors
 peaks1 <- read.table(file = "../../../web_apps/peak_visualizer/data/bed_files/ELF3_ZT0_1_peaks.narrowPeak")
 head(peaks1)
@@ -692,7 +696,7 @@ for (i in 1:total.tests)
     bed.intersections[i,1] <- strsplit(x = as.character(combinations[i,1]), split = "_peaks")[[1]][1]
     bed.intersections[i,2] <- strsplit(x = as.character(combinations[i,2]), split = "_peaks")[[1]][1]
     bed.intersections[i,3] <- p.value
-    bed.intersections[i,5] <- nrow(real.intersection)
+    bed.intersections[i,5] <- nrow(real.intersection[[1]])
     bed.intersections[i,6] <- target.genes
     
   } else 
@@ -712,9 +716,7 @@ write.table(bed.intersections, file = "bed_intersections.txt", sep = "\t", row.n
 # Stop the clock
 proc.time() - ptm
 
-library(TxDb.Athaliana.BioMart.plantsmart28)
-library(org.At.tair.db)
-library(ChIPseeker)
+
 
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
 colnames(real.intersection) <- c("chromosome", "start", "end")
