@@ -69,13 +69,9 @@ i <- 1
 
 for(i in 1:length(seq.names))
 {
+  print(i)
   current.seq <- c2s(sequences[[i]])
   current.seq.name <- seq.names[i]
-  
-  
-  #motifs.pwm[[j]]
-  #motif.ids[[j]]
-  #motif.names[[j]]
   
   for(j in 1:number.motifs)
   {
