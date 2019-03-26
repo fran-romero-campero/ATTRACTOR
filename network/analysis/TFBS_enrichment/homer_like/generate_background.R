@@ -1,7 +1,7 @@
 library(seqinr)
 library(TxDb.Athaliana.BioMart.plantsmart28)
-promoter.length <- 1000
-downstream.promoter <- 500
+promoter.length <- 2000
+downstream.promoter <- 0
 
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
 

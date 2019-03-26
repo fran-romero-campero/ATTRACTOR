@@ -1,8 +1,14 @@
 library(seqinr)
 library(Biostrings)
 
-sequences.file <- "background_1000_500_5778.fa"
-score.value <- "95%"
+args <- commandArgs(trailingOnly = T)
+
+promoter.upstream <- args[1]
+promoter.downstream <- args[2]
+score.value <- args[3] #"95%"
+
+sequences.file <- paste(c("background_",promoter.upstream, "_", promoter.downstream,
+                          "_5778.fa"),collapse = "")
 
 number.motifs <- 453
 
@@ -67,7 +73,7 @@ head(multiplicities)
 
 i <- 1
 
-for(i in 1:length(seq.names))
+for(i in 1:10)#length(seq.names))
 {
   print(i)
   current.seq <- c2s(sequences[[i]])
@@ -75,8 +81,17 @@ for(i in 1:length(seq.names))
   
   for(j in 1:number.motifs)
   {
-    multiplicities[current.seq.name, motif.names[[j]]] <- nrow(as.data.frame(matchPWM(pwm = motifs.pwm[[j]],subject = current.seq,min.score = score.value)))
+    multiplicities[current.seq.name, motif.names[[j]]] <- nrow(as.data.frame(matchPWM(pwm = motifs.pwm[[j]],subject = current.seq,min.score = paste0(score.value,"%"))))
   }
 }
 
-write.table(x = multiplicities,file = "precomputed_network.tsv",sep = "\t",quote = F)
+write.table(x = multiplicities,
+            file = sequences.file <- paste(c("precomputed_",
+                                             promoter.upstream, 
+                                             "_", 
+                                             promoter.downstream,
+                                             "_",
+                                             score.value,
+                                             "_5778.tsv"),collapse = ""),
+            sep = "\t",
+            quote = F)
