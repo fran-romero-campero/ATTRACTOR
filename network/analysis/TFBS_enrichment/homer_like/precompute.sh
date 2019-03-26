@@ -10,7 +10,7 @@ do
    do
       for k in `seq 0 4`;
       do
-         qsub -N ${promoter_up[$i]}_${promoter_down[$j]}_${scores[$k]} -o ${promoter_up[$i]}_${promoter_down[$j]}_${scores[$k]} multiplicity.sh ${promoter_up[$i]} ${promoter_down[$j]} ${scores[$k]}
+         qsub -N p_${promoter_up[$i]}_${promoter_down[$j]}_${scores[$k]} -o p_${promoter_up[$i]}_${promoter_down[$j]}_${scores[$k]} multiplicity_motifs.sh ${promoter_up[$i]} ${promoter_down[$j]} ${scores[$k]}
       done
    done
 done
