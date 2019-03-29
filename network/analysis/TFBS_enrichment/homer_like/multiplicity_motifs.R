@@ -73,7 +73,7 @@ head(multiplicities)
 
 i <- 1
 
-for(i in 1:10)#length(seq.names))
+for(i in 1:length(seq.names))
 {
   print(i)
   current.seq <- c2s(sequences[[i]])
