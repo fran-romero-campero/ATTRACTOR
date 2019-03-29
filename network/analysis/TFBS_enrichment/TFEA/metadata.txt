@@ -1,5 +1,4 @@
 Name	Accession	Cell	Cell.Type	Treatment	Antibody	TF
-CCA1_peaks.narrowPeak	CCA1	.	.	.	.	AT2G46830
 CCA1_ZT02_peaks.narrowPeak	CCA1_ZT02	.	.	.	.	AT2G46830
 CCA1_ZT14_peaks.narrowPeak	CCA1_ZT14	.	.	.	.	AT2G46830
 CRY2_peaks.narrowPeak	CRY2	.	.	.	.	AT1G04400
