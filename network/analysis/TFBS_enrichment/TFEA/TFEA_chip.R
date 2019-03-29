@@ -113,84 +113,101 @@ my.list <- intersect(zt0.peak, all.genes)
 length(my.list)
 
 control.list <- setdiff(all.genes, my.list)
-length(control.list) ###CAGIEN LAPUTA
+length(control.list) 
 
 CM.list <- contingency_matrix(test_list = my.list, 
                               control_list = control.list, chip_index = myMetadata)
 
-#NOTE: Since the contingency matrix function does not work for me, I edit it to work
-# Basically, i replace the lapply for a loop and remove a function
-
-test_list <- my.list
-control_list <- control.list
-
-
-contingency_matrix_pedro <- function(test_list, control_list,
-                               chip_index = get_chip_index()) {
-  
-  #' @title Computes 2x2 contingency matrices
-  #' @description Function to compute contingency 2x2 matrix by the partition
-  #' of the two gene ID lists according to the presence or absence of the
-  #' terms in these list in a ChIP-Seq binding database.
-  #' @param test_list List of gene Entrez IDs
-  #' @param control_list If not provided, all human genes not present in
-  #' test_list will be used as control.
-  #' @param chip_index Output of the function “get_chip_index”, a data frame
-  #' containing accession IDs of ChIPs on the database and the TF each one
-  #' tests. If not provided, the whole internal database will be used
-  #' @return List of contingency matrices, one CM per element in chip_index
-  #' (i.e. per ChIP-seq dataset).
-  #' @export contingency_matrix
-  #' @examples
-  #' data('Genes.Upreg',package = 'TFEA.ChIP')
-  #' CM_list_UP <- contingency_matrix(Genes.Upreg)
-  
-  if (!exists("Mat01")) {
-    Mat01 <- NULL
-    data("Mat01", package = "TFEA.ChIP", envir = environment())
-  }
-  if (missing(control_list)) {
-    # Generating control gene list in case is not provided.
-    control_list <- rownames(Mat01)
-  }
-  
-  control_list <- control_list[!(control_list %in% test_list)]
-  
-  Matrix1 <- Mat01[rownames(Mat01) %in% test_list, colnames(Mat01) %in%
-                     chip_index$Accession]
-  Matrix2 <- Mat01[rownames(Mat01) %in% control_list, colnames(Mat01) %in%
-                     chip_index$Accession]
-  
-  contMatrix_list <- lapply(1:(nrow(myMetadata)-1), matrix, data= NA, nrow=2, ncol=2) #Create an empty list of matrices
-  # contMatrix_list <- vector("list", nrow(myMetadata))
-  for (i in 1:(nrow(myMetadata)-1))
-  {
-    
-      chip.vector1 <- m1[, accs[i] ]
-      chip.vector2 <- m2[, accs[i] ]
-      
-      pos1 <- sum( chip.vector1 == 1 )
-      pos2 <- sum(chip.vector2 == 1 )
-      neg1 <- sum( chip.vector1 == 0 )
-      neg2 <- sum( chip.vector2 == 0 )
-      
-      contMatrix <- cbind(c(pos1, pos2), c(neg1, neg2))
-      rownames(contMatrix) <- c("Test", "Control")
-      colnames(contMatrix) <- c("Positive", "Negative")
-      contMatrix_list[[i]] <- contMatrix
-  }
-
-  names(contMatrix_list) <- as.character(chip_index$Accession)
-  return(contMatrix_list)
-}
-
-# El bucle lo hace bien pero falla en el TF número 20 (TOC1) ¿Por qué?? CORREGIIIR
-
-CM.list <- contingency_matrix_pedro(test_list = my.list, 
-                              control_list = control.list, chip_index = myMetadata)
 
 pvalues <- getCMstats(CM.list)
-    
-    
+head(pvalues)
 
-  
+plot_CM(pvalues)  #plot p-values against ORs (odd-ratios)
+
+
+
+# An odds ratio is a relative measure of effect, which allows the 
+# comparison of the intervention group of a study relative to the 
+# comparison or placebo group. So if the outcome is the same in both 
+# groups the ratio will be 1, which implies there is no difference 
+# between the two arms of the study.
+
+#' #NOTE: Since the contingency matrix function does not work for me, I edit it to work
+#' # Basically, i replace the lapply for a loop and remove a function
+#' 
+#' test_list <- my.list
+#' control_list <- control.list
+#' chip_index <- myMetadata
+#' Mat01 <- myTFBSmatrix
+#' 
+#' 
+#' 
+#' contingency_matrix_pedro <- function(test_list, control_list,
+#'                                chip_index = get_chip_index()) {
+#'   
+#'   #' @title Computes 2x2 contingency matrices
+#'   #' @description Function to compute contingency 2x2 matrix by the partition
+#'   #' of the two gene ID lists according to the presence or absence of the
+#'   #' terms in these list in a ChIP-Seq binding database.
+#'   #' @param test_list List of gene Entrez IDs
+#'   #' @param control_list If not provided, all human genes not present in
+#'   #' test_list will be used as control.
+#'   #' @param chip_index Output of the function “get_chip_index”, a data frame
+#'   #' containing accession IDs of ChIPs on the database and the TF each one
+#'   #' tests. If not provided, the whole internal database will be used
+#'   #' @return List of contingency matrices, one CM per element in chip_index
+#'   #' (i.e. per ChIP-seq dataset).
+#'   #' @export contingency_matrix
+#'   #' @examples
+#'   #' data('Genes.Upreg',package = 'TFEA.ChIP')
+#'   #' CM_list_UP <- contingency_matrix(Genes.Upreg)
+#'   
+#'   if (!exists("Mat01")) {
+#'     Mat01 <- NULL
+#'     data("Mat01", package = "TFEA.ChIP", envir = environment())
+#'   }
+#'   if (missing(control_list)) {
+#'     # Generating control gene list in case is not provided.
+#'     control_list <- rownames(Mat01)
+#'   }
+#'   
+#'   control_list <- control_list[!(control_list %in% test_list)]
+#'   
+#'   Matrix1 <- Mat01[rownames(Mat01) %in% test_list, colnames(Mat01) %in%
+#'                      chip_index$Accession]
+#'   Matrix2 <- Mat01[rownames(Mat01) %in% control_list, colnames(Mat01) %in%
+#'                      chip_index$Accession]
+#'   
+#'   contMatrix_list <- lapply(1:nrow(myMetadata), matrix, data= NA, nrow=2, ncol=2) #Create an empty list of matrices
+#'   # contMatrix_list <- vector("list", nrow(myMetadata))
+#'   for (i in 1:(nrow(myMetadata)-1))
+#'   {
+#'     
+#'       chip.vector1 <- Matrix1[, chip_index$Accession[i] ]
+#'       chip.vector2 <- Matrix2[, chip_index$Accession[i] ]
+#'       
+#'       pos1 <- sum( chip.vector1 == 1 )
+#'       pos2 <- sum(chip.vector2 == 1 )
+#'       neg1 <- sum( chip.vector1 == 0 )
+#'       neg2 <- sum( chip.vector2 == 0 )
+#'       
+#'       contMatrix <- cbind(c(pos1, pos2), c(neg1, neg2))
+#'       rownames(contMatrix) <- c("Test", "Control")
+#'       colnames(contMatrix) <- c("Positive", "Negative")
+#'       contMatrix_list[[i]] <- contMatrix
+#'   }
+#' 
+#'   names(contMatrix_list) <- as.character(chip_index$Accession)
+#'   return(contMatrix_list)
+#' }
+#' 
+#' # El bucle lo hace bien pero falla en el TF número 20 (TOC1) ¿Por qué?? CORREGIIIR
+#' 
+#' CM.list <- contingency_matrix_pedro(test_list = my.list, 
+#'                               control_list = control.list, chip_index = myMetadata)
+#' 
+#' pvalues <- getCMstats(CM.list)
+#'     
+#'     
+#' 
+#'   
