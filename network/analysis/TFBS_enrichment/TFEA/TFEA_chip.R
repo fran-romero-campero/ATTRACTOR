@@ -124,6 +124,35 @@ head(pvalues)
 
 plot_CM(pvalues)  #plot p-values against ORs (odd-ratios)
 
+##Hay que buscar log10(adj.pval) altos y odds distintos de uno. 
+rows.to.keep <- subset(x = pvalues, subset = adj.p.value < 0.001)
+
+
+######Bucle para testear todos los conjuntos de genes####
+
+clusters.folder<-"../../../clusters/"
+cluster.list<-dir(clusters.folder)
+
+for (i in 1:length(cluster.list))
+{
+  gene.list <- read.table(paste0("../../../clusters/", cluster.list[i]), as.is = T)[[1]]
+  my.list <- intersect(gene.list, all.genes)
+  control.list <- setdiff(all.genes, my.list)
+  CM.list <- contingency_matrix(test_list = my.list, 
+                                control_list = control.list, chip_index = myMetadata)
+  
+  
+  pvalues <- getCMstats(CM.list)
+  rows.to.keep <- subset(x = pvalues, subset = adj.p.value < 0.001)
+  
+  split.name <- strsplit(x = cluster.list[i], split = ".txt")[[1]]
+  write.table(rows.to.keep, 
+              file=paste0("TFEA_tests/TFBS_enrichment_",split.name),
+              sep="\t", row.names = FALSE)
+  
+  
+}
+
 
 
 # An odds ratio is a relative measure of effect, which allows the 
