@@ -128,7 +128,7 @@ plot_CM(pvalues)  #plot p-values against ORs (odd-ratios)
 rows.to.keep <- subset(x = pvalues, subset = adj.p.value < 0.001)
 
 
-######Bucle para testear todos los conjuntos de genes####
+######Bucle para testear todos los conjuntos de genes (clusters)####
 
 clusters.folder<-"../../../clusters/"
 cluster.list<-dir(clusters.folder)
