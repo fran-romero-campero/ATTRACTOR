@@ -150,7 +150,7 @@ bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
                "data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
                "data/bed_files/ELF4_1_peaks.narrowPeak")
 
-names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT??","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
                     
 ## TF binding sites colors and symbol shapes
 symbol.shapes <- c(17, 18, 19, 15)

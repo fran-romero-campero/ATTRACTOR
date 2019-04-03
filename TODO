@@ -1,9 +1,7 @@
 To Do List:
 
-1) Generate bw file for PHYB using the files PHYB_FLAG_27_1.bw and PHYB_MYC_27_1.bw
+1) Fusionar peakvisualizer y network visualizer dentro de un tab en ATTRACTOR. Arreglar que sólo aparezcan los reguladores en network y peak visualizer además de darle la
+opción al usuario de visualizar otros factores de transcripción. 
 2) Reparar reactividad en peakvisualizer
-3) Añadir al código de peakvisualizer el fichero de picos de PHYB 
-4) Tener en cuenta la nueva versión de la red transcripcional que incluye a LUX
 5) Añadir sanity tests
-6) Desarrollar una app para comprabar la significancia de las intersecciones de los BED FILES usando randomización de Monte Carlo.
 7) Hacer la representación gráfica de la red interactiva. 
