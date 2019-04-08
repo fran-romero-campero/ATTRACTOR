@@ -412,6 +412,45 @@ ui <- fluidPage(
       htmlOutput(outputId = "outputText"),
       dataTableOutput(outputId = "outputTable"),
       
+      
+      #ui for GO enrichment
+      htmlOutput(outputId = "textGOTable"),
+      tags$br(),
+      tags$br(),
+      dataTableOutput(outputId = "output_go_table"),
+      htmlOutput(outputId = "revigo"),
+      tags$br(),
+      htmlOutput(outputId = "go_graph"),
+      tags$br(),
+      tags$br(),
+      div(style= "overflow:scroll; height:500px;", 
+          plotOutput(outputId = "go.plot", inline = TRUE)),
+      downloadButton(outputId= "downloadImage", "Get GO map"),
+      tags$br(),
+      tags$br(),
+      htmlOutput(outputId = "barplot_text"),
+      tags$br(),
+      plotOutput(outputId = "bar.plot",inline=TRUE),
+      tags$br(),
+      tags$br(),
+      htmlOutput(outputId = "dotplot_text"),
+      tags$br(),
+      plotOutput(outputId = "dot.plot",inline=TRUE),
+      tags$br(),
+      tags$br(),
+      htmlOutput(outputId = "emapplot_text"),
+      tags$br(),
+      plotOutput(outputId = "emap.plot",inline=TRUE),
+      tags$br(),
+      tags$br(),
+      htmlOutput(outputId = "cnetplot_text"),
+      tags$br(),
+      plotOutput(outputId = "cnet.plot",inline=TRUE),
+      
+      #end ui for GO enrichment
+      
+      
+      
       width = 9
     )
       )
