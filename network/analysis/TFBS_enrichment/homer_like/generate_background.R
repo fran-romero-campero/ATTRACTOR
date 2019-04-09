@@ -3,7 +3,7 @@
 
 library(seqinr)
 library(TxDb.Athaliana.BioMart.plantsmart28)
-promoter.length <- 2000
+promoter.length <- 1000
 downstream.promoter <- 0
 
 # Extract info of promoters of genes
@@ -17,7 +17,7 @@ network.genes <- network.data$names
 genes.data <- subset(genes(txdb,columns=c("tx_id", "tx_name","gene_id")), seqnames %in% 1:5)
 genes.tss <- resize(genes.data, width=1, fix='start')
 genes.tss <- as.data.frame(genes.tss)
-genes.tss  <- genes.tss[network.genes,]
+# genes.tss  <- genes.tss[network.genes,]
 head(genes.tss)
 
 genes.promoters.coordinates <- genes.tss[,c(1:3,5)]
@@ -32,12 +32,16 @@ for(i in 1:nrow(genes.promoters.coordinates))
   
   if(current.strand == "+")
   {
-    genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - 1000
-    genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 500
+    # genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - 1000
+    # genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 500
+    genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - promoter.length
+    genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + downstream.promoter
   } else if(current.strand == "-")
   {
-    genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - 500
-    genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 1000
+    # genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - 500
+    # genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 1000
+    genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - downstream.promoter
+    genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + promoter.length
   } else
   {
     print("no strand!!!!")
