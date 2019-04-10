@@ -1,0 +1,22 @@
+Name	Accession	Cell	Cell.Type	Treatment	Antibody	TF
+CCA1_ZT02_peaks.narrowPeak	CCA1_ZT02	.	.	.	.	AT2G46830
+CCA1_ZT14_peaks.narrowPeak	CCA1_ZT14	.	.	.	.	AT2G46830
+CRY2_peaks.narrowPeak	CRY2	.	.	.	.	AT1G04400
+ELF3_ZT0_1_peaks.narrowPeak	ELF3_ZT0	.	.	.	.	AT2G25930
+ELF3_ZT4_1_peaks.narrowPeak	ELF3_ZT4	.	.	.	.	AT2G25930
+ELF4_1_peaks.narrowPeak	ELF4	.	.	.	.	AT2G40080
+FHY1_peaks.narrowPeak	FHY1	.	.	.	.	AT2G37678
+LHY_1_peaks.narrowPeak	LHY	.	.	.	.	AT1G01060
+LUX_ZT10_1_peaks.narrowPeak	LUX_ZT0	.	.	.	.	AT3G46640
+LUX_ZT12_1_peaks.narrowPeak	LUX_ZT12	.	.	.	.	AT3G46640
+PHYA_peaks.narrowPeak	PHYA	.	.	.	.	AT1G09570
+PHYB_peaks.narrowPeak	PHYB	.	.	.	.	AT2G18790
+PIF3_peaks.narrowPeak	PIF3	.	.	.	.	AT1G09530
+PIF4_peaks.narrowPeak	PIF4	.	.	.	.	AT2G43010
+PIF5_peaks.narrowPeak	PIF5	.	.	.	.	AT3G59060
+PRR5_1_peaks.narrowPeak	PRR5	.	.	.	.	AT5G24470
+PRR7_peaks.narrowPeak	PRR7	.	.	.	.	AT5G02810
+PRR9_1_peaks.narrowPeak	PRR9	.	.	.	.	AT2G46790
+TOC1_1_peaks.narrowPeak	TOC1	.	.	.	.	AT5G61380
+
+

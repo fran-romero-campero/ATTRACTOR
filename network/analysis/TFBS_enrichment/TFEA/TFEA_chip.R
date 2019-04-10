@@ -72,6 +72,8 @@ gen.list <- genes(txdb)$gene_id # selecting all the genes in knownGene
 
 myTFBSmatrix <- makeTFBSmatrix(gen.list,TF.gene.binding.db)
 myTFBSmatrix[2530:2531,] # The gene AT1G23080 has TFBS for this five ChIP-Seq datasets
+write.table(myTFBSmatrix, file = "myTFBSmatrix.txt", 
+            sep = "\t",row.names = TRUE)
 
 #######---Step4: Sustitute the default database by a custom generated table ---#####
 

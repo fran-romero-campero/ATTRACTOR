@@ -4,6 +4,7 @@ library(shinycssloaders)
 library(ggplot2)
 library(org.At.tair.db)
 library(SuperExactTest)
+library(TFEA.ChIP)
 library(TxDb.Athaliana.BioMart.plantsmart28)
 library(ChIPseeker)
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
@@ -201,6 +202,14 @@ extract.circadian.genes <- function(peak.time, trough.time, network.specificatio
   return(res.circadian.genes)
 }
 
+## Load database for TFEA_chip analysis
+myTFBSmatrix <- read.table(file = "data/myTFBSmatrix.txt", header = TRUE, sep = "\t")
+rownames(myTFBSmatrix) <- myTFBSmatrix$X
+myTFBSmatrix$X <- NULL
+myMetadata <- read.table(file = "data/metadata.txt", header = T)
+set_user_data(binary_matrix = myTFBSmatrix, metadata = myMetadata)
+
+
 ## Load network
 #network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -397,6 +406,16 @@ ui <- fluidPage(
                    value = 100, min = 5, max = 1000000, step = NA,
                    width = NULL),
       actionButton(inputId = "button_bed", label = "Test"),
+      
+      tags$h3(tags$b("TFBS enrichment analysis using TFEA")),
+      
+      selectInput(inputId = "peak_tfea", label="Peak",
+                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                  multiple = FALSE, selectize = TRUE), 
+      selectInput(inputId = "trough_tfea", label = "Trough", 
+                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                  multiple = FALSE, selectize = TRUE),
+      actionButton(inputId = "button_tfea", label = "Test"),
       
       
       width = 3 
@@ -758,7 +777,10 @@ server <- function(input, output) {
     enrichment <- result[2][[1]]
     intersect.genes <- result[3][[1]]$intersection.genes
     
-    selected.genes.df <- subset(network.data, names %in% intersect.genes)
+    
+    
+    
+    selected.genes.df <- subset(network.data, names %in% intersect.genes )
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
@@ -933,7 +955,80 @@ server <- function(input, output) {
     
   })
   
-  
+  ##TFBS enrichment using TFEA 
+  observeEvent(input$button_tfea, {
+    print("TFEA test")
+    gene.names <- network.data$names
+    
+    
+    if (input$peak_tfea == "Any")
+    {
+      if (input$trough_tfea == "Any") 
+      {
+        zt.genes <- network.data$names
+      } else
+      {
+        
+        zt.genes <- subset(network.data, trough.zt == paste0("trough", substr(x = input$trough_tfea, start = 3, stop = nchar(input$trough_tfea))))$names
+      }
+      
+    } else 
+    {
+      if (input$trough_tfea == "Any")
+      {
+        peak.selection <- paste0("peak", substr(x = input$peak_tfea, start = 3, stop = nchar(input$peak_tfea)))
+        zt.genes <- subset(network.data, peak.zt == peak.selection)$names
+      } else 
+      {
+        trough.selection <- paste0("trough", substr(x = input$trough_tfea, start = 3, stop = nchar(input$trough_tfea)))
+        peak.selection <- paste0("peak", substr(x = input$peak_tfea, start = 3, stop = nchar(input$peak_tfea)))
+        zt.genes <- subset(network.data, trough.zt == trough.selection & peak.zt == peak.selection)$names
+      }
+      
+    }
+    
+    my.list <- intersect(zt.genes, gene.names)
+    control.list <- setdiff(gene.names, zt.genes)
+    CM.list <- contingency_matrix(test_list = my.list, 
+                                  control_list = control.list, chip_index = myMetadata)
+    
+    
+    pvalues <- getCMstats(CM.list)
+    
+    
+    selected.genes.df <- subset(network.data, names %in% zt.genes)
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
+    
+    print(selected.genes.df)
+    print(selected.nodes.colors)
+    
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+      #geom_point(data = selected.tfs.df, size=8, fill=selected.tfs.df$color,colour="black",pch=21) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    
+    
+    output$networkPlot <- renderPlot({
+      
+      network.representation
+    },height = 700)
+    
+    
+    # output$outputText <- renderText(expr = text.bed, quoted = FALSE)
+    
+    output$outputTable <- renderDataTable({
+      pvalues
+    },escape=FALSE)
+    
+    
+    
+  })
   
 }
 
