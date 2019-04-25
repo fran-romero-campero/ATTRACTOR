@@ -744,4 +744,10 @@ target.genes <- paste(target.genes, collapse = ",")
 
 # cpsets(x = nrow(second), L = length.sets, n = sum(length.sets), 5778, lower.tail = FALSE) ##DUda, cuánto es n (population size)
 
+#####--FIlter bed_intersections.txt ----####
+bed.intersections <- read.table(file = "bed_intersections.txt", header = TRUE, as.is = TRUE)
+nrow(bed.intersections)
 
+filter <- subset(x = bed.intersections, subset = fdr < 0.05)
+nrow(filter)
+write.table(filter, file = "bed_intersections_filtered.txt", sep = "\t", row.names = FALSE)

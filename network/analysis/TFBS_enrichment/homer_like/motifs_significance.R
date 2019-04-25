@@ -162,8 +162,6 @@ colnames(background)[q.values < 0.001]
 tfs.intersections.data <- read.table(file = "../../intersections/filtered_significant_results_1.tsv",as.is = T, header = TRUE)
 head(tfs.intersections.data)
 
-
-
 for (j in 1:nrow(tfs.intersections.data)) 
 {
   print(j)
@@ -212,4 +210,53 @@ for (j in 1:nrow(tfs.intersections.data))
   
 }
 
+bed.intersections.data <- read.table(file = "../../intersections/bed_intersections_filtered.txt", 
+           sep = "\t", header = TRUE, as.is=TRUE)
 
+
+for (j in 1:nrow(bed.intersections.data)) 
+{
+  print(j)
+  target.genes <- strsplit(x = bed.intersections.data$Genes[j], split = ",")[[1]]
+  k <- length(target.genes)
+  x <- colSums(precomputed.result[target.genes,] > 0)
+  ## Compute p-values for enrichment aocording to a hypergeometric distribution
+  p.values <- vector(mode="numeric", length=length(x))
+  names(p.values) <- colnames(precomputed.result)
+  
+  for(i in 1:length(x))
+  {
+    p.values[i] <- phyper(q = x[i] - 1, m = m[i], n = n[i], k = k, lower.tail = F)
+  }
+  
+  # which(p.values < input$motif_significance)
+  # p.values[which(p.values < input$motif_significance)]
+  
+  ## Adjust p-values using Benjamini Hochberg
+  q.values <- p.adjust(p = p.values,method = "BH")
+  names(q.values) <- names(p.values)
+  
+  which(q.values < input$motif_significance)
+  
+  ## Compute enrichments
+  enrichments <- (x / k) / (m / nrow(precomputed.result))
+  
+  
+  ## Final motifs
+  sig.enrich.motifs <- names(which(q.values < input$motif_significance & enrichments > input$enrichment_threshold))
+  
+  final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+  final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+  final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+  
+  ##Store data
+  
+  store.data <- data.frame(sig.enrich.motifs, final.p.values, final.q.values, final.enrichments) 
+  write.table(store.data, sep = "\t", row.names = FALSE,
+              file = paste0("TFBS_enrichment_intersections/beds/TFBS_enrichment_of_", 
+                            bed.intersections.data$TF1[j], "_and_",
+                            bed.intersections.data$TF2[j], "_beds_intersection.txt")
+              
+  )       
+  
+}
