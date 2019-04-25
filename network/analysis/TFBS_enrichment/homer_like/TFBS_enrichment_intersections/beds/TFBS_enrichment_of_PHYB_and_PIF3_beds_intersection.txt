@@ -1,1 +1,2 @@
 "sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"bZIP68_1"	5.95543372315036e-05	0.0269185604286396	30.09375

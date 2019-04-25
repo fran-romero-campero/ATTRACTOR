@@ -1,1 +1,2 @@
 "sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"TCP17"	0.00191729146562879	0.0089341829120022	2.18299845440495

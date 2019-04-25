@@ -1,1 +1,2 @@
 "sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"ABI5"	1.61714175204217e-05	0.00730948071923059	3.07787918605064
