@@ -1,0 +1,2 @@
+"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"WRKY57"	3.40809635279434e-05	0.0154045955146304	2.0318928788801
