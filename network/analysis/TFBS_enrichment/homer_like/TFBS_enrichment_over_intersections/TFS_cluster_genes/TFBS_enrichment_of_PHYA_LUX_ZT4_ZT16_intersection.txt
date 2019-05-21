@@ -1,0 +1,2 @@
+"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"LHY1"	6.78996351103361e-05	0.0306906350698719	4.28794063079777

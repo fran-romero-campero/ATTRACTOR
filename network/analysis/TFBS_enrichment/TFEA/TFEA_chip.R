@@ -53,9 +53,12 @@ for (i in 1:length(File.list))
 library(GSEABase)
 library(TxDb.Athaliana.BioMart.plantsmart28)
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
-atha.genes <- genes(txdb)
+genes.data <- subset(genes(txdb,columns=c("tx_id", "tx_name","gene_id")))
+head(genes.data)
+# atha.genes <- genes(txdb)
+# head(atha.genes)
 
-TF.gene.binding.db <- GR2tfbs_db(atha.genes, gr.list, distanceMargin = 0) #asignation of peaks to genes
+TF.gene.binding.db <- GR2tfbs_db(genes.data, gr.list, distanceMargin = 2000) #asignation of peaks to genes
 str(TF.gene.binding.db)
 
 #######---Step3: Generation of the TFBS database ---#####
@@ -69,6 +72,8 @@ gen.list <- genes(txdb)$gene_id # selecting all the genes in knownGene
 
 myTFBSmatrix <- makeTFBSmatrix(gen.list,TF.gene.binding.db)
 myTFBSmatrix[2530:2531,] # The gene AT1G23080 has TFBS for this five ChIP-Seq datasets
+write.table(myTFBSmatrix, file = "myTFBSmatrix.txt", 
+            sep = "\t",row.names = TRUE)
 
 #######---Step4: Sustitute the default database by a custom generated table ---#####
 
@@ -143,11 +148,12 @@ for (i in 1:length(cluster.list))
   
   
   pvalues <- getCMstats(CM.list)
-  rows.to.keep <- subset(x = pvalues, subset = adj.p.value < 0.001)
+  # rows.to.keep <- subset(x = pvalues, subset = adj.p.value < 0.05)
   
   split.name <- strsplit(x = cluster.list[i], split = ".txt")[[1]]
-  write.table(rows.to.keep, 
-              file=paste0("TFEA_tests/TFBS_enrichment_",split.name),
+  write.table(pvalues,
+  # write.table(rows.to.keep, 
+              file=paste0("TFEA_tests/TFBS_enrichment_",split.name,".txt"),
               sep="\t", row.names = FALSE)
   
   

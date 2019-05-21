@@ -8,7 +8,7 @@ promoter.downstream <- args[2]
 score.value <- args[3] #"95%"
 
 sequences.file <- paste(c("background_",promoter.upstream, "_", promoter.downstream,
-                          "_5778.fa"),collapse = "")
+                          "_33323.fa"),collapse = "")
 
 number.motifs <- 453
 
@@ -92,6 +92,6 @@ write.table(x = multiplicities,
                                              promoter.downstream,
                                              "_",
                                              score.value,
-                                             "_5778.tsv"),collapse = ""),
+                                             "_33323.tsv"),collapse = ""),
             sep = "\t",
             quote = F)

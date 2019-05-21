@@ -1,0 +1,2 @@
+"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"ABF2"	5.68291072512333e-05	0.00709625812359061	2.11981132075472

@@ -1,0 +1,2 @@
+"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
+"BZR1_1"	9.68242059119662e-05	0.0437645410722087	8.06082589285714
