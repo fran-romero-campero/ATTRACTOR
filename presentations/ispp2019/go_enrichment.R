@@ -15,7 +15,7 @@ compute.enrichments <- function(gene.ratios, bg.ratios)
 }
 
 #genes <- read.table(file="genes_CCA1_PRR5_PIF5.txt",as.is=T)[[1]]
-genes <- read.table(file="genes_PHYB_PIF5_PRR5",as.is=T)[[1]]
+genes <- read.table(file="CCA1_PIF4_LUX/genes_CCA1_PIF5_LUX.txt",as.is=T)[[1]]
 
 length(genes)
 
@@ -54,7 +54,7 @@ colnames(go.result.table) <- c("GO ID", "Description", "p-value", "q-value",
                                  "Enrichment (Target Ratio; BG Ration)","Genes")
 
 head(go.result.table)  
-write.table(x = go.result.table,file = "PHYB_PIF5_PRR5.txt",row.names = F,quote = F,sep = "\t")
+write.table(x = go.result.table,file = "CCA1_PIF4_LUX/CCA1_PIF4_LUX.txt",row.names = F,quote = F,sep = "\t")
 
 pathway.enrichment <- as.data.frame(enrichKEGG(gene = genes, 
                                                organism = "ath", universe = atha.universe,
