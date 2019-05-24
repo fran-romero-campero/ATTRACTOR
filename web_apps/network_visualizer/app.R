@@ -418,6 +418,10 @@ server <- function(input, output) {
           } else if(edge.weights[k] == -1)
           {
             E(tfs.network)$color[k] <- repressor.color  #"darkred"
+          } else if(edge.weights[k] == 2)
+          {
+            print(1)
+            E(tfs.network)$color[k] <- neutral.color
           }
         }
         
@@ -431,7 +435,7 @@ server <- function(input, output) {
           } else if(new.matrix[k,ncol(new.matrix)] == -1)
           {
             node.colors[k] <- repressor.color
-          } else if (new.matrix[k,ncol(new.matrix)] == 0)
+          } else #if (new.matrix[k,ncol(new.matrix)] == 0)
           {
             node.colors[k] <- neutral.color
           }
@@ -456,12 +460,14 @@ server <- function(input, output) {
         
         #Plot the network
         #par(mar = c(4,4,4,4))
+        print(2)
+        print(node.colors)
         plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
                     vertex.color = node.colors, vertex.label=new.node.labels, edge.arrow.size = 0.8, 
                     edge.arrow.width=2, edge.curved= TRUE, edge.width = 4, vertex.label.dist = 0,
                     vertex.label.cex=1, vertex.label.font=2,vertex.label.color="black",label.font=2)
         
-        
+        print(3)
       # } else {
       #   #par(mar = c(0,0,0,0))
       #   plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
@@ -510,6 +516,11 @@ server <- function(input, output) {
           {
             point.color <- repressor.color # "firebrick1"
             arrow.angle <- 90
+            draw.tf <- TRUE
+          } else if (current.regulation == 2)
+          {
+            point.color <- neutral.color
+            arrow.angle <- 45
             draw.tf <- TRUE
           } else if (current.regulation == 0)
           {

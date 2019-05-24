@@ -53,7 +53,7 @@ zts.to.consider <- function(zt.point)
 }
 
 gene.names <- network.representation$names
-
+i <- 4558
 for(i in 1:length(gene.names))
 {
   target.gene <- gene.names[i]
@@ -75,12 +75,15 @@ for(i in 1:length(gene.names))
         increment <- gene.expression.profile[zts.to.check[2]] - gene.expression.profile[zts.to.check[1]]
         relative.increment <- increment / gene.expression.profile[zts.to.check[1]]
         
-        if(relative.increment > 0.1)
+        if(relative.increment > 0.03)
         {
           regulatory.matrix[target.gene,current.regulator] <- 1
-        } else 
+        } else if(relative.increment < - 0.03) 
         {
           regulatory.matrix[target.gene,current.regulator] <- -1
+        } else
+        {
+          regulatory.matrix[target.gene,current.regulator] <- 2
         }
       }
     }
@@ -88,6 +91,10 @@ for(i in 1:length(gene.names))
 }
 
 head(regulatory.matrix)
+
+100 * sum(regulatory.matrix == 1)/sum(regulatory.matrix != 0)
+100 * sum(regulatory.matrix == -1)/sum(regulatory.matrix != 0)
+100 * sum(regulatory.matrix == 2)/sum(regulatory.matrix != 0)
 
 network.representation[,35:53] <- regulatory.matrix
 
@@ -104,8 +111,9 @@ percent.tf <- function(tf.name)
   freq.act.rep <- table(network.representation[,tf.name])
   number.rep <- freq.act.rep["-1"]
   number.act <- freq.act.rep["1"]
-  total.targets <- number.act + number.rep
-  return(list(activated=100*number.act/total.targets, repressed=100*number.rep/total.targets))
+  number.neutral <- freq.act.rep["2"]
+  total.targets <- number.act + number.rep + number.neutral
+  return(list(activated=100*number.act/total.targets, neutral = 100*number.neutral/total.targets, repressed=100*number.rep/total.targets))
 }
 
 percent.tf(tf.name = "CCA1_ZT02")
@@ -113,6 +121,7 @@ percent.tf(tf.name = "CCA1_ZT14")
 percent.tf(tf.name = "PHYA_ZT00")
 percent.tf(tf.name = "PHYB_ZT00")
 percent.tf(tf.name = "PIF5_ZT04")
+percent.tf(tf.name = "PRR5_ZT10")
 
 table(network.representation$CCA1_ZT02)
 table(network.representation$CCA1_ZT14)

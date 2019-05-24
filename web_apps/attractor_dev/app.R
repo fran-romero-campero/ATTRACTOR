@@ -151,8 +151,6 @@ randomize.peaks <- function(input.peaks,chr.lengths)
   return(random.peaks)
 }
 
-
-
 ## Function to generate output table
 create.output.table <- function(input.gene.df,alias,tfs.names)
 {
@@ -204,6 +202,10 @@ extract.circadian.genes <- function(peak.time, trough.time, network.specificatio
   return(res.circadian.genes)
 }
 
+
+
+
+
 ## Load database for TFEA_chip analysis
 myTFBSmatrix <- read.table(file = "data/myTFBSmatrix.txt", header = TRUE, sep = "\t")
 rownames(myTFBSmatrix) <- myTFBSmatrix$X
@@ -244,12 +246,16 @@ genes <- sort(network.data$name)
 ## Load all and circadian genes
 my.key <- keys(org.At.tair.db, keytype="ENTREZID")
 my.col <- c("SYMBOL", "TAIR")
-alias2symbol.table <- select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
 alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
+
+
+
+
 
 ## Transcription factors AGI ids and names
 tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
@@ -444,7 +450,7 @@ ui <- fluidPage(
       htmlOutput(outputId = "go_graph"),
       tags$br(),
       tags$br(),
-      div(style= "overflow:scroll; height:500px;", 
+      div(style= "overflow:scroll; height:500px;",
           plotOutput(outputId = "go.plot", inline = TRUE)),
       downloadButton(outputId= "downloadImage", "Get GO map"),
       tags$br(),
@@ -633,6 +639,9 @@ server <- function(input, output) {
                    yend=selected.genes.df$y.pos, 
                    color="grey", arrow=arrow(type="closed",length=unit(0.1, "cm")))
       }
+      
+      network.representation <- network.representation + 
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
     }
     
     output$networkPlot <- renderPlot({
@@ -1031,49 +1040,41 @@ server <- function(input, output) {
   })
     #####server for the GO enrichment
     observeEvent(input$go.button , {
+      
       selected.gene.list <- as.vector(unlist(
         strsplit(input$gene.list, split="\n",
-                 fixed = TRUE)[1]))  
-      org.db <- org.At.tair.db
+                 fixed = TRUE)[1]))
+      
       enrich.go <- enrichGO(gene          = selected.gene.list,
-                            OrgDb         = org.db,
+                            OrgDb         = org.At.tair.db,
                             ont           = "MF",
                             pAdjustMethod = "BH",
                             pvalueCutoff  = 0.05,
                             qvalueCutoff  = 0.05,
                             readable      = TRUE,
                             keyType = "TAIR")
-      
-      
+
+
       ## Generate ouput table
       enrich.go.result <- as.data.frame(enrich.go)
       ## GO term Description P-value Q-value Enrichment (SetRatio, BgRatio) Genes
-      compute.enrichments <- function(gene.ratios, bg.ratios)
-      {
-        gene.ratios.eval <- sapply(parse(text=gene.ratios),FUN = eval)
-        bg.ratios.eval <- sapply(parse(text=bg.ratios),FUN = eval)
-        enrichments <- round(x=gene.ratios.eval/bg.ratios.eval,digits = 2)
-        enrichments.text <- paste(enrichments, " (", gene.ratios, "; ", bg.ratios, ")",sep="")
-        
-        return(enrichments.text)  
-      }
       go.term.enrichments <- compute.enrichments(gene.ratios = enrich.go.result$GeneRatio,
                                                  bg.ratios = enrich.go.result$BgRatio)
-      
+
       go.result.table <- data.frame(enrich.go.result$ID, enrich.go.result$Description,
                                     enrich.go.result$pvalue, enrich.go.result$qvalue,
-                                    go.term.enrichments, 
+                                    go.term.enrichments,
                                     gsub(pattern = "/",replacement = " ",x = enrich.go.result$geneID),
                                     stringsAsFactors = FALSE)
-      
+
       colnames(go.result.table) <- c("GO ID", "Description", "p-value", "q-value",
                                      "Enrichment (Target Ratio; BG Ration)","Genes")
-      
+
       go.result.table.with.links <- go.result.table
-      
+
       ## Developing genes link function
       genes.in.go.enrichment <- go.result.table$Genes
-      
+
       gene.link.function <- function(gene.name)
       {
         tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
@@ -1086,13 +1087,13 @@ server <- function(input, output) {
                            collapse="")
         return(gene.link)
       }
-      
+
       # Add links to genes
       for(i in 1:length(genes.in.go.enrichment))
       {
         go.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(genes.in.go.enrichment[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
       }
-      
+
       #Developing GO links function
       go.link <- function(go.term)
       {
@@ -1104,15 +1105,15 @@ server <- function(input, output) {
                                collapse = "")
         return(complete.link)
       }
-      
+
       ## Add links to GO ids
       go.result.table.with.links[["GO ID"]] <- sapply(X = go.result.table.with.links[["GO ID"]], FUN = go.link)
-      
+
       go.table.text <- "The table below summarizes the result of the GO term
       enrichment analysis. Each row represents a GO term significantly enriched in the target
       gene set with respect to the selected gene universe. The first column represents the GO term
-      identifier. The second column contains a human readable description. For more details on the 
-      corresponding GO term, click on the identifier in the first column. The third and fourth 
+      identifier. The second column contains a human readable description. For more details on the
+      corresponding GO term, click on the identifier in the first column. The third and fourth
       column presents the p-value and q-value (adjusted p-value or FDR) capturing the level
       of significance. The fifth column displays the corresponding enrichment value E (m/n; M/N) where
       n is the number of genes with annotation from the target set, N is the number of genes with
@@ -1120,25 +1121,25 @@ server <- function(input, output) {
       corresponding GO term and M is the number of genes from the gene universe annotated with
       the GO term associated with the corresponding row. The enrichment is then computed as
       E = (m/n) / (M/N). Finally, the last column, contains the genes from the target set
-      annotated with the GO term represented in the corresponding row." 
-      
+      annotated with the GO term represented in the corresponding row."
+
       output$textGOTable <- renderText(expr = go.table.text)
-      
+
       ## Output table with GO enrichment result
       output$output_go_table <- renderDataTable({
         go.result.table.with.links #go.result.table
-      },escape=FALSE,options =list(pageLength = 5)) 
-      
-      ## Link to REVIGO 
+      },escape=FALSE,options =list(pageLength = 5))
+
+      ## Link to REVIGO
       revigo.data <- paste(revigo.data <- apply(go.result.table[,c("GO ID", "q-value")], 1, paste, collapse = " "), collapse="\n")
-      
+
       url1 <- a("here", href="#", onclick="document.revigoForm.submit();")
       url2 <- tags$form(
-        name="revigoForm", action="http://revigo.irb.hr/", method="post", target="_blank", 
-        tags$textarea(name="inputGoList", rows="1", cols="8", class="revigoText", 
-                      style="visibility: hidden", revigo.data) 
+        name="revigoForm", action="http://revigo.irb.hr/", method="post", target="_blank",
+        tags$textarea(name="inputGoList", rows="1", cols="8", class="revigoText",
+                      style="visibility: hidden", revigo.data)
       )
-      
+
       output$revigo<- renderUI(
         tagList("The enriched GO terms above may be redundant. Visualize these results in REViGO in order to remove redundancy. Click", url1, url2)
       )
@@ -1147,9 +1148,9 @@ server <- function(input, output) {
       indicates the level of significance from grey, non-significant, to intense red,
       highly significant. An arrow is drawn from GO term A to GO term B when A is a more
       general GO term than B or B is more specific than A."
-      
+
       output$go_graph <- renderText(expr = go.graph.text)
-      
+
       ## GO plot
       output$go.plot <- renderPlot(
         width     = 940,
@@ -1158,12 +1159,12 @@ server <- function(input, output) {
         expr = {
           goplot(enrich.go,showCategory = 10)
         })
-      
-      output$barplot_text <- renderText("In the following barplot each bar represents a significantly enriched 
+
+      output$barplot_text <- renderText("In the following barplot each bar represents a significantly enriched
                                         GO term. The length of the bar corresponds to the number of genes in the
                                         target set annotated with the given GO term. The bar color captures the level
                                         of significance from blue, less significant, to red, more significant.")
-      
+
       ## Barplot
       output$bar.plot <- renderPlot(
         width     = 870,
@@ -1172,12 +1173,12 @@ server <- function(input, output) {
         expr = {
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
-      
-      output$dotplot_text <- renderText("In the following dotplot each dot represents a significantly enriched 
+
+      output$dotplot_text <- renderText("In the following dotplot each dot represents a significantly enriched
                                         GO term. The x-position of the dot corresponds to the ratio between the number of genes annotated with the
                                         corresponding GO term and the total number of annotated genes in the target set. The dot color captures the level
                                         of significance from blue, less significant, to red, more significant.")
-      
+
       ## Dotplot
       output$dot.plot <- renderPlot(
         width     = 870,
@@ -1186,12 +1187,12 @@ server <- function(input, output) {
         expr = {
           dotplot(enrich.go)
         })
-      
+
       output$emapplot_text <- renderText("The following figure consists of an enrichment map where nodes represent enriched GO terms. The
                                          size of a node is proportional to the number of genes annotated with the corresponding GO term in the target set.
                                          The node colors represent the level of significance from less signficant in blue to more significant in red. Edges are drawn
                                          between two nodes when the corresponding GO terms are semantically related.")
-      
+
       ##EMAP plot
       output$emap.plot <- renderPlot(
         width     = 870,
@@ -1200,13 +1201,13 @@ server <- function(input, output) {
         expr = {
           emapplot(enrich.go)
         })
-      
+
       output$cnetplot_text <- renderText("The following figure corresponds to a gene-concept network. The beige
 nodes represents GO terms and the grey nodes genes. An edge is drawn from a gene to a GO term when the gene is annotated
 with the corresponding gene. The size of nodes representing GO terms is proportional to the number of genes annotated
 with the corresponding GO term.")
-      
-      
+
+
       ##CNET plot
       output$cnet.plot <- renderPlot(
         width     = 870,
@@ -1215,7 +1216,7 @@ with the corresponding GO term.")
         expr = {
           cnetplot(enrich.go)
         })
-      
+
     })
     
   }
