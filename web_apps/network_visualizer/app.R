@@ -73,6 +73,9 @@ agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
 agis[is.na(agis)] <- ""
 
+agis["FHY1"] <- "AT2G37678"
+alias["AT1G79790"] <- "ATCPFHY1"
+
 ##Functions
 #Function for radian conversion
 radian.conversion <- function(alpha)
@@ -314,7 +317,7 @@ server <- function(input, output) {
         }
         
         if (input$all){
-          sel.tfs <- c("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
+          sel.tfs <- c("LHY","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
           to.keep <- rep(TRUE,ncol(adj.global.matrix))
           selected.tfs.agi <- agis[sel.tfs]
         } else {
@@ -494,7 +497,13 @@ server <- function(input, output) {
            main=paste(target.agi, alias[target.agi],sep=" - "))
       
       ## Add TFs to expression profile
-      selected.tfs.agi <- agis[input$selected.tfs]
+      if (input$all){
+        sel.tfs <- c("LHY","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
+        selected.tfs.agi <- agis[sel.tfs]
+        } else {
+          selected.tfs.agi <- agis[input$selected.tfs]
+        }
+      
       
       for(i in 1:length(selected.tfs.agi))
       {
