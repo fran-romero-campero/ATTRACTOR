@@ -315,8 +315,8 @@ server <- function(input, output) {
         
         if (input$all){
           sel.tfs <- c("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
-          to.keep <- agis[sel.tfs]
-          
+          to.keep <- rep(TRUE,ncol(adj.global.matrix))
+          selected.tfs.agi <- agis[sel.tfs]
         } else {
           selected.tfs.agi <- agis[input$selected.tfs]
           to.keep <- rep(FALSE,ncol(adj.global.matrix))
