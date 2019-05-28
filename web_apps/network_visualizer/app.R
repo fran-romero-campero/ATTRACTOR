@@ -295,30 +295,38 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$button, handlerExpr = {
     
     output$network <- renderPlot({
-      validate(
-        need(input$selected.tfs != "", "Please select some transcription factor")
-      )
+      
+      #Error message for the user
+      if(input$all == FALSE)
+      {
+        validate(
+          need(input$selected.tfs, "Please select some transcription factor")
+        )
+      }
+      
+      
+      #      if (target.agi %in% row.names(adj.global.matrix)) {
+      #Plot circle
+      par(mar=c(0,0,0,0))
+      plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
+      lines(x.circle.2, y.circle.2, lwd=3)
+      x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                     sin(seq(from=-pi, to=0, by=0.01))* radius.1)
+      y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                    cos(seq(from=-pi, to=0, by=0.01))*radius.1)
+      polygon(x = x.polygon, y = y.polygon, col = "black")
+      for (i in 0:5)
+      {
+        angle.zt <- radian.conversion(alpha = 60*i)
+        zt <- 4*i
+        current.zt <- paste("ZT", zt,  sep = "")
+        text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
+        lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
+              y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
+      }
+      
+      
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
-
-#      if (target.agi %in% row.names(adj.global.matrix)) {
-        #Plot circle
-        par(mar=c(0,0,0,0))
-        plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
-        lines(x.circle.2, y.circle.2, lwd=3)
-        x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
-                       sin(seq(from=-pi, to=0, by=0.01))* radius.1)
-        y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
-                      cos(seq(from=-pi, to=0, by=0.01))*radius.1)
-        polygon(x = x.polygon, y = y.polygon, col = "black")
-        for (i in 0:5)
-        {
-          angle.zt <- radian.conversion(alpha = 60*i)
-          zt <- 4*i
-          current.zt <- paste("ZT", zt,  sep = "")
-          text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
-          lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
-                y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
-        }
         
         if (input$all){
           sel.tfs <- c("LHY","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
@@ -332,6 +340,11 @@ server <- function(input, output) {
             to.keep <- (to.keep | grepl(input$selected.tfs[i],colnames(adj.global.matrix)))
           }
         }
+      
+
+      
+              
+
 
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
         adj.matrix.to.represent <- as.matrix(adj.global.matrix[selected.tfs.agi,to.keep])
@@ -487,9 +500,14 @@ server <- function(input, output) {
   
   observeEvent(eventExpr = input$button, handlerExpr = {
     output$expression <- renderPlot({
-      validate(
-        need(input$selected.tfs != "", "Please select some transcription factor")
-      )
+      #Error message for the user
+      if(input$all == FALSE)
+      {
+        validate(
+          need(input$selected.tfs, "Please select some transcription factor")
+        )
+      }
+      
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       gene.expression <- as.vector(scale(mean.expression[target.agi,]))
       gene.expression <- c(gene.expression, gene.expression[1])
