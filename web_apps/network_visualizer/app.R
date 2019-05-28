@@ -299,9 +299,6 @@ server <- function(input, output) {
       
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       #Error message for the user
-      validate(
-        need(((target.agi %in% network.data$names == TRUE)), "Sorry, the selected gene is not in the network")
-      )
       if(input$all == FALSE)
       {
         validate(
@@ -507,9 +504,6 @@ server <- function(input, output) {
     output$expression <- renderPlot({
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       #Error message for the user
-      validate(
-        need(((target.agi %in% network.data$names == TRUE)), "PLEASE")
-      )
       if(input$all == FALSE)
       {
         validate(
