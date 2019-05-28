@@ -60,14 +60,15 @@ network.data <- read.table(file="../attractor_dev/data/attractor_network_represe
 genes <- sort(network.data$name)
 
 ## Load all and circadian genes
-my.key <- keys(org.At.tair.db, keytype="ENTREZID")
-my.col <- c("SYMBOL", "TAIR")
-alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, keys=my.key, columns=my.col, keytype="ENTREZID")
+alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
+                                            keys=keys(org.At.tair.db, keytype="ENTREZID"), 
+                                            columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
 alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
-genes <- paste(names(alias), alias, sep=" - ")
+# alias <- alias[genes] 
+genes.selectize <- paste(names(alias), alias, sep=" - ")
 
 agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
@@ -250,7 +251,7 @@ ui <- fluidPage(
         #Selectize input to choose the gene for represent in the network
         selectizeInput(inputId="target.gene", 
                        label="Target gene", 
-                       choices=genes, 
+                       choices=genes.selectize, 
                        selected = "AT1G22770 - GI", 
                        multiple = FALSE),
         
