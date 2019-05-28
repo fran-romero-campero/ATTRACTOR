@@ -73,6 +73,9 @@ agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
 agis[is.na(agis)] <- ""
 
+agis["FHY1"] <- "AT2G37678"
+alias["AT1G79790"] <- "ATCPFHY1"
+
 ##Functions
 #Function for radian conversion
 radian.conversion <- function(alpha)
@@ -290,7 +293,11 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   observeEvent(eventExpr = input$button, handlerExpr = {
+    
     output$network <- renderPlot({
+      validate(
+        need(input$selected.tfs != "", "Please select some transcription factor")
+      )
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
 
 #      if (target.agi %in% row.names(adj.global.matrix)) {
@@ -314,9 +321,9 @@ server <- function(input, output) {
         }
         
         if (input$all){
-          sel.tfs <- c("LHY1","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
-          to.keep <- agis[sel.tfs]
-          
+          sel.tfs <- c("LHY","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
+          to.keep <- rep(TRUE,ncol(adj.global.matrix))
+          selected.tfs.agi <- agis[sel.tfs]
         } else {
           selected.tfs.agi <- agis[input$selected.tfs]
           to.keep <- rep(FALSE,ncol(adj.global.matrix))
@@ -480,6 +487,9 @@ server <- function(input, output) {
   
   observeEvent(eventExpr = input$button, handlerExpr = {
     output$expression <- renderPlot({
+      validate(
+        need(input$selected.tfs != "", "Please select some transcription factor")
+      )
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       gene.expression <- as.vector(scale(mean.expression[target.agi,]))
       gene.expression <- c(gene.expression, gene.expression[1])
@@ -494,7 +504,13 @@ server <- function(input, output) {
            main=paste(target.agi, alias[target.agi],sep=" - "))
       
       ## Add TFs to expression profile
-      selected.tfs.agi <- agis[input$selected.tfs]
+      if (input$all){
+        sel.tfs <- c("LHY","CRY2","PIF3","PHYA","PHYB","ELF3","FHY1","ELF4","PIF4","PRR9","CCA1","LUX","PIF5","PRR7","PRR5","TOC1")
+        selected.tfs.agi <- agis[sel.tfs]
+        } else {
+          selected.tfs.agi <- agis[input$selected.tfs]
+        }
+      
       
       for(i in 1:length(selected.tfs.agi))
       {
