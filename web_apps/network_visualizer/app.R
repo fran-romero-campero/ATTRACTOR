@@ -293,7 +293,11 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   observeEvent(eventExpr = input$button, handlerExpr = {
+    
     output$network <- renderPlot({
+      validate(
+        need(input$selected.tfs != "", "Please select some transcription factor")
+      )
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
 
 #      if (target.agi %in% row.names(adj.global.matrix)) {
@@ -483,6 +487,9 @@ server <- function(input, output) {
   
   observeEvent(eventExpr = input$button, handlerExpr = {
     output$expression <- renderPlot({
+      validate(
+        need(input$selected.tfs != "", "Please select some transcription factor")
+      )
       target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
       gene.expression <- as.vector(scale(mean.expression[target.agi,]))
       gene.expression <- c(gene.expression, gene.expression[1])
