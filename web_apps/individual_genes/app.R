@@ -220,6 +220,10 @@ ui <- fluidPage(
                                   )))
              ),
       column(width = 2, 
+             img(src='logo_us.png', align = "center", width=100),
+             tags$br(),tags$br(),tags$br(),
+             img(src='logo_csic.jpg', align = "center", width=100),
+             img(src='logo_ibvf.jpg', align = "center", width=100),
              plotOutput(outputId = "plot2"))
      )
         
