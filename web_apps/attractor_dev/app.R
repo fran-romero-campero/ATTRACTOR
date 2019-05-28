@@ -28,7 +28,6 @@ intersectSets <- function(tf1,tf2,set.of.genes){
   names(intersection.data) <- c("p-value", "enrichment", "genes")
   return(intersection.data)
 }
-
 intersect2sets <- function(set1, set2, alias, gene.descriptions){
   intersection.data <- list()
   sets <- list(set1, set2)
@@ -103,7 +102,6 @@ intersectBed.1 <- function(peaks.set1, peaks.set2)
   }
   return(intersection)
 }
-
 intersectBed <- function(peaks.set1, peaks.set2)
 {
   intersection <- matrix(ncol = 3, nrow=min(nrow(peaks.set1),nrow(peaks.set2)) )
@@ -140,7 +138,6 @@ intersectBed <- function(peaks.set1, peaks.set2)
   }
   return(list(intersection=intersection[1:j,],size=j))
 }
-
 randomize.peaks <- function(input.peaks,chr.lengths)
 {
   random.numbers <- runif(n = nrow(input.peaks))
@@ -166,6 +163,25 @@ create.output.table <- function(input.gene.df,alias,tfs.names)
                                              "\" target=\"_blank\">",
                                              input.gene.df[i,1], "</a>"),
                                            collapse="")
+    output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+    output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+    output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+    output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+  }
+  
+  return(output.selected.genes.df)
+}
+
+## Function to generate output table to download
+create.downloadable.output.table <- function(input.gene.df,alias,tfs.names)
+{
+  output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+  colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+  output.selected.genes.df$`Gene Description` <- input.gene.df$description
+  
+  for(i in 1:nrow(output.selected.genes.df))
+  {
+    output.selected.genes.df[i,1] <- input.gene.df[i,1]
     output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
     output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
     output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
@@ -202,9 +218,41 @@ extract.circadian.genes <- function(peak.time, trough.time, network.specificatio
   return(res.circadian.genes)
 }
 
+## Auxiliary function to compute enrichments
+compute.enrichments <- function(gene.ratios, bg.ratios)
+{
+  gene.ratios.eval <- sapply(parse(text=gene.ratios),FUN = eval)
+  bg.ratios.eval <- sapply(parse(text=bg.ratios),FUN = eval)
+  enrichments <- round(x=gene.ratios.eval/bg.ratios.eval,digits = 2)
+  enrichments.text <- paste(enrichments, " (", gene.ratios, "; ", bg.ratios, ")",sep="")
+  
+  return(enrichments.text)  
+}
 
+#GO links and tair link functions
+go.link <- function(go.term)
+{
+  link <- paste0("http://amigo.geneontology.org/amigo/term/", go.term)
+  complete.link <- paste(c("<a href=\"",
+                           link,
+                           "\" target=\"_blank\">",
+                           go.term, "</a>"),
+                         collapse = "")
+  return(complete.link)
+}
 
-
+gene.link.function <- function(gene.name)
+{
+  tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
+                       gene.name,
+                       "&type=locus"),collapse="")
+  gene.link <- paste(c("<a href=\"",
+                       tair.link,
+                       "\" target=\"_blank\">",
+                       gene.name, "</a>"),
+                     collapse="")
+  return(gene.link)
+}
 
 ## Load database for TFEA_chip analysis
 myTFBSmatrix <- read.table(file = "data/myTFBSmatrix.txt", header = TRUE, sep = "\t")
@@ -316,7 +364,8 @@ ui <- fluidPage(
                    choices = c("Individual Genes", 
                                "Gene List", 
                                "Common TF target genes",
-                               "Topological parameter"),
+                               "Topological parameter",
+                               "Significance intersections"),
                    selected = "Individual Genes"),
       
       ## Dynamic panel for selecting single genes
@@ -365,25 +414,25 @@ ui <- fluidPage(
       ),
       
       
-      tags$h3(tags$b("Multiset Intersections:")),
-      
-      selectInput(inputId = "tf1", label="Transcription Factor 1", 
-                  choices = tfs.names, selected = NULL,
-                  multiple = FALSE, selectize = TRUE),
-      selectInput(inputId = "tf2", label="Transcription Factor 2", 
-                  choices = tfs.names, selected = NULL,
-                  multiple = FALSE, selectize = TRUE),
-      tags$b("Cluster of Circadian Genes"),
-      selectInput(inputId = "peak", label="Peak", 
-                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-                  multiple = FALSE, selectize = TRUE),
-      selectInput(inputId = "trough", label="Trough", 
-                  choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-                  multiple = FALSE, selectize = TRUE),
-      actionButton(inputId = "button_intersect", label = "Test"),
-      
-      
-      
+      conditionalPanel(condition = "input.gene_selection_mode == 'Significance intersections'",
+                       tags$h3(tags$b("Multiset Intersections:")),
+                       
+                       selectInput(inputId = "tf1", label="Transcription Factor 1", 
+                                   choices = tfs.names, selected = NULL,
+                                   multiple = FALSE, selectize = TRUE),
+                       selectInput(inputId = "tf2", label="Transcription Factor 2", 
+                                   choices = tfs.names, selected = NULL,
+                                   multiple = FALSE, selectize = TRUE),
+                       tags$b("Cluster of Circadian Genes"),
+                       selectInput(inputId = "peak", label="Peak", 
+                                   choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                                   multiple = FALSE, selectize = TRUE),
+                       selectInput(inputId = "trough", label="Trough", 
+                                   choices = c("Any",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                                   multiple = FALSE, selectize = TRUE),
+                       actionButton(inputId = "button_intersect", label = "Test")
+      ),
+
       
       tags$h3(tags$b("Topological Intersections")),
       selectInput(inputId = "peak_top", label="Peak",
@@ -438,13 +487,14 @@ ui <- fluidPage(
       plotOutput("progressPlot", width = "300px", height = "300px"),
       htmlOutput(outputId = "outputText"),
       dataTableOutput(outputId = "outputTable"),
-      
-      
+      uiOutput(outputId = "download_ui_for_table"),
+
       #ui for GO enrichment
       htmlOutput(outputId = "textGOTable"),
       tags$br(),
       tags$br(),
       dataTableOutput(outputId = "output_go_table"),
+      uiOutput(outputId = "download_ui_for_go_table"),
       htmlOutput(outputId = "revigo"),
       tags$br(),
       htmlOutput(outputId = "go_graph"),
@@ -609,6 +659,7 @@ server <- function(input, output) {
     }
     
     selected.genes.df <- network.data[gene.selection,]
+    
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     print(selected.genes.df)
@@ -651,6 +702,128 @@ server <- function(input, output) {
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
+    
+    output$download_ui_for_table<- renderUI(
+      tagList(downloadButton(outputId= "downloadData", "Download Selected Genes"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+    )
+    
+    output$downloadData<- downloadHandler(
+      filename= function() {
+        paste0(paste(input$selected.tfs,collapse = "_"), ".tsv")
+      },
+      content= function(file) {
+        write.table(create.downloadable.output.table(input.gene.df=selected.genes.df,alias,tfs.names), 
+                    file=file, 
+                    sep = "\t", 
+                    quote = FALSE,
+                    row.names = FALSE)
+      })
+    
+    ## GO enrichment analysis
+    enrich.go <- enrichGO(gene          = selected.genes.df$name,
+                          universe      = genes,
+                          OrgDb         = org.At.tair.db,
+                          ont           = "BP",
+                          pAdjustMethod = "BH",
+                          pvalueCutoff  = 0.05,
+                          qvalueCutoff  = 0.05,
+                          readable      = FALSE,
+                          keyType = "TAIR")
+    
+    ## Generate ouput table
+    enrich.go.result <- as.data.frame(enrich.go)
+    
+    
+    if(nrow(enrich.go.result) > 0)
+    {
+      ## GO term Description P-value Q-value Enrichment (SetRatio, BgRatio) Genes
+      go.term.enrichments <- compute.enrichments(gene.ratios = enrich.go.result$GeneRatio,
+                                                 bg.ratios = enrich.go.result$BgRatio)
+    
+      go.result.table <- data.frame(enrich.go.result$ID, enrich.go.result$Description,
+                                    enrich.go.result$pvalue, enrich.go.result$qvalue,
+                                    go.term.enrichments, 
+                                    gsub(pattern = "/",replacement = " ",x = enrich.go.result$geneID),
+                                    stringsAsFactors = FALSE)
+    
+      colnames(go.result.table) <- c("GO ID", "Description", "p-value", "q-value",
+                                     "Enrichment (Target Ratio; BG Ration)","Genes")
+      
+      go.result.table.with.links <- go.result.table
+      ## Add links to the genes
+      genes.in.go.enrichment <- go.result.table$Genes
+      
+      ## Add link to genes
+      for(i in 1:length(genes.in.go.enrichment))
+      {
+        go.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(genes.in.go.enrichment[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
+      }
+      
+      ## Add links to GO ids
+      go.result.table.with.links[["GO ID"]] <- sapply(X = go.result.table.with.links[["GO ID"]], FUN = go.link)
+      
+      
+      ## Introductory text for GO enrichment table
+      # go.table.text <- "The table below summarizes the result of the GO term
+      # enrichment analysis. Each row represents a GO term significantly enriched in the target
+      # gene set with respect to the selected gene universe. The first column represents the GO term
+      # identifier. The second column contains a human readable description. For more details on the 
+      # corresponding GO term, click on the identifier in the first column. The third and fourth 
+      # column presents the p-value and q-value (adjusted p-value or FDR) capturing the level
+      # of significance. The fifth column displays the corresponding enrichment value E (m/n; M/N) where
+      # n is the number of genes with annotation from the target set, N is the number of genes with
+      # annotation from the gene universe, m is the number of genes from the target set annotated with the
+      # corresponding GO term and M is the number of genes from the gene universe annotated with
+      # the GO term associated with the corresponding row. The enrichment is then computed as
+      # E = (m/n) / (M/N). Finally, the last column, contains the genes from the target set
+      # annotated with the GO term represented in the corresponding row." 
+      # 
+      # output$textGOTable <- renderText(expr = go.table.text)
+      
+      ## Output table with GO enrichment result
+      output$output_go_table <- renderDataTable({
+        go.result.table.with.links #go.result.table
+      },escape=FALSE,options =list(pageLength = 5)) 
+      
+      output$download_ui_for_go_table<- renderUI(
+        tagList(downloadButton(outputId= "downloadGOData", "Download GO Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+      )
+      
+      output$downloadGOData<- downloadHandler(
+        filename= function() {
+          paste0(paste(c("GO_enrichment",input$selected.tfs),collapse = "_"), ".tsv")
+        },
+        content= function(file) {
+          write.table(go.result.table, 
+                      file=file, 
+                      sep = "\t", 
+                      quote = FALSE,
+                      row.names = FALSE)
+        })
+
+      ## Download result
+      output$downloadData<- downloadHandler(
+        filename= function() {
+          paste("godata-",microalgae.names[input$microalgae] , ".csv", sep="")
+        },
+        content= function(file) {
+          write.csv(go.result.table,
+                    file,
+                    row.names=TRUE
+          )
+        })
+      
+      
+      
+      
+      
+      
+    }
+    
+    
+    
+    
+
   })
   
   ##Visualization of text and table with p.value, enrichment and genes.
@@ -721,6 +894,23 @@ server <- function(input, output) {
     output$outputTable <- renderDataTable({
       create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
     },escape=FALSE)
+    
+    output$download_ui_for_table<- renderUI(
+      tagList(downloadButton(outputId= "downloadData", "Download Selected Genes"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+    )
+    
+    output$downloadData<- downloadHandler(
+      filename= function() {
+        paste0(paste(c(input$tf1, input$tf2),collapse = "_"), ".tsv")
+      },
+      content= function(file) {
+        write.table(create.downloadable.output.table(input.gene.df=selected.genes.df,alias,tfs.names), 
+                    file=file, 
+                    sep = "\t", 
+                    quote = FALSE,
+                    row.names = FALSE)
+      })
+    
     
   })
   
@@ -1075,35 +1265,10 @@ server <- function(input, output) {
       ## Developing genes link function
       genes.in.go.enrichment <- go.result.table$Genes
 
-      gene.link.function <- function(gene.name)
-      {
-        tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
-                             gene.name,
-                             "&type=locus"),collapse="")
-        gene.link <- paste(c("<a href=\"",
-                             tair.link,
-                             "\" target=\"_blank\">",
-                             gene.name, "</a>"),
-                           collapse="")
-        return(gene.link)
-      }
-
       # Add links to genes
       for(i in 1:length(genes.in.go.enrichment))
       {
         go.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(genes.in.go.enrichment[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
-      }
-
-      #Developing GO links function
-      go.link <- function(go.term)
-      {
-        link <- paste0("http://amigo.geneontology.org/amigo/term/", go.term)
-        complete.link <- paste(c("<a href=\"",
-                                 link,
-                                 "\" target=\"_blank\">",
-                                 go.term, "</a>"),
-                               collapse = "")
-        return(complete.link)
       }
 
       ## Add links to GO ids
