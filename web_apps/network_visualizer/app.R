@@ -67,7 +67,7 @@ alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
-# alias <- alias[genes] 
+alias <- alias[genes]
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
 agis <-alias2symbol.table$TAIR
