@@ -29,7 +29,7 @@ repressor.color <- "firebrick1"
 activator.color <- "seagreen3"
 neutral.color <- "lightgrey"
 
-## Auxiliary function to determine surronding ZTs
+## Auxiliary function to determine surrounding ZTs
 zts.to.consider <- function(zt.point)
 {
   zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
@@ -74,6 +74,7 @@ agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
 agis[is.na(agis)] <- ""
 
+## Fix some ambiguities
 agis["FHY1"] <- "AT2G37678"
 alias["AT1G79790"] <- "ATCPFHY1"
 
@@ -113,6 +114,8 @@ names(agi.tfs.zts) <- agi.tfs
 names(agi.tfs.zts.multiplicity) <- agi.tfs
 names(name.tfs) <- agi.tfs
 
+
+## Read regulation data
 regulation.matrix <- as.matrix(network.data[,35:53])
 rownames(regulation.matrix) <- network.data$names
 
@@ -120,6 +123,7 @@ adj.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.matrix) <- network.data$names
 adj.matrix <- adj.matrix[agi.tfs,]
 
+## Extract TF targets
 cca1.tf.targets <- adj.matrix[,"CCA1_ZT02"] + adj.matrix[,"CCA1_ZT14"]
 lhy.tf.targets <- adj.matrix[,"LHY_ZT02"]
 toc1.tf.targets <- adj.matrix[,"TOC1_ZT15"]
@@ -342,10 +346,6 @@ server <- function(input, output) {
             to.keep <- (to.keep | grepl(input$selected.tfs[i],colnames(adj.global.matrix)))
           }
         }
-      
-
-      
-              
 
 
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
