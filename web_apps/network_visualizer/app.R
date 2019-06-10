@@ -29,6 +29,11 @@ repressor.color <- "firebrick1"
 activator.color <- "seagreen3"
 neutral.color <- "lightgrey"
 
+## Colors to represent gene expression profiles
+selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
+names(selected.colors) <- peak.times
+
 ## Auxiliary function to determine surronding ZTs
 zts.to.consider <- function(zt.point)
 {
@@ -54,10 +59,12 @@ height <- 4 ## highest point in ylim for profile plot
 
 ## Read graph adjacency matrix
 network.data <- read.table(file="../attractor_dev/data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+rownames(network.data) <- network.data$names
+
 
 # columns(org.At.tair.db)
 ## Extract gene ids
-genes <- sort(network.data$name)
+genes <- sort(network.data$names)
 
 ## Load all and circadian genes
 alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
@@ -518,10 +525,17 @@ server <- function(input, output) {
       extended.gene.expression.values <- extended.gene.expression$y
       names(extended.gene.expression.values) <- c("ZT00", "ZT02", "ZT04", "ZT08", "ZT10", "ZT12", "ZT14", "ZT15", "ZT16", "ZT20", "ZT24")
 
+      target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+      print("agi")
+      print(target.agi)
+      line.color <- selected.colors[network.data[target.agi, "peak.zt"]]
+      print("line.color")
+      print(line.color)
+
       plot(x=seq(from=0,to=24,by=4),gene.expression,
            type="o",lwd=5,cex=1.5,
            ylim=c(-2.5,height),xlim=c(0,24),
-           col="darkgrey",axes=FALSE,xlab="",ylab="", 
+           col=line.color,axes=FALSE,xlab="",ylab="", 
            main=paste(target.agi, alias[target.agi],sep=" - "))
       
       ## Add TFs to expression profile
@@ -578,7 +592,7 @@ server <- function(input, output) {
       polygon(x=c(12,24,24,12),y=c(-2,-2,-2.3,-2.3),col = "black",lwd=2)
       
       axis(side = 2,at = -2:2,labels = FALSE,lwd=2)
-      mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.3,at = 0)
+      mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.5,at = 0)
       axis(side = 1,at=seq(from=0,to=24,by=2),line=-1,las=2,labels = paste("ZT",seq(from=0,to=24,by=2),sep=""),lwd=2)
       
     }, height = 600)

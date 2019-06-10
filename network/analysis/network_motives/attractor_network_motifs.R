@@ -99,7 +99,7 @@ number.randomisation <- 1000
 
 motifs.3.random.graph <- matrix(0,nrow=number.randomisation, ncol=16)
 motifs.3.random.graph[1:3,]
-
+i <- 7
 for (i in 1:number.randomisation)
 {
   print(paste0("motif 3 ",i))
@@ -113,6 +113,8 @@ for (i in 1:number.randomisation)
   
   motifs.3.random.graph[i,] <- graph.motifs(random.network, size=3)
 }
+
+write.graph(graph = random.network,file = "random_network_7.gml",format = "gml")
 
 write.table(x = motifs.3.random.graph,file = "motifs_three_random_graph.txt",quote = F,row.names = F,col.names = F,sep = "\t")
 

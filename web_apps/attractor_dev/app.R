@@ -283,6 +283,7 @@ network.data$x.pos <- rotated.pos[,1]
 network.data$y.pos <- rotated.pos[,2]
 
 selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+#c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
 node.colors <- selected.colors[network.data$peak.zt]
@@ -445,7 +446,7 @@ ui <- fluidPage(
                   choices = c("Degree","Betweeness", "Closeness", "Eccentricity","Transitivity"), selected = NULL,
                   multiple = FALSE, selectize = TRUE),
       selectInput(inputId = "threshold", label = "Parameter threshold",
-                  choices = c(0.75,0.90,0.95), selected = NULL, multiple = FALSE, selectize = TRUE),
+                  choices = c(0.2,0.60,0.75,0.90,0.95), selected = NULL, multiple = FALSE, selectize = TRUE),
       
       
       actionButton(inputId = "top_intersect", label = "Test"),
@@ -635,7 +636,7 @@ server <- function(input, output) {
               axis.text = element_blank(),
               axis.ticks.y = element_blank()) + 
         geom_point(color=node.colors,size=1) +
-        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=6, fill=selected.nodes.colors,colour="black",pch=21)
     },height = 700)
     
     output$outputTable <- renderDataTable({

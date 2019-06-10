@@ -95,7 +95,7 @@ head(regulatory.matrix)
 100 * sum(regulatory.matrix == 1)/sum(regulatory.matrix != 0)
 100 * sum(regulatory.matrix == -1)/sum(regulatory.matrix != 0)
 100 * sum(regulatory.matrix == 2)/sum(regulatory.matrix != 0)
-
+nrow(regulatory.matrix)
 network.representation[,35:53] <- regulatory.matrix
 
 write.table(network.representation, file="attractor_network_representation.tsv", sep = "\t", quote = FALSE,

@@ -15,11 +15,11 @@ compute.enrichments <- function(gene.ratios, bg.ratios)
 }
 
 #genes <- read.table(file="genes_CCA1_PRR5_PIF5.txt",as.is=T)[[1]]
-genes <- read.table(file="CCA1_PIF4_LUX/genes_CCA1_PIF5_LUX.txt",as.is=T)[[1]]
+genes <- read.table(file="genes_CCA1_PRR5_PIF5.txt",as.is=T)[[1]]
 
 length(genes)
 
-atha.universe <- unique(select(org.At.tair.db,columns = c("GO"),keys=keys(org.At.tair.db,keytype = "TAIR"))[["TAIR"]])
+atha.universe <- unique(AnnotationDbi::select(org.At.tair.db,columns = c("GO"),keys=keys(org.At.tair.db,keytype = "TAIR"))[["TAIR"]])
 length(atha.universe)
 
 ego <- enrichGO(gene          = genes,
@@ -31,6 +31,7 @@ ego <- enrichGO(gene          = genes,
                 qvalueCutoff  = 0.05,
                 readable      = FALSE,
                 keyType = "TAIR")
+
 
 barplot(ego,drop=TRUE,showCategory = 20)
 goplot(x=ego,showCategory = 10)
@@ -54,10 +55,20 @@ colnames(go.result.table) <- c("GO ID", "Description", "p-value", "q-value",
                                  "Enrichment (Target Ratio; BG Ration)","Genes")
 
 head(go.result.table)  
-write.table(x = go.result.table,file = "CCA1_PIF4_LUX/CCA1_PIF4_LUX.txt",row.names = F,quote = F,sep = "\t")
+write.table(x = go.result.table,file = "hubs_go.txt",row.names = F,quote = F,sep = "\t")
 
 pathway.enrichment <- as.data.frame(enrichKEGG(gene = genes, 
                                                organism = "ath", universe = atha.universe,
                                                qvalueCutoff = 0.05))
 
+
+write.table(x = pathway.enrichment,file = "hubs_pathways.txt",row.names = F,col.names=F,quote = F,sep = "\t")
+
+genes.pathway <- rep(0,length(atha.universe))
+names(genes.pathway) <- atha.universe
+
+genes.pathway[genes] <- 1
+
+pathview(gene.data = sort(genes.pathway,decreasing = TRUE), pathway.id =pathway.enrichment$ID[6], species = "ath",
+         limit = list(gene=max(abs(genes.pathway)), cpd=1),gene.idtype ="kegg")
 head(pathway.enrichment)

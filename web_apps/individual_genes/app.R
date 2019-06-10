@@ -151,20 +151,54 @@ symbol.color <- c("blue", "red", "darkgreen", "magenta")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Old Faithful Geyser Data"),
+  
+  # Application title, introductory text and sidebar navigation
+  fluidRow(
+    column(
+      width = 2,
+      img(src='attractor_logo_2.jpg', align = "center", width=200),
+      tags$br(),tags$br(),
+      tags$b("Individual gene analysis"), tags$br(),
+      tags$b("Multiple transcription factor analysis"), tags$br(),
+      tags$b("GitHub repository"), tags$br(),
+      tags$b("Citation")),
+    column(
+      width = 8,
+      tags$h1(tags$b("ATTRACTOR,"),tags$i(" Arabidopsis thaliana ")),
+      tags$br(),tags$br(),
+      tags$div(tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
+               exherted by the circadian clock and light signalling in the model plant ", 
+               tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
+               " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
+               with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
+               and light signalling. ")),
+    column(
+      width = 2,
+      img(src='logo_ibvf.jpg', align = "center", width=100),
+      img(src='logo_us.png', align = "center", width=100),
+      tags$br(),tags$br(),
+      img(src='logo_csic.jpg', align = "center", width=100)
+    )
+  ),
+  
+  ## Separation from tools
+  tags$br(),tags$br(),
    
    fluidRow(
-     column(width = 2,
-            img(src='dribbbble.jpg', align = "center", width=200),
+     column(width = 3,
+            ## Select target gene to study
             selectizeInput(inputId = "target.gene",
                            label = "Gene",
                            choices = genes.selectize,
-                           multiple = FALSE)
+                           multiple = FALSE),
+            ## Check box for the TF peaks to represent
+            checkboxGroupInput(inputId = "names.tfs",
+                               label = "Select Transcription Factors:",
+                               choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
+                               inline = TRUE,width = "100%")
             ),
      
-      column(width = 8,
+      column(width = 9,
              tabsetPanel(type = "tabs",
                          tabPanel(title = "Network Visualizer", plotOutput(outputId = "plot")),
                          tabPanel(title = "Peak Visualizer",
@@ -176,22 +210,13 @@ ui <- fluidPage(
                                                  min = 500,
                                                  max = 2000,
                                                  step = 100),
-                                    
                                     ## Numeric input for 5' length
                                     numericInput(inputId = "fiveprime.length",
                                                  label = "5' Length",
                                                  value = 500,
                                                  min = 100,
                                                  max = 500,
-                                                 step = 100)),width=4),
-                                  
-                                  column(wellPanel(
-                                    ## Check box for the TF peaks to represent
-                                    checkboxGroupInput(inputId = "names.tfs",
-                                                       label = "Select Transcription Factors:",
-                                                       choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
-                                                       inline = TRUE,width = "100%")),width=4),
-                                  
+                                                 step = 100)),width=3),
                                   column(wellPanel(
                                     ## Selectize to choose target gene to represent
                                     selectizeInput(inputId = "selected.motifs",
@@ -206,11 +231,11 @@ ui <- fluidPage(
                                     
                                     ## Numeric input for PWM score
                                     numericInput(inputId = "min.score.pwm", 
-                                                 label = "Minimum Score for Motif Identification:",
+                                                 label = "Motif Identification Score:",
                                                  value = 100, 
                                                  min = 80,
                                                  max = 100,
-                                                 step = 5)),width=4),
+                                                 step = 5)),width=9),
                                   actionButton(inputId = "go",label = "GO"),
                                   
                                   fluidRow(
@@ -218,13 +243,13 @@ ui <- fluidPage(
                                       plotOutput(outputId = "plot.to.chulo.to.wapo"),
                                       width=12)
                                   )))
-             ),
-      column(width = 2, 
-             img(src='logo_us.png', align = "center", width=100),
-             tags$br(),tags$br(),tags$br(),
-             img(src='logo_csic.jpg', align = "center", width=100),
-             img(src='logo_ibvf.jpg', align = "center", width=100),
-             plotOutput(outputId = "plot2"))
+             )#,
+      # column(width = 2, 
+      #        img(src='logo_us.png', align = "center", width=100),
+      #        tags$br(),tags$br(),tags$br(),
+      #        img(src='logo_csic.jpg', align = "center", width=100),
+      #        img(src='logo_ibvf.jpg', align = "center", width=100),
+      #        plotOutput(outputId = "plot2"))
      )
         
 )
