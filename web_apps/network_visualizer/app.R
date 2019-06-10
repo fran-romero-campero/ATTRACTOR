@@ -74,13 +74,14 @@ alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
-# alias <- alias[genes] 
+alias <- alias[genes]
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
 agis <-alias2symbol.table$TAIR
 names(agis) <- alias2symbol.table$SYMBOL
 agis[is.na(agis)] <- ""
 
+## Fix some ambiguities
 agis["FHY1"] <- "AT2G37678"
 alias["AT1G79790"] <- "ATCPFHY1"
 
@@ -120,6 +121,8 @@ names(agi.tfs.zts) <- agi.tfs
 names(agi.tfs.zts.multiplicity) <- agi.tfs
 names(name.tfs) <- agi.tfs
 
+
+## Read regulation data
 regulation.matrix <- as.matrix(network.data[,35:53])
 rownames(regulation.matrix) <- network.data$names
 
@@ -127,6 +130,7 @@ adj.matrix <- as.matrix(network.data[,35:53])
 rownames(adj.matrix) <- network.data$names
 adj.matrix <- adj.matrix[agi.tfs,]
 
+## Extract TF targets
 cca1.tf.targets <- adj.matrix[,"CCA1_ZT02"] + adj.matrix[,"CCA1_ZT14"]
 lhy.tf.targets <- adj.matrix[,"LHY_ZT02"]
 toc1.tf.targets <- adj.matrix[,"TOC1_ZT15"]
@@ -349,10 +353,6 @@ server <- function(input, output) {
             to.keep <- (to.keep | grepl(input$selected.tfs[i],colnames(adj.global.matrix)))
           }
         }
-      
-
-      
-              
 
 
         ##First, modify the adj matrix to keep only the selected tfs marked in the app
