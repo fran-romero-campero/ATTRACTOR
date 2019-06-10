@@ -163,15 +163,28 @@ ui <- fluidPage(
       tags$b("GitHub repository"), tags$br(),
       tags$b("Citation")),
     column(
-      width = 8,
-      tags$h1(tags$b("ATTRACTOR,"),tags$i(" Arabidopsis thaliana ")),
+      width = 8, 
+      tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk"),
       tags$br(),tags$br(),
+      tags$div("The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
+               tags$i("plant physiology"), "and", tags$i("development. As a consequence, massive amounts of"),
+               tags$b("omics data"), ". Nonetheless, these data remains fragmented and researchers who want to 
+               explore the joint regulation exherted by the circadian clock and light signalling needs to consult
+               different papers and resources making imperative the used of", tags$b("molecular systems biology"), 
+               "techniques to integrate and make easily accesible all the generated information."),
       tags$div(tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
-               exherted by the circadian clock and light signalling in the model plant ", 
+               exherted by the circadian clock and light signalling over genes exhibiting ryhtmic expression profiles in the model plant ", 
                tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
                " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
                with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
-               and light signalling. ")),
+               and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
+               14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
+               components of the morning and central loops CCA1, LHY, the pseudo response regulator family members TOC1,
+               PRR5, PRR7 and PRR9; as well as some components of the evening loop such as LUX, ELF3 and ELF4. In order to capture
+               synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes
+               PHYA and PHYB, the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
+               family PIF5, PIF4 and PIF3. Finally, the phytochrome interacting transcriptional factor FHY1 (Far-red elongated Hypocotyl 1)
+               is also included in our network.")),
     column(
       width = 2,
       img(src='logo_ibvf.jpg', align = "center", width=100),
