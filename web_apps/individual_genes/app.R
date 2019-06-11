@@ -13,9 +13,11 @@ library(TxDb.Athaliana.BioMart.plantsmart28)
 library(Biostrings)
 library(seqinr)
 library(org.At.tair.db)
+library(igraph)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+rownames(network.data) <- network.data$names
 
 ## Extract gene ids
 genes <- sort(network.data$name)
@@ -35,7 +37,6 @@ alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
-alias <- alias[genes] 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
 ## Color vectors
@@ -143,11 +144,138 @@ bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
                "data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
                "data/bed_files/ELF4_1_peaks.narrowPeak")
 
-names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
+                      "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
+                      "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
+                      "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
 
 ## TF binding sites colors and symbol shapes
 symbol.shapes <- c(17, 18, 19, 15)
 symbol.color <- c("blue", "red", "darkgreen", "magenta")
+
+## Colors used to represent repression/activation/neutrality in network visualizer
+repressor.color <- "firebrick1"
+activator.color <- "seagreen3"
+neutral.color <- "lightgrey"
+
+## Colors to represent gene expression profiles in network visualizer
+selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
+names(selected.colors) <- peak.times
+
+## Auxiliary function to determine surrounding ZTs in network visualizer
+zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
+zts.to.consider <- function(zt.point, zts=zts)
+{
+  zts.numeric <- seq(from=0,to=20,by=4)
+  
+  if(zt.point %in% zts.numeric)
+  {
+    return(c(zt.point,zt.point))
+  } else
+  {
+    next.zt <- zts.numeric[which(zts.numeric >= zt.point)[1]]
+    previous.zt <- zts.numeric[which(zts.numeric >= zt.point)[1] - 1]
+    return(c(previous.zt, next.zt))
+  }
+}
+
+# Circle and profile parameters for network visualizer
+radius.1 <- 100 #Outer circle radius
+height <- 4 ## highest point in ylim for profile plot
+
+#Function for radian conversion
+radian.conversion <- function(alpha)
+{
+  rad <- (alpha*pi/180)
+  return(rad)
+}
+
+## Generate coordinates for inner and outer circle in the clock representation for 
+## network visualizer
+angle <- seq(from=0, to=2*pi, by=0.01)
+x.circle.1 <- radius.1*sin(angle)
+y.circle.1 <- radius.1*cos(angle)
+
+radius.2 <- radius.1 - radius.1/12
+x.circle.2 <- radius.2 * sin(angle)
+y.circle.2 <- radius.2 * cos(angle)
+
+## Define vectrors for location of transcription factors in the clock representation 
+## in network visualizer
+agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", 
+             "AT2G46790","AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", 
+             "AT1G09530", "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+name.tfs <- c("CCA1", "LHY",  "TOC1", "PRR5", "PRR7", "PRR9", "PHYA", "PHYB", 
+              "CRY2", "FHY1", "LUX", "PIF3", "PIF4", "PIF5", "ELF4", "ELF3")
+agi.tfs.zts <- list(c("ZT02","ZT14"),
+                    c("ZT02"),c("ZT15"),c("ZT10"),c("ZT12"),c("ZT04"),c("ZT00"),c("ZT00"),
+                    c("ZT08"),c("ZT04"),c("ZT10","ZT12"),c("ZT08"),c("ZT04"),c("ZT04"),
+                    c("ZT10"),c("ZT00","ZT04"))
+
+## Pasting transcription factors with ZTs
+tfs.with.zts <- c()
+for (i in 1:length(name.tfs))
+{
+  tfs.with.zts <- c(tfs.with.zts, paste(name.tfs[i], agi.tfs.zts[[i]], sep= "_") )
+}
+
+## Determine the number of ZTs points for each transcription factor to represent
+## this multiplicity in the clock for network visualizer
+agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
+names(agi.tfs.zts) <- agi.tfs
+names(agi.tfs.zts.multiplicity) <- agi.tfs
+names(name.tfs) <- agi.tfs
+
+## Extract adjacency matrix
+adj.global.matrix <- as.matrix(network.data[,tfs.with.zts])
+rownames(adj.global.matrix) <- network.data$names
+
+## Extract expression profiles
+mean.expression <- as.matrix(network.data[,zts])
+rownames(mean.expression) <- network.data$names
+
+## Computing angles for each transcription factor according to its ZT and
+## the muber of transcription factors in that ZT to represent tfs avoiding overlapping. 
+splitted.tfs.names <- strsplit(tfs.with.zts,split="_")
+tfs.angles <- vector(mode="numeric",length=length(tfs.with.zts))
+tfs.zts <- vector(mode="numeric",length=length(tfs.with.zts))
+
+for(i in 1:length(splitted.tfs.names))
+{
+  tfs.zts[i] <- substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))
+  tfs.angles[i] <- radian.conversion(15*as.numeric(tfs.zts[i]))
+}
+
+zt.multiplicity <- table(tfs.zts)
+## Compute coordinates for each transcription factor setting a radius 
+## and height to avoid the overlap
+radius.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+height.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+node.labels <- vector(mode="numeric",length=length(splitted.tfs.names))
+for(i in 1:length(splitted.tfs.names))
+{
+  node.labels[i] <- splitted.tfs.names[i][[1]][1]
+  current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
+  current.multiplicity <- zt.multiplicity[current.zt]
+  radius.to.multiply[i] <- (1 - (0.16*current.multiplicity))*radius.1
+  height.to.multiply[i] <- (1 - (0.1*current.multiplicity))*height
+  zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
+}
+
+get.first <- function(my.vector)
+{
+  return(my.vector[[1]])
+}
+
+names(height.to.multiply) <- sapply(X= splitted.tfs.names, FUN = get.first)
+
+## Set the x.y coordinates for the positions 
+tfs.x <- radius.to.multiply * sin(tfs.angles)
+tfs.y <- radius.to.multiply * cos(tfs.angles)
+
+## Generating a positions matrix 
+matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -197,7 +325,7 @@ ui <- fluidPage(
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
-        tags$div(align="justify", tags$b("ATRRACTOR"), "allows researchers to explore the coordinated regulation of several 
+        tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
                  transcription factors or regulators over a selected individual gene as well as the effect observed in its
                  expression profile. Follow the following steps:"),
         tags$div(align="justify", "lalala" )
@@ -225,7 +353,7 @@ ui <- fluidPage(
                                            choices = genes.selectize,
                                            multiple = FALSE),
                             ## Check box for the TF peaks to represent
-                            checkboxGroupInput(inputId = "names.tfs",
+                            checkboxGroupInput(inputId = "selected.tfs",
                                                label = "Select Transcription Factors:",
                                                choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
                                                inline = TRUE,width = "100%")
@@ -234,11 +362,10 @@ ui <- fluidPage(
                      column(width = 9,
                             tabsetPanel(type = "tabs",
                                         tabPanel(title = "Network Visualizer", 
-                                                 
-                                                 
-                                                 
-                                                 
-                                                 plotOutput(outputId = "plot")),
+                                                 plotOutput(outputId = "network",width = 600, height=600),
+                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+                                                 plotOutput(outputId = "expression")),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
@@ -290,6 +417,43 @@ ui <- fluidPage(
 
 ## ATTRACTOR server
 server <- function(input, output) {
+  
+  
+  
+  
+  
+  ## Network visualizer code
+  output$network <- renderPlot({
+    
+    ## Error message for the user
+    validate(
+      need(input$selected.tfs, "Please select some transcription factor")
+    )
+    
+    ## Extracting agi ID for selected gene
+    target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+    
+    #Plot circle
+    par(mar=c(0,0,0,0))
+    plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
+    lines(x.circle.2, y.circle.2, lwd=3)
+    x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                   sin(seq(from=-pi, to=0, by=0.01))* radius.1)
+    y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
+                  cos(seq(from=-pi, to=0, by=0.01))*radius.1)
+    polygon(x = x.polygon, y = y.polygon, col = "black")
+    for (i in 0:5)
+    {
+      angle.zt <- radian.conversion(alpha = 60*i)
+      zt <- 4*i
+      current.zt <- paste("ZT", zt,  sep = "")
+      text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
+      lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
+            y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
+    }
+    
+  })
+  
   observeEvent(input$go,{
     
     ## Extract target gene annotation 
@@ -326,7 +490,7 @@ server <- function(input, output) {
     current.length <- range.to.plot$end - range.to.plot$start
     
     ## Determine upper limit of the graph
-    number.tfs <- length(input$names.tfs)
+    number.tfs <- length(input$selected.tfs)
     upper.lim <- 25 * number.tfs
     
     ## Draw DNA strand
@@ -336,7 +500,7 @@ server <- function(input, output) {
       
       ## Sanity checks
       validate(
-        need(length(input$names.tfs) > 0 , "Please select a set of transcription factors")
+        need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors")
       )
       
       validate(
@@ -428,8 +592,8 @@ server <- function(input, output) {
         axis(side = 1,labels = c("TSS",- input$promoter.length / 2,- input$promoter.length),at = c(current.length-input$promoter.length,current.length-input$promoter.length/2, current.length),lwd=2,cex=1.5,las=2,cex=2)
       }
       
-      selected.bigwig.files <- bigwig.files[input$names.tfs]
-      selected.bed.files <- bed.files[input$names.tfs]
+      selected.bigwig.files <- bigwig.files[input$selected.tfs]
+      selected.bed.files <- bed.files[input$selected.tfs]
       
       ## Since ChIPpeakAnno needs more than one region to plot our region
       ## is duplicated 
@@ -441,7 +605,7 @@ server <- function(input, output) {
                          which=regions.plot, 
                          as="RleList")
       
-      names(cvglists) <- input$names.tfs
+      names(cvglists) <- input$selected.tfs
       
       ## Compute signal in the region to plot
       chip.signal <- featureAlignedSignal(cvglists, regions.plot, 
@@ -651,7 +815,7 @@ server <- function(input, output) {
         
         polygon(cord.x,cord.y,col=area.colors[i])
         
-        text(x = -50,y = 25*(i-1) + 12,labels = input$names.tfs[i],adj = 1,col = line.colors[i],font = 2)
+        text(x = -50,y = 25*(i-1) + 12,labels = input$selected.tfs[i],adj = 1,col = line.colors[i],font = 2)
       }
       
     })
