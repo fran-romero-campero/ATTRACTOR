@@ -157,119 +157,130 @@ ui <- fluidPage(
     column(
       width = 2,
       img(src='attractor_logo_2.jpg', align = "center", width=200),
-      tags$br(),tags$br(),
-      tags$b("Individual gene analysis"), tags$br(),
-      tags$b("Multiple transcription factor analysis"), tags$br(),
-      tags$b("GitHub repository"), tags$br(),
-      tags$b("Citation")),
+      tags$br(),
+      radioButtons(inputId = "navigation_bar", width="100%",selected="home",
+                   label="",
+                   choices=c(
+                      "Home" = "home",
+                     "Individual gene analysis" = "individual_gene",
+                     "Multiple transcription factor analysis" = "multiple_gene",
+                     "Tutorials" = "tutorials",
+                     "GitHub repository" = "github",
+                     "Citation" = "citation"
+                   ))),
     column(
-      width = 8, 
+      width = 8,
       tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk"),
       tags$br(),tags$br(),
-      tags$div("The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
-               tags$i("plant physiology"), "and", tags$i("development. As a consequence, massive amounts of"),
-               tags$b("omics data"), ". Nonetheless, these data remains fragmented and researchers who want to 
-               explore the joint regulation exherted by the circadian clock and light signalling needs to consult
-               different papers and resources making imperative the used of", tags$b("molecular systems biology"), 
-               "techniques to integrate and make easily accesible all the generated information."),
-      tags$div(tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
-               exherted by the circadian clock and light signalling over genes exhibiting ryhtmic expression profiles in the model plant ", 
-               tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
-               " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
-               with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
-               and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
-               14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
-               components of the morning and central loops CCA1, LHY, the pseudo response regulator family members TOC1,
-               PRR5, PRR7 and PRR9; as well as some components of the evening loop such as LUX, ELF3 and ELF4. In order to capture
-               synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes
-               PHYA and PHYB, the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
-               family PIF5, PIF4 and PIF3. Finally, the phytochrome interacting transcriptional factor FHY1 (Far-red elongated Hypocotyl 1)
-               is also included in our network.")),
+      conditionalPanel(condition = "input.navigation_bar == 'home'",
+        tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
+          tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
+          tags$b("omics data"), " have been generated to characterise their individual components. Nonetheless, 
+          these data remains fragmented and researchers who want to explore the joint regulation exherted by the 
+          circadian clock and light signalling need to consult different papers and resources making imperative 
+          the used of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
+          all the generated information."),
+        tags$div(align="justify", tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
+          exherted by the circadian clock and light signalling over genes exhibiting ryhtmic expression profiles in the model plant ", 
+          tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
+          " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
+          with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
+          and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
+          14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
+          components of the morning and central loops CCA1, LHY, the pseudo response regulator family members TOC1,
+          PRR5, PRR7 and PRR9; as well as some components of the evening loop such as LUX, ELF3 and ELF4. In order to capture
+          synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes
+          PHYA and PHYB, the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
+          family PIF5, PIF4 and PIF3. Finally, the phytochrome interacting transcriptional factor FHY1 (Far-red elongated Hypocotyl 1)
+          is also included in our network."),
+        tags$div(align="justify","Use the navigation bar on the left to check the different utilities in ATTRACTOR.")
+      ),
+      
+      conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
+        tags$div(align="justify", tags$b("ATRRACTOR"), "alllows researchers the regulation of the tra")
+      )
+    ),
     column(
       width = 2,
       img(src='logo_ibvf.jpg', align = "center", width=100),
       img(src='logo_us.png', align = "center", width=100),
-      tags$br(),tags$br(),
+      tags$br(),tags$br(),tags$br(),
       img(src='logo_csic.jpg', align = "center", width=100)
     )
   ),
   
-  ## Separation from tools
+  ## Separation for different tools
   tags$br(),tags$br(),
-   
-   fluidRow(
-     column(width = 3,
-            ## Select target gene to study
-            selectizeInput(inputId = "target.gene",
-                           label = "Gene",
-                           choices = genes.selectize,
-                           multiple = FALSE),
-            ## Check box for the TF peaks to represent
-            checkboxGroupInput(inputId = "names.tfs",
-                               label = "Select Transcription Factors:",
-                               choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
-                               inline = TRUE,width = "100%")
-            ),
-     
-      column(width = 9,
-             tabsetPanel(type = "tabs",
-                         tabPanel(title = "Network Visualizer", plotOutput(outputId = "plot")),
-                         tabPanel(title = "Peak Visualizer",
-                                  column(wellPanel(
-                                    ## Numeric input for promoter length
-                                    numericInput(inputId = "promoter.length",
-                                                 label = "Promoter Length",
-                                                 value = 2000,
-                                                 min = 500,
-                                                 max = 2000,
-                                                 step = 100),
-                                    ## Numeric input for 5' length
-                                    numericInput(inputId = "fiveprime.length",
-                                                 label = "5' Length",
-                                                 value = 500,
-                                                 min = 100,
-                                                 max = 500,
-                                                 step = 100)),width=3),
-                                  column(wellPanel(
-                                    ## Selectize to choose target gene to represent
-                                    selectizeInput(inputId = "selected.motifs",
-                                                   label = "Select Motifs",
-                                                   choices = motif.names,
-                                                   multiple = TRUE),
-                                    
-                                    ## Checkbox to select all available motifs
-                                    checkboxInput(inputId = "all.motifs",
-                                                  label = "Select All Motifs:",
-                                                  value = FALSE),
-                                    
-                                    ## Numeric input for PWM score
-                                    numericInput(inputId = "min.score.pwm", 
-                                                 label = "Motif Identification Score:",
-                                                 value = 100, 
-                                                 min = 80,
-                                                 max = 100,
-                                                 step = 5)),width=9),
-                                  actionButton(inputId = "go",label = "GO"),
-                                  
-                                  fluidRow(
-                                    column(
-                                      plotOutput(outputId = "plot.to.chulo.to.wapo"),
-                                      width=12)
-                                  )))
-             )#,
-      # column(width = 2, 
-      #        img(src='logo_us.png', align = "center", width=100),
-      #        tags$br(),tags$br(),tags$br(),
-      #        img(src='logo_csic.jpg', align = "center", width=100),
-      #        img(src='logo_ibvf.jpg', align = "center", width=100),
-      #        plotOutput(outputId = "plot2"))
-     )
-        
+  
+  ## Conditional panel for individual gene analysis
+  conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
+                   fluidRow(
+                     column(width = 3,
+                            ## Select target gene to study
+                            selectizeInput(inputId = "target.gene",
+                                           label = "Gene",
+                                           choices = genes.selectize,
+                                           multiple = FALSE),
+                            ## Check box for the TF peaks to represent
+                            checkboxGroupInput(inputId = "names.tfs",
+                                               label = "Select Transcription Factors:",
+                                               choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
+                                               inline = TRUE,width = "100%")
+                     ),
+                     
+                     column(width = 9,
+                            tabsetPanel(type = "tabs",
+                                        tabPanel(title = "Network Visualizer", plotOutput(outputId = "plot")),
+                                        tabPanel(title = "Peak Visualizer",
+                                                 column(wellPanel(
+                                                   ## Numeric input for promoter length
+                                                   numericInput(inputId = "promoter.length",
+                                                                label = "Promoter Length",
+                                                                value = 2000,
+                                                                min = 500,
+                                                                max = 2000,
+                                                                step = 100),
+                                                   ## Numeric input for 5' length
+                                                   numericInput(inputId = "fiveprime.length",
+                                                                label = "5' Length",
+                                                                value = 500,
+                                                                min = 100,
+                                                                max = 500,
+                                                                step = 100)),width=3),
+                                                 column(wellPanel(
+                                                   ## Selectize to choose target gene to represent
+                                                   selectizeInput(inputId = "selected.motifs",
+                                                                  label = "Select Motifs",
+                                                                  choices = motif.names,
+                                                                  multiple = TRUE),
+                                                   
+                                                   ## Checkbox to select all available motifs
+                                                   checkboxInput(inputId = "all.motifs",
+                                                                 label = "Select All Motifs:",
+                                                                 value = FALSE),
+                                                   
+                                                   ## Numeric input for PWM score
+                                                   numericInput(inputId = "min.score.pwm", 
+                                                                label = "Motif Identification Score:",
+                                                                value = 100, 
+                                                                min = 80,
+                                                                max = 100,
+                                                                step = 5)),width=9),
+                                                 
+                                                 actionButton(inputId = "go",label = "GO"),
+                                                 
+                                                 fluidRow(
+                                                   column(
+                                                     plotOutput(outputId = "plot.to.chulo.to.wapo"),
+                                                     width=12)
+                                                 )))
+                     )
+                   )
+  )
+
 )
 
-
-
-# Define server logic required to draw a histogram
+## ATTRACTOR server
 server <- function(input, output) {
   observeEvent(input$go,{
     
