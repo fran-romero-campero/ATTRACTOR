@@ -197,7 +197,10 @@ ui <- fluidPage(
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
-        tags$div(align="justify", tags$b("ATRRACTOR"), "alllows researchers the regulation of the tra")
+        tags$div(align="justify", tags$b("ATRRACTOR"), "allows researchers to explore the coordinated regulation of several 
+                 transcription factors or regulators over a selected individual gene as well as the effect observed in its
+                 expression profile. Follow the following steps:"),
+        tags$div(align="justify", "lalala" )
       )
     ),
     column(
@@ -230,7 +233,12 @@ ui <- fluidPage(
                      
                      column(width = 9,
                             tabsetPanel(type = "tabs",
-                                        tabPanel(title = "Network Visualizer", plotOutput(outputId = "plot")),
+                                        tabPanel(title = "Network Visualizer", 
+                                                 
+                                                 
+                                                 
+                                                 
+                                                 plotOutput(outputId = "plot")),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
