@@ -14,6 +14,7 @@ library(Biostrings)
 library(seqinr)
 library(org.At.tair.db)
 library(igraph)
+library(ggplot2)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -163,6 +164,10 @@ selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
 
+## Node colors to represent in the global transcriptional network
+node.colors <- selected.colors[network.data$peak.zt]
+names(node.colors) <- NULL
+
 ## Auxiliary function to determine surrounding ZTs in network visualizer
 zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
 zts.to.consider <- function(zt.point, zts=zts)
@@ -298,7 +303,8 @@ ui <- fluidPage(
                    ))),
     column(
       width = 8,
-      tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk"),
+      tags$div(align = "center", 
+               tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk")),
       tags$br(),tags$br(),
       conditionalPanel(condition = "input.navigation_bar == 'home'",
         tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
@@ -329,7 +335,14 @@ ui <- fluidPage(
                  transcription factors or regulators over a selected individual gene as well as the effect observed in its
                  expression profile. Follow the following steps:"),
         tags$div(align="justify", "lalala" )
+      ),
+      
+      conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
+                       tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
+                 transcription factors or regulators over their common targets."),
+                       tags$div(align="justify", "lalala" )
       )
+      
     ),
     column(
       width = 2,
@@ -411,7 +424,56 @@ ui <- fluidPage(
                                                  )))
                      )
                    )
+  ),
+  
+  
+  ## Conditional panel for multiple transcription factors and regulators analysis
+  conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
+                   fluidRow(
+                     column(width = 3,
+                            ## Check box for the TFs to analyse
+                            checkboxGroupInput(inputId = "selected.multiple.tfs",
+                                               label = "Select Transcription Factors:",
+                                               choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", 
+                                                              "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", 
+                                                              "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", 
+                                                              "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", 
+                                                              "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
+                                               inline = TRUE,width = "100%"),
+                            tags$b("Select a specific rythmic gene expression pattern with"),
+                            selectInput(inputId = "peak", label="peak at:", 
+                                        choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                                        multiple = FALSE, selectize = TRUE),
+                            selectInput(inputId = "trough", label="and trough at:", 
+                                        choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                                        multiple = FALSE, selectize = TRUE)
+                     ),
+                     
+                     column(width = 9,
+                            tabsetPanel(type = "tabs",
+                                        tabPanel(title = "Network Visualization",
+                                                 plotOutput("networkPlot")
+                                        ),
+                                        tabPanel(title = "Gene Table",
+                                                 dataTableOutput(outputId = "outputTable"),
+                                                 uiOutput(outputId = "download_ui_for_table")
+                                         ),
+                                         tabPanel(title = "GO Enrichment",
+                                            tabsetPanel(type = "tabs",
+                                                       tabPanel(title = "GO map"),
+                                                       tabPanel(title = "GO barplot"),
+                                                       tabPanel(title = "GO concept network"),
+                                                       tabPanel(title = "GO table")
+                                            )
+                                         ),
+                                        tabPanel(title = "Pathway Enrichment"),
+                                        tabPanel(title = "TFBS Enrichment")
+                            )
+                     )
+                                                 
+                   )
   )
+                     
 
 )
 
@@ -822,7 +884,19 @@ server <- function(input, output) {
     
   })
   
-   
+  ## Multiple transcription factor code
+  
+  ## Initial/default visualization of ATTRACTOR
+  output$networkPlot <- renderPlot({
+    ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1)
+  },height = 700)
 
 }
 
