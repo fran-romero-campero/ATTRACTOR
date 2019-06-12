@@ -3,7 +3,7 @@
 #          Francisco J. Romero-Campero
 # 
 # Contact: Francisco J. Romero-Campero - fran@us.es 
-# Date: May 2019
+# Date: June 2019
 
 # Load neccesary libraries
 library(shiny)
@@ -19,6 +19,32 @@ library(ggplot2)
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
 rownames(network.data) <- network.data$names
+
+## Tranforming coordinates for a better visualization
+x.coord <- as.numeric(network.data$y.pos)
+y.coord <- as.numeric(network.data$x.pos)
+
+network.data$x.pos <- x.coord
+network.data$y.pos <- y.coord
+
+pos.data <- t(matrix(data=c(x.coord,y.coord),ncol=2))
+
+rotation.angle <- -pi/2
+rotation.matrix <- matrix(data = c(cos(rotation.angle),sin(rotation.angle),-sin(rotation.angle),cos(rotation.angle)),nrow = 2,ncol = 2)
+rotated.pos <- t(rotation.matrix %*% pos.data)
+
+network.data$x.pos <- rotated.pos[,1]
+network.data$y.pos <- rotated.pos[,2]
+
+## Transcription factors AGI ids and names
+tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+               "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
+
+tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
+            "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
+            "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+
+names(tf.ids) <- tfs.names
 
 ## Extract gene ids
 genes <- sort(network.data$name)
@@ -440,13 +466,15 @@ ui <- fluidPage(
                                                               "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", 
                                                               "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
                                                inline = TRUE,width = "100%"),
-                            tags$b("Select a specific rythmic gene expression pattern with"),
-                            selectInput(inputId = "peak", label="peak at:", 
+                            tags$b("Select a specific rythmic gene expression pattern with peak at:"),
+                            selectInput(inputId = "peak", label="", 
                                         choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
                                         multiple = FALSE, selectize = TRUE),
                             selectInput(inputId = "trough", label="and trough at:", 
                                         choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-                                        multiple = FALSE, selectize = TRUE)
+                                        multiple = FALSE, selectize = TRUE),
+                            checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
+                            actionButton(inputId = "go_multiple",label = "GO")
                      ),
                      
                      column(width = 9,
@@ -479,11 +507,7 @@ ui <- fluidPage(
 
 ## ATTRACTOR server
 server <- function(input, output) {
-  
-  
-  
-  
-  
+
   ## Network visualizer code
   output$network <- renderPlot({
     
@@ -897,6 +921,59 @@ server <- function(input, output) {
             axis.ticks.y = element_blank()) + 
       geom_point(color=node.colors,size=1)
   },height = 700)
+  
+  ## Determine common targets and perfomr analysis when button is clicked
+  observeEvent(input$go_multiple, {
+
+    ## Determine targets of selected TFs
+    selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
+    #input$selected.multiple.tfs
+    
+    gene.selection <- rowSums(network.data[,selected.only.tfs]) == length(selected.only.tfs)
+    selected.genes.df <- network.data[gene.selection,]    
+    
+    ## Node colors for representation
+    selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
+    
+    ## Target gene representation on the network
+    network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(color=node.colors,size=1) +
+      geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    
+    ## Add edges to the network when selected
+    if(input$edges)
+    {
+      for(i in 1:length(input$selected.multiple.tfs))
+      {
+        tf.xpos <- subset(network.data, names == tf.ids[selected.only.tfs[i]])[["x.pos"]]
+        tf.ypos <- subset(network.data, names == tf.ids[selected.only.tfs[i]])[["y.pos"]]
+        network.representation <- network.representation +
+          annotate("segment",
+                   x=rep(tf.xpos,nrow(selected.genes.df)),
+                   y=rep(tf.ypos,nrow(selected.genes.df)),
+                   xend=selected.genes.df$x.pos,
+                   yend=selected.genes.df$y.pos, 
+                   color="grey", arrow=arrow(type="closed",length=unit(0.1, "cm")))
+      }
+      
+      network.representation <- network.representation + 
+        geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
+    }
+    
+    ## Update network representation on the app
+    output$networkPlot <- renderPlot({
+      network.representation
+    },height = 700)
+    
+    
+  })
+  
 
 }
 

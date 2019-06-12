@@ -656,7 +656,6 @@ server <- function(input, output) {
     } else if(length(input$selected.tfs) > 1)
     {
       gene.selection <- rowSums(network.data[,input$selected.tfs]) == length(input$selected.tfs)
-      
     }
     
     selected.genes.df <- network.data[gene.selection,]
