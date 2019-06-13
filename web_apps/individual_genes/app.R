@@ -5,6 +5,9 @@
 # Contact: Francisco J. Romero-Campero - fran@us.es 
 # Date: June 2019
 
+## Input to test 
+## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak0", trough = "trough12")
+
 # Load neccesary libraries
 library(shiny)
 library(ChIPpeakAnno)
@@ -15,6 +18,7 @@ library(seqinr)
 library(org.At.tair.db)
 library(igraph)
 library(ggplot2)
+library(stringr)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -148,7 +152,10 @@ bigwig.files <- c("data/bw_files/PHYA.bw",
                   "data/bw_files/ELF3_ZT4.bw",
                   "data/bw_files/ELF4.bw")
 
-names(bigwig.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02","CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", "LUX ZT12","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12","PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+names(bigwig.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
+                         "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
+                         "LUX ZT12","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
+                         "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
 
 ## Load bed files for each transcription factor
 bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
@@ -308,6 +315,49 @@ tfs.y <- radius.to.multiply * cos(tfs.angles)
 ## Generating a positions matrix 
 matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
 
+## Function to generate output table
+create.output.table <- function(input.gene.df,alias,tfs.names)
+{
+  output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+  colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+  output.selected.genes.df$`Gene Description` <- input.gene.df$description
+  
+  for(i in 1:nrow(output.selected.genes.df))
+  {
+    tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",input.gene.df[i,1])
+    output.selected.genes.df[i,1] <- paste(c("<a href=\"",
+                                             tair.link,
+                                             "\" target=\"_blank\">",
+                                             input.gene.df[i,1], "</a>"),
+                                           collapse="")
+    output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+    output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+    output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+    output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+  }
+  
+  return(output.selected.genes.df)
+}
+
+## Function to generate output table to download
+create.downloadable.output.table <- function(input.gene.df,alias,tfs.names)
+{
+  output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+  colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+  output.selected.genes.df$`Gene Description` <- input.gene.df$description
+  
+  for(i in 1:nrow(output.selected.genes.df))
+  {
+    output.selected.genes.df[i,1] <- input.gene.df[i,1]
+    output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+    output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+    output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+    output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+  }
+  
+  return(output.selected.genes.df)
+}
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -338,22 +388,22 @@ ui <- fluidPage(
           tags$b("omics data"), " have been generated to characterise their individual components. Nonetheless, 
           these data remains fragmented and researchers who want to explore the joint regulation exherted by the 
           circadian clock and light signalling need to consult different papers and resources making imperative 
-          the used of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
+          the use of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
           all the generated information."),
         tags$div(align="justify", tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
-          exherted by the circadian clock and light signalling over genes exhibiting ryhtmic expression profiles in the model plant ", 
+          exherted by the circadian clock and light signalling over genes exhibiting rythmic expression profiles in the model plant ", 
           tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
           " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
           with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
           and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
           14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
-          components of the morning and central loops CCA1, LHY, the pseudo response regulator family members TOC1,
-          PRR5, PRR7 and PRR9; as well as some components of the evening loop such as LUX, ELF3 and ELF4. In order to capture
-          synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes
-          PHYA and PHYB, the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
-          family PIF5, PIF4 and PIF3. Finally, the phytochrome interacting transcriptional factor FHY1 (Far-red elongated Hypocotyl 1)
+          components of the morning and central loops", tags$b("CCA1, LHY"), ", the pseudo response regulator family members", 
+          tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9"), "; as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4"),
+          ". In order to capture synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes",
+          tags$b("PHYA"), "and", tags$b("PHYB"),", the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
+          family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3"),". Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
           is also included in our network."),
-        tags$div(align="justify","Use the navigation bar on the left to check the different utilities in ATTRACTOR.")
+        tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR.")
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
@@ -365,7 +415,7 @@ ui <- fluidPage(
       
       conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
                        tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
-                 transcription factors or regulators over their common targets."),
+                 transcription factors or regulators over their common targets. TeirGO term and pathways enrichment can be performed  Select your transcription factors "),
                        tags$div(align="justify", "lalala" )
       )
       
@@ -468,10 +518,13 @@ ui <- fluidPage(
                                                inline = TRUE,width = "100%"),
                             tags$b("Select a specific rythmic gene expression pattern with peak at:"),
                             selectInput(inputId = "peak", label="", 
-                                        choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
-                                        multiple = FALSE, selectize = TRUE),
+                                        choices = c("Any ZT" = "any", "ZT0" = "peak0", "ZT4" = "peak4", "ZT8" = "peak8",
+                                                                      "ZT12" = "peak12", "ZT16" = "peak16", "ZT20" = "peak20"),
+                                                  selected = NULL, multiple = FALSE, selectize = TRUE),
                             selectInput(inputId = "trough", label="and trough at:", 
-                                        choices = c("Any ZT",paste("ZT",seq(from=0,to=20,by=4),sep="")), selected = NULL,
+                                        choices = c("Any ZT" = "any", "ZT0" = "trough0", "ZT4" = "trough4", "ZT8" = "trough8",
+                                                    "ZT12" = "trough12", "ZT16" = "trough16", "ZT20" = "trough20"),
+                                        selected = NULL,
                                         multiple = FALSE, selectize = TRUE),
                             checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
                             actionButton(inputId = "go_multiple",label = "GO")
@@ -926,11 +979,25 @@ server <- function(input, output) {
   observeEvent(input$go_multiple, {
 
     ## Determine targets of selected TFs
-    selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
-    #input$selected.multiple.tfs
+    #selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
+    selected.only.tfs <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
+    selected.tfs.adj <- (network.data[,selected.only.tfs] != 0)
     
-    gene.selection <- rowSums(network.data[,selected.only.tfs]) == length(selected.only.tfs)
+    gene.selection <- rowSums(selected.tfs.adj) == length(selected.only.tfs)
+    
+    ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
+    
+    if(input$peak != "any" && input$trough != "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, (peak.zt == input$peak & trough.zt == input$trough))
+    } else if(input$peak == "any" && input$trough != "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, trough.zt == input$trough)
+    } else if(input$peak != "any" && input$trough == "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, peak.zt == input$peak)
+    }
     
     ## Node colors for representation
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
@@ -970,6 +1037,28 @@ server <- function(input, output) {
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
+    
+    ## Output table with gene info
+    output$outputTable <- renderDataTable({
+      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+    },escape=FALSE)
+    
+    ## Generate UI to download table and creating a downlodable table
+    output$download_ui_for_table<- renderUI(
+      tagList(downloadButton(outputId= "downloadData", "Download Selected Genes"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+    )
+    
+    output$downloadData<- downloadHandler(
+      filename= function() {
+        paste0(paste(input$selected.tfs,collapse = "_"), ".tsv")
+      },
+      content= function(file) {
+        write.table(create.downloadable.output.table(input.gene.df=selected.genes.df,alias,tfs.names), 
+                    file=file, 
+                    sep = "\t", 
+                    quote = FALSE,
+                    row.names = FALSE)
+      })
     
     
   })
