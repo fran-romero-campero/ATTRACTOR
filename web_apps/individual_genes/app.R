@@ -19,6 +19,9 @@ library(org.At.tair.db)
 library(igraph)
 library(ggplot2)
 library(stringr)
+library(clusterProfiler)
+library(pathview)
+
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -358,6 +361,43 @@ create.downloadable.output.table <- function(input.gene.df,alias,tfs.names)
   return(output.selected.genes.df)
 }
 
+## Auxiliary function to compute enrichments for GO table
+compute.enrichments <- function(gene.ratios, bg.ratios)
+{
+  gene.ratios.eval <- sapply(parse(text=gene.ratios),FUN = eval)
+  bg.ratios.eval <- sapply(parse(text=bg.ratios),FUN = eval)
+  enrichments <- round(x=gene.ratios.eval/bg.ratios.eval,digits = 2)
+  enrichments.text <- paste(enrichments, " (", gene.ratios, "; ", bg.ratios, ")",sep="")
+  
+  return(enrichments.text)  
+}
+
+#GO links and tair link functions
+go.link <- function(go.term)
+{
+  link <- paste0("http://amigo.geneontology.org/amigo/term/", go.term)
+  complete.link <- paste(c("<a href=\"",
+                           link,
+                           "\" target=\"_blank\">",
+                           go.term, "</a>"),
+                         collapse = "")
+  return(complete.link)
+}
+
+gene.link.function <- function(gene.name)
+{
+  tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
+                       gene.name,
+                       "&type=locus"),collapse="")
+  gene.link <- paste(c("<a href=\"",
+                       tair.link,
+                       "\" target=\"_blank\">",
+                       gene.name, "</a>"),
+                     collapse="")
+  return(gene.link)
+}
+
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -543,8 +583,17 @@ ui <- fluidPage(
                                             tabsetPanel(type = "tabs",
                                                        tabPanel(title = "GO map"),
                                                        tabPanel(title = "GO barplot"),
-                                                       tabPanel(title = "GO concept network"),
-                                                       tabPanel(title = "GO table")
+                                                       tabPanel(title = "GO concept network",
+                                                                htmlOutput(outputId = "cnetplot_text"),
+                                                                tags$br(),
+                                                                plotOutput(outputId = "cnet.plot",inline=TRUE)),
+                                                       tabPanel(title = "GO table",
+                                                                tags$br(), tags$br(),
+                                                                htmlOutput(outputId = "textGOTable"),
+                                                                tags$br(), tags$br(),
+                                                                dataTableOutput(outputId = "output_go_table"),
+                                                                uiOutput(outputId = "download_ui_for_go_table")
+                                                       )
                                             )
                                          ),
                                         tabPanel(title = "Pathway Enrichment"),
@@ -980,10 +1029,11 @@ server <- function(input, output) {
 
     ## Determine targets of selected TFs
     #selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
-    selected.only.tfs <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
-    selected.tfs.adj <- (network.data[,selected.only.tfs] != 0)
+    selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
+    selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
+    selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
     
-    gene.selection <- rowSums(selected.tfs.adj) == length(selected.only.tfs)
+    gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
     
     ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
@@ -1060,6 +1110,104 @@ server <- function(input, output) {
                     row.names = FALSE)
       })
     
+    ## GO enrichment analysis
+    enrich.go <- enrichGO(gene          = selected.genes.df$name,
+                          universe      = genes,
+                          OrgDb         = org.At.tair.db,
+                          ont           = "BP",
+                          pAdjustMethod = "BH",
+                          pvalueCutoff  = 0.05,
+                          qvalueCutoff  = 0.05,
+                          readable      = FALSE,
+                          keyType = "TAIR")
+    
+    ## Generate ouput table
+    enrich.go.result <- as.data.frame(enrich.go)
+    
+    if(nrow(enrich.go.result) > 0)
+    {
+      ## GO term Description P-value Q-value Enrichment (SetRatio, BgRatio) Genes
+      go.term.enrichments <- compute.enrichments(gene.ratios = enrich.go.result$GeneRatio,
+                                                 bg.ratios = enrich.go.result$BgRatio)
+      
+      go.result.table <- data.frame(enrich.go.result$ID, enrich.go.result$Description,
+                                    enrich.go.result$pvalue, enrich.go.result$qvalue,
+                                    go.term.enrichments, 
+                                    gsub(pattern = "/",replacement = " ",x = enrich.go.result$geneID),
+                                    stringsAsFactors = FALSE)
+      
+      colnames(go.result.table) <- c("GO ID", "Description", "p-value", "q-value",
+                                     "Enrichment (Target Ratio; BG Ration)","Genes")
+      
+      go.result.table.with.links <- go.result.table
+      ## Add links to the genes
+      genes.in.go.enrichment <- go.result.table$Genes
+      
+      ## Add link to genes
+      for(i in 1:length(genes.in.go.enrichment))
+      {
+        go.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(genes.in.go.enrichment[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
+      }
+      
+      ## Add links to GO ids
+      go.result.table.with.links[["GO ID"]] <- sapply(X = go.result.table.with.links[["GO ID"]], FUN = go.link)
+      
+      ## Introductory text for GO enrichment table
+      go.table.text <- "The table below summarizes the result of the GO term
+      enrichment analysis. Each row represents a GO term significantly enriched in the selected
+      gene set. The first column represents the GO term
+      identifier. The second column contains a human readable description. For more details on the
+      corresponding GO term, click on the identifier in the first column. The third and fourth
+      column presents the p-value and q-value (adjusted p-value or FDR) capturing the level
+      of significance. The fifth column displays the corresponding enrichment value E (m/n; M/N) where
+      n is the number of genes with annotation from the target set, N is the number of genes with
+      annotation from the gene universe, m is the number of genes from the target set annotated with the
+      corresponding GO term and M is the number of genes from the gene universe annotated with
+      the GO term associated with the corresponding row. The enrichment is then computed as
+      E = (m/n) / (M/N). Finally, the last column, contains the genes from the target set
+      annotated with the GO term represented in the corresponding row."
+
+      output$textGOTable <- renderText(expr = go.table.text)
+      
+      ## Output table with GO enrichment result
+      output$output_go_table <- renderDataTable({
+        go.result.table.with.links #go.result.table
+      },escape=FALSE,options =list(pageLength = 5)) 
+      
+      output$download_ui_for_go_table<- renderUI(
+        tagList(downloadButton(outputId= "downloadGOData", "Download GO Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+      )
+      
+      output$downloadGOData<- downloadHandler(
+        filename= function() {
+          paste0(paste(c("GO_enrichment",input$selected.tfs),collapse = "_"), ".tsv")
+        },
+        content= function(file) {
+          write.table(go.result.table, 
+                      file=file, 
+                      sep = "\t", 
+                      quote = FALSE,
+                      row.names = FALSE)
+        })
+      
+      ## Download result
+      output$downloadData<- downloadHandler(
+        filename= function() {
+          paste("godata-",microalgae.names[input$microalgae] , ".csv", sep="")
+        },
+        content= function(file) {
+          write.csv(go.result.table,
+                    file,
+                    row.names=TRUE
+          )
+        })
+      
+      
+      
+      
+      
+      
+    }
     
   })
   
