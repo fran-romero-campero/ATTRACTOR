@@ -586,22 +586,26 @@ server <- function(input, output) {
     tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
     edge.weights <- E(tfs.network)$weight
     
-    ## Edge colors
-    for(k in 1:length(edge.weights))
+    if (length(selected.tfs) > 1)
     {
-      if(edge.weights[k] == 1)
+      ## Edge colors
+      for(k in 1:length(edge.weights))
       {
-        E(tfs.network)$color[k] <- activator.color #"darkgreen"
-      } else if(edge.weights[k] == -1)
-      {
-        E(tfs.network)$color[k] <- repressor.color  #"darkred"
-      } else if(edge.weights[k] == 2)
-      {
-        print(1)
-        E(tfs.network)$color[k] <- neutral.color
+        if(edge.weights[k] == 1)
+        {
+          E(tfs.network)$color[k] <- activator.color #"darkgreen"
+        } else if(edge.weights[k] == -1)
+        {
+          E(tfs.network)$color[k] <- repressor.color  #"darkred"
+        } else if(edge.weights[k] == 2)
+        {
+          print(1)
+          E(tfs.network)$color[k] <- neutral.color
+        }
       }
+      
     }
-    
+        
     ## Vertex colors
     node.colors <- vector(mode="character",length=nrow(new.matrix))
     for(k in 1:(length(node.colors)-1))
