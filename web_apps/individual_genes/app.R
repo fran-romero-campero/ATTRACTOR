@@ -586,7 +586,7 @@ server <- function(input, output) {
     tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
     edge.weights <- E(tfs.network)$weight
     
-    if (length(selected.tfs) > 1)
+    if (length(input$selected.tfs) > 1)
     {
       ## Edge colors
       for(k in 1:length(edge.weights))
@@ -808,7 +808,7 @@ server <- function(input, output) {
       ## Compute mean signal 
       chip.signal.means <- matrix(nrow=number.tfs, ncol=ncol(chip.signal[[1]]))
       
-      for(i in 1:number.tfs)
+      for(i in 1:length(input$selected.tfs))
       {
         if(target.gene.strand == "+")
         {
@@ -839,7 +839,7 @@ server <- function(input, output) {
       
       ## Width of the rectangule representing the peak reagion
       peak.width <- 1
-      for(i in 1:number.tfs)
+      for(i in 1:length(input$selected.tfs))
       {
         ## Extract bed file name 1 and read it
         current.bed.file <- selected.bed.files[i]
