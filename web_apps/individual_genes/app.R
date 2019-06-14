@@ -73,6 +73,11 @@ names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
+## Setting conversion between alias and agis
+agis <-alias2symbol.table$TAIR
+names(agis) <- alias2symbol.table$SYMBOL
+agis[is.na(agis)] <- ""
+
 ## Color vectors
 line.colors <- c("blue","red", "darkgreen","black","#663300","#99003d","#b3b300","#4d0039","#4d2600","#006666","#000066","#003300","#333300","#660066")
 area.colors <- c("skyblue","salmon", "lightgreen","lightgrey","#ffcc99","#ff99c2","#ffffb3","#ffe6f9","#ffe6cc","#80ffff","#b3b3ff","#99ff99","#e6e600","#ffb3ff")
@@ -639,6 +644,107 @@ server <- function(input, output) {
       lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
             y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
     }
+    
+    ## Get agis and alias of selected tfs and extracting data from adj.global.matrix 
+    ## for clock visualizer
+    selected.tfs.alias <- sapply(X=strsplit(input$selected.tfs,split=" "),FUN = get.first)
+    selected.tfs.agi <- agis[selected.tfs.alias]
+    selected.tfs.zts.pasted <- vector(mode = "character", length = length(input$selected.tfs))
+    for (i in 1:length(input$selected.tfs))
+    {
+      selected.tfs.zts.pasted[i] <- paste(strsplit(input$selected.tfs[i], split=" ")[[1]], collapse = "_")
+    }
+    
+    
+    ## Set transcription factors to keep in the matrix
+    to.keep <- rep(FALSE,ncol(adj.global.matrix))
+    for(i in 1:length(input$selected.tfs))
+    {
+      to.keep <- (to.keep | grepl(selected.tfs.zts.pasted[i],colnames(adj.global.matrix)))
+    }
+    
+    ## Update adjacency matrix to create the transcriptional network 
+    ## represented in the clock visualizer
+    updated.adj.matrix.to.represent <- adj.global.matrix[target.agi,to.keep]
+    for (i in 1:length(input$selected.tfs))
+    {
+      updated.adj.matrix.to.represent <- rbind(rep(0,length(input$selected.tfs)),
+                                               updated.adj.matrix.to.represent)
+    }
+    
+    updated.adj.matrix.to.represent <- cbind(updated.adj.matrix.to.represent, rep(0,length(input$selected.tfs)+1))
+    colnames(updated.adj.matrix.to.represent) <- c(selected.tfs.zts.pasted, alias[target.agi])
+    rownames(updated.adj.matrix.to.represent) <- c(selected.tfs.zts.pasted, alias[target.agi])
+    
+    ## Modify adj.matrix and matrix.pos to add the target.gene
+    gene.peak.str <- subset(network.data, names == target.agi)$peak.zt 
+    gene.peak <- as.numeric(substr(x=gene.peak.str,start=5,stop=nchar(gene.peak.str)))
+    target.color <- selected.colors[paste0("peak",gene.peak)]
+    
+    ## Transpose the matrix to create graph adjacency with igraph
+    new.matrix <- t(updated.adj.matrix.to.represent)
+    
+    ## Generating the complete network
+    tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
+    edge.weights <- E(tfs.network)$weight
+    
+    if (length(selected.tfs) > 1)
+    {
+      ## Edge colors
+      for(k in 1:length(edge.weights))
+      {
+        if(edge.weights[k] == 1)
+        {
+          E(tfs.network)$color[k] <- activator.color #"darkgreen"
+        } else if(edge.weights[k] == -1)
+        {
+          E(tfs.network)$color[k] <- repressor.color  #"darkred"
+        } else if(edge.weights[k] == 2)
+        {
+          print(1)
+          E(tfs.network)$color[k] <- neutral.color
+        }
+      }
+      
+    }
+        
+    ## Vertex colors
+    node.colors <- vector(mode="character",length=nrow(new.matrix))
+    for(k in 1:(length(node.colors)-1))
+    {
+      if(new.matrix[k,ncol(new.matrix)] == 1)
+      {
+        node.colors[k] <- activator.color
+      } else if(new.matrix[k,ncol(new.matrix)] == -1)
+      {
+        node.colors[k] <- repressor.color
+      } else #if (new.matrix[k,ncol(new.matrix)] == 0)
+      {
+        node.colors[k] <- neutral.color
+      }
+    }
+    
+    node.colors[length(node.colors)] <- target.color
+    
+    ## Modify the angles, radius, and labels positions to keep only the selected tfs
+    tfs.angles <- tfs.angles[to.keep]
+    radius.to.multiply <- radius.to.multiply[to.keep]
+    node.labels <- node.labels[to.keep]
+    
+    ## Modify the angles, the radius and the positions to add the new node
+    new.tfs.angles <- c(tfs.angles, radian.conversion(gene.peak*15))
+    new.multiply <- c(radius.to.multiply, radius.1*0.3)
+    tfs.x <- new.multiply * sin(new.tfs.angles)
+    tfs.y <- new.multiply * cos(new.tfs.angles)
+    
+    new.matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = nrow(new.matrix), ncol = 2)
+    new.node.labels <- c(node.labels, alias[target.agi])
+    
+    ## Plot the network
+    plot.igraph(tfs.network, layout=new.matrix.pos, add = TRUE, rescale=FALSE, vertex.size=radius.1*13,
+                vertex.color = node.colors, vertex.label=new.node.labels, edge.arrow.size = 0.8, 
+                edge.arrow.width=2, edge.curved= TRUE, edge.width = 4, vertex.label.dist = 0,
+                vertex.label.cex=1, vertex.label.font=2,vertex.label.color="black",label.font=2)
     
   })
   
