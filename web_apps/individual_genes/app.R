@@ -304,7 +304,9 @@ get.first <- function(my.vector)
   return(my.vector[[1]])
 }
 
-names(height.to.multiply) <- sapply(X= splitted.tfs.names, FUN = get.first)
+# names(height.to.multiply) <- tfs.names
+names(height.to.multiply) <- tfs.with.zts
+
 
 ## Set the x.y coordinates for the positions 
 tfs.x <- radius.to.multiply * sin(tfs.angles)
@@ -406,10 +408,7 @@ ui <- fluidPage(
                      column(width = 9,
                             tabsetPanel(type = "tabs",
                                         tabPanel(title = "Clock Visualizer", 
-                                                 plotOutput(outputId = "clock",width = 600, height=600),
-                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
-                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
-                                                 plotOutput(outputId = "expression")),
+                                                 plotOutput(outputId = "clock",width = 600, height=600)),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
@@ -452,7 +451,9 @@ ui <- fluidPage(
                                                    column(
                                                      plotOutput(outputId = "plot.to.chulo.to.wapo"),
                                                      width=12)
-                                                 )))
+                                                 )),
+                                        tabPanel(title = "Expression Visualizer", 
+                                                 plotOutput(outputId = "expression",width = 600, height=600)))
                      )
                    )
   ),
@@ -646,6 +647,89 @@ server <- function(input, output) {
     
   })
   
+  ## Express visualizer code
+  output$expression <- renderPlot({
+    
+    ## Error message for the user
+    validate(
+        need(input$selected.tfs, "Please select some transcription factor")
+      )
+    
+    
+    ## Get agis and alias of selected tfs and extracting data from adj.global.matrix 
+    ## for clock visualizer
+    selected.tfs.alias <- sapply(X=strsplit(input$selected.tfs,split=" "),FUN = get.first)
+    selected.tfs.agi <- agis[selected.tfs.alias]
+    selected.tfs.zts.pasted <- vector(mode = "character", length = length(input$selected.tfs))
+    for (i in 1:length(input$selected.tfs))
+    {
+      selected.tfs.zts.pasted[i] <- paste(strsplit(input$selected.tfs[i], split=" ")[[1]], collapse = "_")
+    }
+    
+    ## Get expression data for the selected gene
+    target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+    gene.expression <- as.vector(scale(mean.expression[target.agi,]))
+    gene.expression <- c(gene.expression, gene.expression[1])
+    extended.gene.expression <- approx(x = seq(from=0,to=24,by=4), y = gene.expression, xout=c(0,2,4,8,10,12,14,15,16,20,24))
+    extended.gene.expression.values <- extended.gene.expression$y
+    names(extended.gene.expression.values) <- c("ZT00", "ZT02", "ZT04", "ZT08", "ZT10", "ZT12", "ZT14", "ZT15", "ZT16", "ZT20", "ZT24")
+    line.color <- selected.colors[network.data[target.agi, "peak.zt"]]
+    
+    ## Plot the initial visualization of the expression profile
+    plot(x=seq(from=0,to=24,by=4),gene.expression,
+         type="o",lwd=5,cex=1.5,
+         ylim=c(-2.5,height),xlim=c(0,24),
+         col=line.color,axes=FALSE,xlab="",ylab="", 
+         main=paste(target.agi, alias[target.agi],sep=" - "))
+    
+    ## Add TFs to expression profile
+    for(i in 1:length(selected.tfs.agi))
+    {
+      current.tf.name <- names(selected.tfs.agi[i])
+      current.zt <- strsplit(x = selected.tfs.zts.pasted[i], split="_")[[1]][2]
+      current.time.point <- as.numeric(substr(x = current.zt, start = 3, stop = nchar(current.tf.zt)))
+      # current.time.point <- as.numeric(substr(x = current.tf.zts[j], start = 3, stop = nchar(current.tf.zts[j])))
+      current.regulation <- adj.global.matrix[target.agi,selected.tfs.zts.pasted[i]]
+        
+      if(current.regulation == 1)
+      {
+        point.color <- activator.color #"seagreen3"#"darkgreen"
+        arrow.angle <- 45
+        draw.tf <- TRUE
+      } else if (current.regulation == -1)
+      {
+        point.color <- repressor.color # "firebrick1"
+        arrow.angle <- 90
+        draw.tf <- TRUE
+      } else if (current.regulation == 2)
+      {
+        point.color <- neutral.color
+        arrow.angle <- 45
+        draw.tf <- TRUE
+      } else if (current.regulation == 0)
+      {
+        draw.tf <- FALSE
+      }
+      
+      if(draw.tf)
+      {
+        arrows(x0 = current.time.point, y0 = height.to.multiply[selected.tfs.zts.pasted[i]],
+               x1 = current.time.point ,y1= extended.gene.expression.values[current.zt] + 0.3,lwd=4,angle=arrow.angle,length=0.05,col=point.color)
+        points(x = current.time.point,y=height.to.multiply[selected.tfs.zts.pasted[i]],lwd=4,cex=4, col=point.color, pch = 19)  
+        text(x = current.time.point,y=height.to.multiply[selected.tfs.zts.pasted[i]],labels = current.tf.name, cex=1.2, font=2 )
+      }
+    }
+    
+    polygon(x=c(0,12,12,0),y=c(-2,-2,-2.3,-2.3),lwd=2)
+    polygon(x=c(12,24,24,12),y=c(-2,-2,-2.3,-2.3),col = "black",lwd=2)
+    
+    axis(side = 2,at = -2:2,labels = FALSE,lwd=2)
+    mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.5,at = 0)
+    axis(side = 1,at=seq(from=0,to=24,by=2),line=-1,las=2,labels = paste("ZT",seq(from=0,to=24,by=2),sep=""),lwd=2)
+    
+  })
+  
+  ## Peak visualizer code
   observeEvent(input$go,{
     
     ## Extract target gene annotation 
