@@ -185,12 +185,12 @@ names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 Z
 symbol.shapes <- c(17, 18, 19, 15)
 symbol.color <- c("blue", "red", "darkgreen", "magenta")
 
-## Colors used to represent repression/activation/neutrality in network visualizer
+## Colors used to represent repression/activation/neutrality in clock visualizer
 repressor.color <- "firebrick1"
 activator.color <- "seagreen3"
 neutral.color <- "lightgrey"
 
-## Colors to represent gene expression profiles in network visualizer
+## Colors to represent gene expression profiles in clock visualizer
 selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
@@ -199,7 +199,7 @@ names(selected.colors) <- peak.times
 node.colors <- selected.colors[network.data$peak.zt]
 names(node.colors) <- NULL
 
-## Auxiliary function to determine surrounding ZTs in network visualizer
+## Auxiliary function to determine surrounding ZTs in clock visualizer
 zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
 zts.to.consider <- function(zt.point, zts=zts)
 {
@@ -216,7 +216,7 @@ zts.to.consider <- function(zt.point, zts=zts)
   }
 }
 
-# Circle and profile parameters for network visualizer
+# Circle and profile parameters for clock visualizer
 radius.1 <- 100 #Outer circle radius
 height <- 4 ## highest point in ylim for profile plot
 
@@ -228,7 +228,7 @@ radian.conversion <- function(alpha)
 }
 
 ## Generate coordinates for inner and outer circle in the clock representation for 
-## network visualizer
+## clock visualizer
 angle <- seq(from=0, to=2*pi, by=0.01)
 x.circle.1 <- radius.1*sin(angle)
 y.circle.1 <- radius.1*cos(angle)
@@ -238,7 +238,7 @@ x.circle.2 <- radius.2 * sin(angle)
 y.circle.2 <- radius.2 * cos(angle)
 
 ## Define vectrors for location of transcription factors in the clock representation 
-## in network visualizer
+## in clock visualizer
 agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", 
              "AT2G46790","AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", 
              "AT1G09530", "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
@@ -257,7 +257,7 @@ for (i in 1:length(name.tfs))
 }
 
 ## Determine the number of ZTs points for each transcription factor to represent
-## this multiplicity in the clock for network visualizer
+## this multiplicity in the clock for clock visualizer
 agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
 names(agi.tfs.zts) <- agi.tfs
 names(agi.tfs.zts.multiplicity) <- agi.tfs
@@ -405,8 +405,8 @@ ui <- fluidPage(
                      
                      column(width = 9,
                             tabsetPanel(type = "tabs",
-                                        tabPanel(title = "Network Visualizer", 
-                                                 plotOutput(outputId = "network",width = 600, height=600),
+                                        tabPanel(title = "Clock Visualizer", 
+                                                 plotOutput(outputId = "clock",width = 600, height=600),
                                                  tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
                                                  tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
                                                  plotOutput(outputId = "expression")),
@@ -513,8 +513,8 @@ ui <- fluidPage(
 ## ATTRACTOR server
 server <- function(input, output) {
 
-  ## Network visualizer code
-  output$network <- renderPlot({
+  ## clock visualizer code
+  output$clock <- renderPlot({
     
     ## Error message for the user
     validate(
