@@ -22,7 +22,7 @@ library(stringr)
 library(clusterProfiler)
 library(pathview)
 library(shinycssloaders)
-
+library(shinyWidgets)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -612,8 +612,9 @@ ui <- fluidPage(
                                                                 tags$br(), tags$br(),
                                                                 htmlOutput(outputId = "barplot_text"),
                                                                 tags$br(),
-                                                                withSpinner(ui_element = 
-                                                                  plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
+                                                                # withSpinner(ui_element = 
+                                                                #   plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
+                                                                addSpinner(plotOutput("bar.plot"), spin = "circle", color = "#E41A1C")),
                                                        tabPanel(title = "GO concept network",
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
@@ -640,6 +641,9 @@ ui <- fluidPage(
 
 ## ATTRACTOR server
 server <- function(input, output) {
+  reaction <- reactive({
+    input$goterm
+  })
 
   ## clock visualizer code
   output$clock <- renderPlot({
@@ -1336,7 +1340,7 @@ server <- function(input, output) {
   
   ##Perform GO terms enrichment analysis when button is clicked
   observeEvent(input$goterm,{
-  # eventReactive(input$goterm,{
+  
       
     
     ## Determine targets of selected TFs
@@ -1417,6 +1421,10 @@ server <- function(input, output) {
       
       ## Output table with GO enrichment result
       output$output_go_table <- renderDataTable({
+        ## Error message for the user
+        validate(
+          need(input$selected.tfs, "Please select some transcription factor")
+        )
         go.result.table.with.links #go.result.table
       },escape=FALSE,options =list(pageLength = 5)) 
       
@@ -1449,19 +1457,29 @@ server <- function(input, output) {
         })
       
       output$barplot_text <- renderText("In the following barplot each bar represents a significantly enriched 
-        GO term. The length of the bar corresponds to the number of genes in the
+GO term. The length of the bar corresponds to the number of genes in the
                                         target set annotated with the given GO term. The bar color captures the level
                                         of significance from blue, less significant, to red, more significant.")
       
+      
       ## Barplot
-      output$bar.plot <- renderPlot(
+       output$bar.plot <- renderPlot(
         width     = 870,
         height    = 600,
         res       = 120,
         expr = {
-          input$goterm
+          ## Error message for the user
+          validate(
+            need(input$selected.tfs, "Please select some transcription factor")
+          )
+          reaction()
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
+       
+       ## GO map
+       
+       
+       
       
       
       
