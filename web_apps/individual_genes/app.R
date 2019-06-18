@@ -21,6 +21,7 @@ library(ggplot2)
 library(stringr)
 library(clusterProfiler)
 library(pathview)
+library(shinycssloaders)
 
 
 ##Load the network data
@@ -592,19 +593,27 @@ ui <- fluidPage(
                                                  uiOutput(outputId = "download_ui_for_table")
                                          ),
                                          tabPanel(title = "GO Enrichment",
+                                                  tags$br(),
+                                                  tags$div(align="justify", "In this section you can perform a GO term
+                                                           enrichment analysis over the genes in the intersection. First
+                                                           of all, choose the background set of genes to detecting enrichment;
+                                                           the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
+                                                  tags$br(),
                                                   radioButtons(inputId = "go.background", width="100%",selected="onlynet",
                                                                label="",
                                                                choices=c(
                                                                  "All genome" = "allgenome",
                                                                  "only net" = "onlynet"
-                                                               )),
+                                                               )), tags$br(),
+                                                  actionButton(inputId = "goterm",label = "GO terms analysis"),tags$br(),
                                             tabsetPanel(type = "tabs",
                                                        tabPanel(title = "GO map"),
                                                        tabPanel(title = "GO barplot",
                                                                 tags$br(), tags$br(),
                                                                 htmlOutput(outputId = "barplot_text"),
                                                                 tags$br(),
-                                                                plotOutput(outputId = "bar.plot",inline=TRUE)),
+                                                                withSpinner(ui_element = 
+                                                                  plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
                                                        tabPanel(title = "GO concept network",
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
@@ -1321,6 +1330,26 @@ server <- function(input, output) {
                     row.names = FALSE)
       })
     
+    
+    
+  })
+  
+  ##Perform GO terms enrichment analysis when button is clicked
+  observeEvent(input$goterm,{
+  # eventReactive(input$goterm,{
+      
+    
+    ## Determine targets of selected TFs
+    #selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
+    selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
+    selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
+    selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
+    
+    gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
+    
+    ## Determine targets with the specified expression profile
+    selected.genes.df <- network.data[gene.selection,]    
+    
     ## GO enrichment analysis
     
     ## Set the background to perform the GO terms enrichment analysis depending on the user selection
@@ -1383,7 +1412,7 @@ server <- function(input, output) {
       the GO term associated with the corresponding row. The enrichment is then computed as
       E = (m/n) / (M/N). Finally, the last column, contains the genes from the target set
       annotated with the GO term represented in the corresponding row."
-
+      
       output$textGOTable <- renderText(expr = go.table.text)
       
       ## Output table with GO enrichment result
@@ -1430,6 +1459,7 @@ server <- function(input, output) {
         height    = 600,
         res       = 120,
         expr = {
+          input$goterm
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
       
@@ -1440,7 +1470,6 @@ server <- function(input, output) {
       
       
     }
-    
   })
   
 
