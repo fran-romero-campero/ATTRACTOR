@@ -784,9 +784,10 @@ server <- function(input, output) {
         need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors")
       )
       
-      validate(
-        need((length(input$selected.motifs) > 0 || input$all.motifs), "Please select a set of DNA motifs")
-      )
+      # validate(
+      #   need((length(input$selected.motifs) > 0 || input$all.motifs), "Please select a set of DNA motifs")
+      # )
+
       
       plot(cord.x, rep(gene.height,length(cord.x)),type="l",col="black",lwd=3,ylab="",
            cex.lab=2,axes=FALSE,xlab="",main="",cex.main=2,
@@ -910,11 +911,15 @@ server <- function(input, output) {
       
       ## Draw peak regions for each TF and determing TF binding sequences
       
-      ## Determine TFBS motifs to search for
+      ## Determine TFBS motifs to search for and Selecting an
+      ## example motif if the user does not select any of them
       if(input$all.motifs)
       {
         selected.motifs.pwm <- motifs.pwm
-      } else
+      } else if(length(input$selected.motifs)==0)
+      {
+        selected.motifs.pwm <- motifs.pwm["EE"]
+      }else
       {
         selected.motifs.pwm <- motifs.pwm[input$selected.motifs]
       }
