@@ -435,6 +435,7 @@ ui <- fluidPage(
                                                    ## Selectize to choose target gene to represent
                                                    selectizeInput(inputId = "selected.motifs",
                                                                   label = "Select Motifs",
+                                                                  selected ="EE",
                                                                   choices = motif.names,
                                                                   multiple = TRUE),
                                                    
