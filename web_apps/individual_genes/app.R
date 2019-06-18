@@ -592,6 +592,12 @@ ui <- fluidPage(
                                                  uiOutput(outputId = "download_ui_for_table")
                                          ),
                                          tabPanel(title = "GO Enrichment",
+                                                  radioButtons(inputId = "go.background", width="100%",selected="onlynet",
+                                                               label="",
+                                                               choices=c(
+                                                                 "All genome" = "allgenome",
+                                                                 "only net" = "onlynet"
+                                                               )),
                                             tabsetPanel(type = "tabs",
                                                        tabPanel(title = "GO map"),
                                                        tabPanel(title = "GO barplot",
@@ -1038,7 +1044,7 @@ server <- function(input, output) {
       df.hits <- data.frame(0,0,"","","")
       colnames(df.hits) <- c("tf_number","position","id","name","seq")
       
-      ## Width of the rectangule representing the peak reagion
+      ## Width of the rectangle representing the peak region
       peak.width <- 1
       for(i in 1:length(input$selected.tfs))
       {
@@ -1229,7 +1235,7 @@ server <- function(input, output) {
       geom_point(color=node.colors,size=1)
   },height = 700)
   
-  ## Determine common targets and perfomr analysis when button is clicked
+  ## Determine common targets and perform analysis when button is clicked
   observeEvent(input$go_multiple, {
 
     ## Determine targets of selected TFs
@@ -1316,6 +1322,12 @@ server <- function(input, output) {
       })
     
     ## GO enrichment analysis
+    
+    ## Set the background to perform the GO terms enrichment analysis depending on the user selection
+    if (input$go.background == "allgenome")
+    {
+      genes <- agis
+    }
     enrich.go <- enrichGO(gene          = selected.genes.df$name,
                           universe      = genes,
                           OrgDb         = org.At.tair.db,
