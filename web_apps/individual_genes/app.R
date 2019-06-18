@@ -67,11 +67,15 @@ cds.data <- as.data.frame(cds(txdb))
 alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
                                             keys=keys(org.At.tair.db, keytype="ENTREZID"), 
                                             columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
-alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
+# alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
+agis <- alias2symbol.table$TAIR
+agis <- intersect(agis, genes)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
+alias <- alias[agis]
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
+
 
 ## Setting conversion between alias and agis
 agis <-alias2symbol.table$TAIR
@@ -195,12 +199,12 @@ names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 Z
 symbol.shapes <- c(17, 18, 19, 15)
 symbol.color <- c("blue", "red", "darkgreen", "magenta")
 
-## Colors used to represent repression/activation/neutrality in network visualizer
+## Colors used to represent repression/activation/neutrality in clock visualizer
 repressor.color <- "firebrick1"
 activator.color <- "seagreen3"
 neutral.color <- "lightgrey"
 
-## Colors to represent gene expression profiles in network visualizer
+## Colors to represent gene expression profiles in clock visualizer
 selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
 peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
 names(selected.colors) <- peak.times
@@ -209,7 +213,7 @@ names(selected.colors) <- peak.times
 node.colors <- selected.colors[network.data$peak.zt]
 names(node.colors) <- NULL
 
-## Auxiliary function to determine surrounding ZTs in network visualizer
+## Auxiliary function to determine surrounding ZTs in clock visualizer
 zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
 zts.to.consider <- function(zt.point, zts=zts)
 {
@@ -226,7 +230,7 @@ zts.to.consider <- function(zt.point, zts=zts)
   }
 }
 
-# Circle and profile parameters for network visualizer
+# Circle and profile parameters for clock visualizer
 radius.1 <- 100 #Outer circle radius
 height <- 4 ## highest point in ylim for profile plot
 
@@ -238,7 +242,7 @@ radian.conversion <- function(alpha)
 }
 
 ## Generate coordinates for inner and outer circle in the clock representation for 
-## network visualizer
+## clock visualizer
 angle <- seq(from=0, to=2*pi, by=0.01)
 x.circle.1 <- radius.1*sin(angle)
 y.circle.1 <- radius.1*cos(angle)
@@ -248,7 +252,7 @@ x.circle.2 <- radius.2 * sin(angle)
 y.circle.2 <- radius.2 * cos(angle)
 
 ## Define vectrors for location of transcription factors in the clock representation 
-## in network visualizer
+## in clock visualizer
 agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", 
              "AT2G46790","AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", 
              "AT1G09530", "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
@@ -267,7 +271,7 @@ for (i in 1:length(name.tfs))
 }
 
 ## Determine the number of ZTs points for each transcription factor to represent
-## this multiplicity in the clock for network visualizer
+## this multiplicity in the clock for clock visualizer
 agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
 names(agi.tfs.zts) <- agi.tfs
 names(agi.tfs.zts.multiplicity) <- agi.tfs
@@ -314,7 +318,9 @@ get.first <- function(my.vector)
   return(my.vector[[1]])
 }
 
-names(height.to.multiply) <- sapply(X= splitted.tfs.names, FUN = get.first)
+# names(height.to.multiply) <- tfs.names
+names(height.to.multiply) <- tfs.with.zts
+
 
 ## Set the x.y coordinates for the positions 
 tfs.x <- radius.to.multiply * sin(tfs.angles)
@@ -495,11 +501,10 @@ ui <- fluidPage(
                      
                      column(width = 9,
                             tabsetPanel(type = "tabs",
-                                        tabPanel(title = "Network Visualizer", 
-                                                 plotOutput(outputId = "network",width = 600, height=600),
-                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
-                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
-                                                 plotOutput(outputId = "expression")),
+                                        tabPanel(title = "Clock Visualizer", 
+                                                 plotOutput(outputId = "clock",width = 600, height=600)),
+                                        tabPanel(title = "Expression Visualizer", 
+                                                 plotOutput(outputId = "expression",width = 600, height=600)),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
@@ -520,6 +525,7 @@ ui <- fluidPage(
                                                    ## Selectize to choose target gene to represent
                                                    selectizeInput(inputId = "selected.motifs",
                                                                   label = "Select Motifs",
+                                                                  selected ="EE",
                                                                   choices = motif.names,
                                                                   multiple = TRUE),
                                                    
@@ -542,7 +548,8 @@ ui <- fluidPage(
                                                    column(
                                                      plotOutput(outputId = "plot.to.chulo.to.wapo"),
                                                      width=12)
-                                                 )))
+                                                 ))
+                                        )
                      )
                    )
   ),
@@ -619,8 +626,8 @@ ui <- fluidPage(
 ## ATTRACTOR server
 server <- function(input, output) {
 
-  ## Network visualizer code
-  output$network <- renderPlot({
+  ## clock visualizer code
+  output$clock <- renderPlot({
     
     ## Error message for the user
     validate(
@@ -692,7 +699,7 @@ server <- function(input, output) {
     tfs.network <- graph.adjacency(adjmatrix = new.matrix, mode = "directed",weighted = TRUE)
     edge.weights <- E(tfs.network)$weight
     
-    if (length(selected.tfs) > 1)
+    if (length(input$selected.tfs) > 1)
     {
       ## Edge colors
       for(k in 1:length(edge.weights))
@@ -752,6 +759,89 @@ server <- function(input, output) {
     
   })
   
+  ## Express visualizer code
+  output$expression <- renderPlot({
+    
+    ## Error message for the user
+    validate(
+        need(input$selected.tfs, "Please select some transcription factor")
+      )
+    
+    
+    ## Get agis and alias of selected tfs and extracting data from adj.global.matrix 
+    ## for expression visualizer
+    selected.tfs.alias <- sapply(X=strsplit(input$selected.tfs,split=" "),FUN = get.first)
+    selected.tfs.agi <- agis[selected.tfs.alias]
+    selected.tfs.zts.pasted <- vector(mode = "character", length = length(input$selected.tfs))
+    for (i in 1:length(input$selected.tfs))
+    {
+      selected.tfs.zts.pasted[i] <- paste(strsplit(input$selected.tfs[i], split=" ")[[1]], collapse = "_")
+    }
+    
+    ## Get expression data for the selected gene
+    target.agi <- strsplit(x = input$target.gene, split = " - ")[[1]][1]
+    gene.expression <- as.vector(scale(mean.expression[target.agi,]))
+    gene.expression <- c(gene.expression, gene.expression[1])
+    extended.gene.expression <- approx(x = seq(from=0,to=24,by=4), y = gene.expression, xout=c(0,2,4,8,10,12,14,15,16,20,24))
+    extended.gene.expression.values <- extended.gene.expression$y
+    names(extended.gene.expression.values) <- c("ZT00", "ZT02", "ZT04", "ZT08", "ZT10", "ZT12", "ZT14", "ZT15", "ZT16", "ZT20", "ZT24")
+    line.color <- selected.colors[network.data[target.agi, "peak.zt"]]
+    
+    ## Plot the initial visualization of the expression profile
+    plot(x=seq(from=0,to=24,by=4),gene.expression,
+         type="o",lwd=5,cex=1.5,
+         ylim=c(-2.5,height),xlim=c(0,24),
+         col=line.color,axes=FALSE,xlab="",ylab="", 
+         main=paste(target.agi, alias[target.agi],sep=" - "))
+    
+    ## Add TFs to expression profile
+    for(i in 1:length(selected.tfs.agi))
+    {
+      current.tf.name <- names(selected.tfs.agi[i])
+      current.zt <- strsplit(x = selected.tfs.zts.pasted[i], split="_")[[1]][2]
+      current.time.point <- as.numeric(substr(x = current.zt, start = 3, stop = nchar(selected.tfs.zts.pasted[i])))
+      # current.time.point <- as.numeric(substr(x = current.tf.zts[j], start = 3, stop = nchar(current.tf.zts[j])))
+      current.regulation <- adj.global.matrix[target.agi,selected.tfs.zts.pasted[i]]
+        
+      if(current.regulation == 1)
+      {
+        point.color <- activator.color #"seagreen3"#"darkgreen"
+        arrow.angle <- 45
+        draw.tf <- TRUE
+      } else if (current.regulation == -1)
+      {
+        point.color <- repressor.color # "firebrick1"
+        arrow.angle <- 90
+        draw.tf <- TRUE
+      } else if (current.regulation == 2)
+      {
+        point.color <- neutral.color
+        arrow.angle <- 45
+        draw.tf <- TRUE
+      } else if (current.regulation == 0)
+      {
+        draw.tf <- FALSE
+      }
+      
+      if(draw.tf)
+      {
+        arrows(x0 = current.time.point, y0 = height.to.multiply[selected.tfs.zts.pasted[i]],
+               x1 = current.time.point ,y1= extended.gene.expression.values[current.zt] + 0.3,lwd=4,angle=arrow.angle,length=0.05,col=point.color)
+        points(x = current.time.point,y=height.to.multiply[selected.tfs.zts.pasted[i]],lwd=4,cex=4, col=point.color, pch = 19)  
+        text(x = current.time.point,y=height.to.multiply[selected.tfs.zts.pasted[i]],labels = current.tf.name, cex=1.2, font=2 )
+      }
+    }
+    
+    polygon(x=c(0,12,12,0),y=c(-2,-2,-2.3,-2.3),lwd=2)
+    polygon(x=c(12,24,24,12),y=c(-2,-2,-2.3,-2.3),col = "black",lwd=2)
+    
+    axis(side = 2,at = -2:2,labels = FALSE,lwd=2)
+    mtext("Normalized Gene Expression",side = 2,line = 1.3,cex = 1.5,at = 0)
+    axis(side = 1,at=seq(from=0,to=24,by=2),line=-1,las=2,labels = paste("ZT",seq(from=0,to=24,by=2),sep=""),lwd=2)
+    
+  })
+  
+  ## Peak visualizer code
   observeEvent(input$go,{
     
     ## Extract target gene annotation 
@@ -801,9 +891,10 @@ server <- function(input, output) {
         need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors")
       )
       
-      validate(
-        need((length(input$selected.motifs) > 0 || input$all.motifs), "Please select a set of DNA motifs")
-      )
+      # validate(
+      #   need((length(input$selected.motifs) > 0 || input$all.motifs), "Please select a set of DNA motifs")
+      # )
+
       
       plot(cord.x, rep(gene.height,length(cord.x)),type="l",col="black",lwd=3,ylab="",
            cex.lab=2,axes=FALSE,xlab="",main="",cex.main=2,
@@ -914,7 +1005,7 @@ server <- function(input, output) {
       ## Compute mean signal 
       chip.signal.means <- matrix(nrow=number.tfs, ncol=ncol(chip.signal[[1]]))
       
-      for(i in 1:number.tfs)
+      for(i in 1:length(input$selected.tfs))
       {
         if(target.gene.strand == "+")
         {
@@ -927,11 +1018,15 @@ server <- function(input, output) {
       
       ## Draw peak regions for each TF and determing TF binding sequences
       
-      ## Determine TFBS motifs to search for
+      ## Determine TFBS motifs to search for and Selecting an
+      ## example motif if the user does not select any of them
       if(input$all.motifs)
       {
         selected.motifs.pwm <- motifs.pwm
-      } else
+      } else if(length(input$selected.motifs)==0)
+      {
+        selected.motifs.pwm <- motifs.pwm["EE"]
+      }else
       {
         selected.motifs.pwm <- motifs.pwm[input$selected.motifs]
       }
@@ -945,7 +1040,7 @@ server <- function(input, output) {
       
       ## Width of the rectangule representing the peak reagion
       peak.width <- 1
-      for(i in 1:number.tfs)
+      for(i in 1:length(input$selected.tfs))
       {
         ## Extract bed file name 1 and read it
         current.bed.file <- selected.bed.files[i]
