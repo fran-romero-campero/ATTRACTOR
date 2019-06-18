@@ -413,6 +413,8 @@ ui <- fluidPage(
                             tabsetPanel(type = "tabs",
                                         tabPanel(title = "Clock Visualizer", 
                                                  plotOutput(outputId = "clock",width = 600, height=600)),
+                                        tabPanel(title = "Expression Visualizer", 
+                                                 plotOutput(outputId = "expression",width = 600, height=600)),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
@@ -455,9 +457,8 @@ ui <- fluidPage(
                                                    column(
                                                      plotOutput(outputId = "plot.to.chulo.to.wapo"),
                                                      width=12)
-                                                 )),
-                                        tabPanel(title = "Expression Visualizer", 
-                                                 plotOutput(outputId = "expression",width = 600, height=600)))
+                                                 ))
+                                        )
                      )
                    )
   ),
@@ -661,7 +662,7 @@ server <- function(input, output) {
     
     
     ## Get agis and alias of selected tfs and extracting data from adj.global.matrix 
-    ## for clock visualizer
+    ## for expression visualizer
     selected.tfs.alias <- sapply(X=strsplit(input$selected.tfs,split=" "),FUN = get.first)
     selected.tfs.agi <- agis[selected.tfs.alias]
     selected.tfs.zts.pasted <- vector(mode = "character", length = length(input$selected.tfs))
@@ -691,7 +692,7 @@ server <- function(input, output) {
     {
       current.tf.name <- names(selected.tfs.agi[i])
       current.zt <- strsplit(x = selected.tfs.zts.pasted[i], split="_")[[1]][2]
-      current.time.point <- as.numeric(substr(x = current.zt, start = 3, stop = nchar(current.tf.zt)))
+      current.time.point <- as.numeric(substr(x = current.zt, start = 3, stop = nchar(selected.tfs.zts.pasted[i])))
       # current.time.point <- as.numeric(substr(x = current.tf.zts[j], start = 3, stop = nchar(current.tf.zts[j])))
       current.regulation <- adj.global.matrix[target.agi,selected.tfs.zts.pasted[i]]
         
