@@ -587,7 +587,11 @@ ui <- fluidPage(
                                          tabPanel(title = "GO Enrichment",
                                             tabsetPanel(type = "tabs",
                                                        tabPanel(title = "GO map"),
-                                                       tabPanel(title = "GO barplot"),
+                                                       tabPanel(title = "GO barplot",
+                                                                tags$br(), tags$br(),
+                                                                htmlOutput(outputId = "barplot_text"),
+                                                                tags$br(),
+                                                                plotOutput(outputId = "bar.plot",inline=TRUE)),
                                                        tabPanel(title = "GO concept network",
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
@@ -1299,7 +1303,7 @@ server <- function(input, output) {
       ## Download result
       output$downloadData<- downloadHandler(
         filename= function() {
-          paste("godata-",microalgae.names[input$microalgae] , ".csv", sep="")
+          paste("godata" , ".csv", sep="")
         },
         content= function(file) {
           write.csv(go.result.table,
@@ -1307,6 +1311,21 @@ server <- function(input, output) {
                     row.names=TRUE
           )
         })
+      
+      output$barplot_text <- renderText("In the following barplot each bar represents a significantly enriched 
+        GO term. The length of the bar corresponds to the number of genes in the
+                                        target set annotated with the given GO term. The bar color captures the level
+                                        of significance from blue, less significant, to red, more significant.")
+      
+      ## Barplot
+      output$bar.plot <- renderPlot(
+        width     = 870,
+        height    = 600,
+        res       = 120,
+        expr = {
+          barplot(enrich.go,drop=TRUE,showCategory = 10)
+        })
+      
       
       
       
