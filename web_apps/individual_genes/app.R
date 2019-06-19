@@ -613,15 +613,19 @@ ui <- fluidPage(
                                                        tabPanel(title = "GO map",
                                                                 # withSpinner(ui_element =
                                                                   # plotOutput(outputId = "gomap"),type = 4)),
+                                                                tags$br(), tags$br(),
+                                                                htmlOutput(outputId = "gomap_text"),
+                                                                tags$br(),
                                                                 addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C")),
                                                        tabPanel(title = "GO barplot",
-                                                                tags$br(), tags$br(),
+                                                                tags$br(),
                                                                 htmlOutput(outputId = "barplot_text"),
                                                                 tags$br(),
                                                                 # withSpinner(ui_element = 
                                                                 #   plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
                                                                 addSpinner(plotOutput("bar.plot"), spin = "circle", color = "#E41A1C")),
                                                        tabPanel(title = "GO concept network",
+                                                                tags$br(), 
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
                                                                 addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE))),
@@ -647,10 +651,7 @@ ui <- fluidPage(
 
 ## ATTRACTOR server
 server <- function(input, output) {
-  reaction <- reactive({
-    input$goterm
-  })
-  
+ 
   ## clock visualizer code
   output$clock <- renderPlot({
     
@@ -1258,7 +1259,6 @@ server <- function(input, output) {
   observeEvent(input$go_multiple, {
 
     ## Determine targets of selected TFs
-    #selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
     selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
     selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
     selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
@@ -1372,7 +1372,7 @@ server <- function(input, output) {
     
     # Show element once submit button is pressed
     shinyjs::showElement(id = 'loading.div')
-    
+
     enrich.go <- enrichGO(gene          = selected.genes.df$name,
                           universe      = genes,
                           OrgDb         = org.At.tair.db,
@@ -1382,7 +1382,7 @@ server <- function(input, output) {
                           qvalueCutoff  = 0.05,
                           readable      = FALSE,
                           keyType = "TAIR")
-    
+
     # Hide loading element when done
     shinyjs::hideElement(id = 'loading.div')
     
@@ -1477,8 +1477,10 @@ GO term. The length of the bar corresponds to the number of genes in the
                                         of significance from blue, less significant, to red, more significant.")
       
       
-      
       ## GO map
+      output$gomap_text <- renderText("The following figure corresponds to a subgraph
+                                      induced by most significant GO terms.")
+      
       output$gomap <- renderPlot(
         width     = 870,
         height    = 600,
@@ -1488,7 +1490,6 @@ GO term. The length of the bar corresponds to the number of genes in the
           validate(
             need(input$selected.multiple.tfs, "Please select some transcription factor")
           )
-          reaction()
           goplot(enrich.go,showCategory = 10)
         })
       
@@ -1502,7 +1503,6 @@ GO term. The length of the bar corresponds to the number of genes in the
           validate(
             need(input$selected.multiple.tfs, "Please select some transcription factor")
           )
-          reaction()
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
        
