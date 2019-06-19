@@ -23,6 +23,7 @@ library(clusterProfiler)
 library(pathview)
 library(shinycssloaders)
 library(shinyWidgets)
+library(shinyjs)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -606,8 +607,13 @@ ui <- fluidPage(
                                                                  "only net" = "onlynet"
                                                                )), tags$br(),
                                                   actionButton(inputId = "goterm",label = "GO terms analysis"),tags$br(),
+                                                  shinyjs::useShinyjs(),
+                                                  hidden(div(id='loading.div',h3('Loading..'))),
                                             tabsetPanel(type = "tabs",
-                                                       tabPanel(title = "GO map"),
+                                                       tabPanel(title = "GO map",
+                                                                # withSpinner(ui_element =
+                                                                  # plotOutput(outputId = "gomap"),type = 4)),
+                                                                addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C")),
                                                        tabPanel(title = "GO barplot",
                                                                 tags$br(), tags$br(),
                                                                 htmlOutput(outputId = "barplot_text"),
@@ -618,7 +624,7 @@ ui <- fluidPage(
                                                        tabPanel(title = "GO concept network",
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
-                                                                plotOutput(outputId = "cnet.plot",inline=TRUE)),
+                                                                addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE))),
                                                        tabPanel(title = "GO table",
                                                                 tags$br(), tags$br(),
                                                                 htmlOutput(outputId = "textGOTable"),
@@ -644,7 +650,7 @@ server <- function(input, output) {
   reaction <- reactive({
     input$goterm
   })
-
+  
   ## clock visualizer code
   output$clock <- renderPlot({
     
@@ -1340,11 +1346,13 @@ server <- function(input, output) {
   
   ##Perform GO terms enrichment analysis when button is clicked
   observeEvent(input$goterm,{
-  
-      
     
+    ## Sanity checks
+    validate(
+      need(input$selected.multiple.tfs, "Please select a set of transcription factors")
+    )
+
     ## Determine targets of selected TFs
-    #selected.only.tfs <- sapply(X=strsplit(input$selected.multiple.tfs,split=" "),FUN = get.first)
     selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
     selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
     selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
@@ -1361,6 +1369,10 @@ server <- function(input, output) {
     {
       genes <- agis
     }
+    
+    # Show element once submit button is pressed
+    shinyjs::showElement(id = 'loading.div')
+    
     enrich.go <- enrichGO(gene          = selected.genes.df$name,
                           universe      = genes,
                           OrgDb         = org.At.tair.db,
@@ -1370,6 +1382,9 @@ server <- function(input, output) {
                           qvalueCutoff  = 0.05,
                           readable      = FALSE,
                           keyType = "TAIR")
+    
+    # Hide loading element when done
+    shinyjs::hideElement(id = 'loading.div')
     
     ## Generate ouput table
     enrich.go.result <- as.data.frame(enrich.go)
@@ -1423,7 +1438,7 @@ server <- function(input, output) {
       output$output_go_table <- renderDataTable({
         ## Error message for the user
         validate(
-          need(input$selected.tfs, "Please select some transcription factor")
+          need(input$selected.multiple.tfs, "Please select some transcription factor")
         )
         go.result.table.with.links #go.result.table
       },escape=FALSE,options =list(pageLength = 5)) 
@@ -1462,6 +1477,21 @@ GO term. The length of the bar corresponds to the number of genes in the
                                         of significance from blue, less significant, to red, more significant.")
       
       
+      
+      ## GO map
+      output$gomap <- renderPlot(
+        width     = 870,
+        height    = 600,
+        res       = 120,
+        expr = {
+          ## Error message for the user
+          validate(
+            need(input$selected.multiple.tfs, "Please select some transcription factor")
+          )
+          reaction()
+          goplot(enrich.go,showCategory = 10)
+        })
+      
       ## Barplot
        output$bar.plot <- renderPlot(
         width     = 870,
@@ -1470,13 +1500,31 @@ GO term. The length of the bar corresponds to the number of genes in the
         expr = {
           ## Error message for the user
           validate(
-            need(input$selected.tfs, "Please select some transcription factor")
+            need(input$selected.multiple.tfs, "Please select some transcription factor")
           )
           reaction()
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
        
-       ## GO map
+       ## CNET plot
+       output$cnetplot_text <- renderText("The following figure corresponds to a gene-concept network. The beige
+nodes represents GO terms and the grey nodes genes. An edge is drawn from a gene to a GO term when the gene is annotated
+with the corresponding gene. The size of nodes representing GO terms is proportional to the number of genes annotated
+with the corresponding GO term.")
+       
+       
+       ##CNET plot
+       output$cnet.plot <- renderPlot(
+         width     = 870,
+         height    = 600,
+         res       = 120,
+         expr = {
+           cnetplot(enrich.go)
+         })
+       
+       
+       
+       
        
        
        
