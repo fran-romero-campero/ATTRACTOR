@@ -603,8 +603,8 @@ ui <- fluidPage(
                                                   radioButtons(inputId = "go.background", width="100%",selected="onlynet",
                                                                label="",
                                                                choices=c(
-                                                                 "All genome" = "allgenome",
-                                                                 "only net" = "onlynet"
+                                                                 "Complete genome" = "allgenome",
+                                                                 "Genes in network" = "onlynet"
                                                                )), tags$br(),
                                                   actionButton(inputId = "goterm",label = "GO terms analysis"),tags$br(),
                                                   shinyjs::useShinyjs(),
