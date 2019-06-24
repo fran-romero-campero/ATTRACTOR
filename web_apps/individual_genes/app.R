@@ -548,7 +548,7 @@ ui <- fluidPage(
                                                  
                                                  fluidRow(
                                                    column(
-                                                     plotOutput(outputId = "plot.to.chulo.to.wapo"),
+                                                     plotOutput(outputId = "peak_plot"),
                                                      width=12)
                                                  ))
                                         )
@@ -905,12 +905,12 @@ server <- function(input, output) {
     
     ## Determine upper limit of the graph
     number.tfs <- length(input$selected.tfs)
-    upper.lim <- 25 * number.tfs
+    upper.lim <- 25 * length(input$selected.tfs)
     
     ## Draw DNA strand
     gene.height <- -25
     cord.x <- 1:current.length
-    output$plot.to.chulo.to.wapo <- renderPlot({
+    output$peak_plot <- renderPlot({
       
       ## Sanity checks
       validate(
@@ -924,7 +924,8 @@ server <- function(input, output) {
       
       plot(cord.x, rep(gene.height,length(cord.x)),type="l",col="black",lwd=3,ylab="",
            cex.lab=2,axes=FALSE,xlab="",main="",cex.main=2,
-           ylim=c(-30,upper.lim),xlim=c(-3000,max(cord.x)))
+           ylim=c(-30,25 * length(input$selected.tfs)),
+           xlim=c(-3000,max(cord.x)))
       
       ## Extract exons for target gene
       exons.data.target.gene <- subset(exons.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
@@ -1029,7 +1030,7 @@ server <- function(input, output) {
                                           n.tile=current.length) 
       
       ## Compute mean signal 
-      chip.signal.means <- matrix(nrow=number.tfs, ncol=ncol(chip.signal[[1]]))
+      chip.signal.means <- matrix(nrow=length(input$selected.tfs), ncol=ncol(chip.signal[[1]]))
       
       for(i in 1:length(input$selected.tfs))
       {
@@ -1220,7 +1221,7 @@ server <- function(input, output) {
       }
       
       ## Draw profiles for TF binding
-      for(i in 1:number.tfs)
+      for(i in 1:length(input$selected.tfs))
       {
         ## Compute base line for current TF
         current.base.line <- 25 * (i - 1)
