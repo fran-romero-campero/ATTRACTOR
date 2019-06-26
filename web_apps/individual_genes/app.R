@@ -863,58 +863,54 @@ server <- function(input, output) {
   
   ## Peak visualizer code
   observeEvent(input$go,{
-    
-    ## Extract target gene annotation 
-    gene.name <-  strsplit(input$target.gene,split=" - ")[[1]][1]
-    
-    target.gene.body <- genes.data[gene.name,]
-    target.gene.chr <- as.character(target.gene.body$seqnames)
-    target.gene.start <- target.gene.body$start
-    target.gene.end <- target.gene.body$end
-    
-    target.gene.strand <- as.character(target.gene.body$strand)
-    
-    ## Extract cds annotation
-    cds.data.target.gene <- subset(cds.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
-    
-    ## Extract exons annotation
-    exons.data.target.gene <- subset(exons.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
-    
-    ## Determine the genome range to plot including promoter, gene body and 5' UTR
-    ## This depends on whether the gene is on the forward or reverse strand
-    range.to.plot <- target.gene.body
-    
-    if(target.gene.strand == "+")
-    {
-      range.to.plot$start <- range.to.plot$start - input$promoter.length
-      range.to.plot$end <- range.to.plot$end + input$fiveprime.length
-    } else if (target.gene.strand == "-")
-    {
-      range.to.plot$end <- range.to.plot$end + input$promoter.length
-      range.to.plot$start <- range.to.plot$start - input$fiveprime.length
-    }
-    
-    ## Compute the length of the genome range to represent
-    current.length <- range.to.plot$end - range.to.plot$start
-    
-    ## Determine upper limit of the graph
-    number.tfs <- length(input$selected.tfs)
-    upper.lim <- 25 * length(input$selected.tfs)
-    
-    ## Draw DNA strand
-    gene.height <- -25
-    cord.x <- 1:current.length
+
     output$peak_plot <- renderPlot({
+      
+      ## Extract target gene annotation 
+      gene.name <-  strsplit(input$target.gene,split=" - ")[[1]][1]
+      
+      target.gene.body <- genes.data[gene.name,]
+      target.gene.chr <- as.character(target.gene.body$seqnames)
+      target.gene.start <- target.gene.body$start
+      target.gene.end <- target.gene.body$end
+      
+      target.gene.strand <- as.character(target.gene.body$strand)
+      
+      ## Extract cds annotation
+      cds.data.target.gene <- subset(cds.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
+      
+      ## Extract exons annotation
+      exons.data.target.gene <- subset(exons.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
+      
+      ## Determine the genome range to plot including promoter, gene body and 5' UTR
+      ## This depends on whether the gene is on the forward or reverse strand
+      range.to.plot <- target.gene.body
+      
+      if(target.gene.strand == "+")
+      {
+        range.to.plot$start <- range.to.plot$start - input$promoter.length
+        range.to.plot$end <- range.to.plot$end + input$fiveprime.length
+      } else if (target.gene.strand == "-")
+      {
+        range.to.plot$end <- range.to.plot$end + input$promoter.length
+        range.to.plot$start <- range.to.plot$start - input$fiveprime.length
+      }
+      
+      ## Compute the length of the genome range to represent
+      current.length <- range.to.plot$end - range.to.plot$start
+      
+      ## Determine upper limit of the graph
+      number.tfs <- length(input$selected.tfs)
+      upper.lim <- 25 * length(input$selected.tfs)
+      
+      ## Draw DNA strand
+      gene.height <- -25
+      cord.x <- 1:current.length
       
       ## Sanity checks
       validate(
         need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors")
       )
-      
-      # validate(
-      #   need((length(input$selected.motifs) > 0 || input$all.motifs), "Please select a set of DNA motifs")
-      # )
-
       
       plot(cord.x, rep(gene.height,length(cord.x)),type="l",col="black",lwd=3,ylab="",
            cex.lab=2,axes=FALSE,xlab="",main="",cex.main=2,
