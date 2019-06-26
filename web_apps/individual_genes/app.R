@@ -503,7 +503,8 @@ ui <- fluidPage(
                                                  tags$div(align="center",
                                                           plotOutput(outputId = "clock",width = 600, height=600))),
                                         tabPanel(title = "Expression Visualizer", 
-                                                 plotOutput(outputId = "expression",width = 600, height=600)),
+                                                 tags$div(align="center",
+                                                          plotOutput(outputId = "expression",width = 600, height=600))),
                                         tabPanel(title = "Peak Visualizer",
                                                  column(wellPanel(
                                                    ## Numeric input for promoter length
