@@ -434,31 +434,32 @@ ui <- fluidPage(
       conditionalPanel(condition = "input.navigation_bar == 'home'",
         tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
           tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
-          tags$b("omics data"), " have been generated to characterise their individual components. Nonetheless, 
-          these data remains fragmented and researchers who want to explore the joint regulation exherted by the 
+          tags$b("omics data"), " have been generated to characterize their individual components. Nonetheless, 
+          these data remain fragmented and researchers who want to explore the synergistic regulation exherted by the 
           circadian clock and light signalling need to consult different papers and resources making imperative 
           the use of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
           all the generated information."),
-        tags$div(align="justify", tags$b("ATTRACTOR"),", is a web based tool for the analysis of the synergistic transcriptional control 
+        tags$div(align="justify", tags$b("ATTRACTOR,"),"is a web based tool for the analysis of the synergistic transcriptional control 
           exherted by the circadian clock and light signalling over genes exhibiting rythmic expression profiles in the model plant ", 
-          tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR"), ", consists of a ", tags$b("transcriptional network"), 
+          tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR,"), "consists of a ", tags$b("transcriptional network"), 
           " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
           with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
           and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
           14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
-          components of the morning and central loops", tags$b("CCA1, LHY"), ", the pseudo response regulator family members", 
-          tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9"), "; as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4"),
-          ". In order to capture synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes",
-          tags$b("PHYA"), "and", tags$b("PHYB"),", the cryptochrome CRY2 as well as the light transcriptional factors from the phytochrome interacting factor
-          family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3"),". Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
+          components of the morning and central loops", tags$b("CCA1, LHY,"), "the pseudo response regulator family members", 
+          tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9;"), "as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4."),
+          "In order to capture synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes",
+          tags$b("PHYA"), "and", tags$b("PHYB,"),"the cryptochrome ", tags$b("CRY2"), "as well as the light transcriptional factors from the phytochrome interacting factor
+          family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3."),"Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
           is also included in our network."),
-        tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR.")
+        tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
+                 tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial.")))
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
         tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
-                 transcription factors or regulators over a selected individual gene as well as the effect observed in its
-                 expression profile. Follow the following steps:"),
+                 transcription factors or regulators over an individually selected gene as well as the effect observed in its
+                 expression profile. Follow the steps below:"),
         tags$div(align="justify", "lalala" )
       ),
       
