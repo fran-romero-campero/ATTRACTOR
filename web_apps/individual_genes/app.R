@@ -542,7 +542,7 @@ ui <- fluidPage(
                                                                 max = 100,
                                                                 step = 5)),width=9),
                                                  
-                                                 actionButton(inputId = "go",label = "GO"),
+                                                 #actionButton(inputId = "go",label = "GO"),
                                                  
                                                  fluidRow(
                                                    column(
@@ -862,7 +862,7 @@ server <- function(input, output) {
   })
   
   ## Peak visualizer code
-  observeEvent(input$go,{
+  #observeEvent(input$go,{
 
     output$peak_plot <- renderPlot({
       
@@ -1230,7 +1230,7 @@ server <- function(input, output) {
       
     })
     
-  })
+  #})
   
   ## Multiple transcription factor code
   
