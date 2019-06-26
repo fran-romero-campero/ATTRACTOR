@@ -69,12 +69,9 @@ cds.data <- as.data.frame(cds(txdb))
 alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
                                             keys=keys(org.At.tair.db, keytype="ENTREZID"), 
                                             columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
-# alias2symbol.table <- subset(alias2symbol.table, genes %in% TAIR)
-agis <- alias2symbol.table$TAIR
-agis <- intersect(agis, genes)
+alias2symbol.table <- subset(alias2symbol.table, TAIR %in% genes)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
-alias <- alias[agis]
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
 
