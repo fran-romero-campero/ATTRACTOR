@@ -320,7 +320,6 @@ get.first <- function(my.vector)
 # names(height.to.multiply) <- tfs.names
 names(height.to.multiply) <- tfs.with.zts
 
-
 ## Set the x.y coordinates for the positions 
 tfs.x <- radius.to.multiply * sin(tfs.angles)
 tfs.y <- radius.to.multiply * cos(tfs.angles)
@@ -500,8 +499,9 @@ ui <- fluidPage(
                      
                      column(width = 9,
                             tabsetPanel(type = "tabs",
-                                        tabPanel(title = "Clock Visualizer", 
-                                                 plotOutput(outputId = "clock",width = 600, height=600)),
+                                        tabPanel(title = "Clock Visualizer",
+                                                 tags$div(align="center",
+                                                          plotOutput(outputId = "clock",width = 600, height=600))),
                                         tabPanel(title = "Expression Visualizer", 
                                                  plotOutput(outputId = "expression",width = 600, height=600)),
                                         tabPanel(title = "Peak Visualizer",
