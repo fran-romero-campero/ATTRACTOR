@@ -466,13 +466,18 @@ ui <- fluidPage(
                            "gene of interest."), 
                    tags$li("Select several transcription factors or regulators for which you want to explore their regulation over the
                            previously selected target gene using the",tags$b("Select Transcription Factors"), "checkboxes on the left below."), 
-                   tags$li("On the tab", tags$b("Clock Visualizer"), "a circular representation of the diurnal cycle under study
-                           will be depicted. The selected transcription factors will be located close to the edge of the circle at the
-                           specific time point when the corresponding ChIP-seq data were generated. The selected target gene will be 
-                           located towards the center of the circle pointing at the specific time point where its expression is highest. 
-                           An arrow will be drawn from a transcription factor to the target gene when the corresponding transcription factor
-                           binds to the promoter of the target gene. The node of the transcription factors and arrows will be colored red to represent a decrease in the target gene expression
-                           after binding of the transcription factor, green to represent an increase or grey when no change is observed.")
+                   tags$li("Results will be depicted on the tabs below. The Clock Visualizer tab will show in a circular representation
+                            of the diurnal cycle the binding of the selected transcription factors on the target gene promoter and 
+                            the observed effect over its expression. The Expression Visualizer tab will show the target gene expression
+                            profile over the diurnal cycle 
+                           ")
+                   # tags$li("On the tab", tags$b("Clock Visualizer"), "a circular representation of the diurnal cycle under study
+                   #         will be depicted. The selected transcription factors will be located close to the edge of the circle at the
+                   #         specific time point when the corresponding ChIP-seq data were generated. The selected target gene will be 
+                   #         located towards the center of the circle pointing at the specific time point where its expression is highest. 
+                   #         An arrow will be drawn from a transcription factor to the target gene when the corresponding transcription factor
+                   #         binds to the promoter of the target gene. The node of the transcription factors and arrows will be colored red to represent a decrease in the target gene expression
+                   #         after binding of the transcription factor, green to represent an increase or grey when no change is observed.")
                  ))
       ),
       
