@@ -458,9 +458,22 @@ ui <- fluidPage(
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
         tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
-                 transcription factors or regulators over an individually selected gene as well as the effect observed in its
-                 expression profile. Follow the steps below:"),
-        tags$div(align="justify", "lalala" )
+                 transcription factors or regulators over an", tags$b("individually selected"), "gene as well as the effect observed in its
+                 expression profile. Follow the steps below:",
+                 tags$ol(
+                   tags$li("Select a specific gene with ryhtmic expression pattern from our network using the", tags$b("Target Gene"),
+                           "dropdown menu on the left below. You can enter either the AGI identifier or primary symbol for the",
+                           "gene of interest."), 
+                   tags$li("Select several transcription factors or regulators for which you want to explore their regulation over the
+                           previously selected target gene using the",tags$b("Select Transcription Factors"), "checkboxes on the left below."), 
+                   tags$li("On the tab", tags$b("Clock Visualizer"), "a circular representation of the diurnal cycle under study
+                           will be depicted. The selected transcription factors will be located close to the edge of the circle at the
+                           specific time point when the corresponding ChIP-seq data were generated. The selected target gene will be 
+                           located towards the center of the circle pointing at the specific time point where its expression is highest. 
+                           An arrow will be drawn from a transcription factor to the target gene when the corresponding transcription factor
+                           binds to the promoter of the target gene. The node of the transcription factors and arrows will be colored red to represent a decrease in the target gene expression
+                           after binding of the transcription factor, green to represent an increase or grey when no change is observed.")
+                 ))
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
@@ -488,7 +501,7 @@ ui <- fluidPage(
                      column(width = 3,
                             ## Select target gene to study
                             selectizeInput(inputId = "target.gene",
-                                           label = "Gene",
+                                           label = "Target Gene:",
                                            choices = genes.selectize,
                                            multiple = FALSE),
                             ## Check box for the TF peaks to represent
