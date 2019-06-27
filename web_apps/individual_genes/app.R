@@ -616,7 +616,7 @@ ui <- fluidPage(
                                                  dataTableOutput(outputId = "outputTable"),
                                                  uiOutput(outputId = "download_ui_for_table")
                                          ),
-                                         tabPanel(title = "GO Enrichment",
+                                        tabPanel(title = "GO Enrichment",
                                                   tags$br(),
                                                   tags$div(align="justify", "In this section you can perform a GO term
                                                            enrichment analysis over the genes in the intersection. First
@@ -660,8 +660,32 @@ ui <- fluidPage(
                                                                 uiOutput(outputId = "download_ui_for_go_table")
                                                        )
                                             )
-                                         ),
-                                        tabPanel(title = "Pathway Enrichment"),
+                                        ),
+                                        tabPanel(title = "KEGG Pathway Enrichment",
+                                                 tags$br(),
+                                                 tags$div(align="justify", "In this section you can perform a KEGG pathway 
+                                                           enrichment analysis over the selected genes. First
+                                                           of all, choose the background set of genes to detecting enrichment;
+                                                           the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
+                                                  tags$br(),
+                                                  actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),tags$br(),
+                                                  tabsetPanel(type = "tabs",
+                                                             tabPanel(title = "Enriched Pathway Table",
+                                                                      tags$br(), tags$br(),
+                                                                      dataTableOutput(outputId = "output_pathway_table"),
+                                                                      tags$br(),
+                                                                      dataTableOutput(outputId = "output_pathway_table"))
+                                                             # tabPanel(title = "Enriched Pathway Visualization",
+                                                             #          uiOutput(outputId = "kegg_selectize"),
+                                                             #          imageOutput("kegg_image"),
+                                                             #          br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                             #          br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                             #          br(), br(), br(), br(), br(),
+                                                             #          htmlOutput(outputId = "text_module_kegg"),
+                                                             #          br(), br(),
+                                                             #          dataTableOutput(outputId = "output_module_table"))
+                                                  )
+                                                 ),
                                         tabPanel(title = "TFBS Enrichment")
                             )
                      )
