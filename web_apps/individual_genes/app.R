@@ -629,7 +629,9 @@ ui <- fluidPage(
                                                                  "Complete genome" = "allgenome",
                                                                  "Genes in network" = "onlynet"
                                                                )), tags$br(),
-                                                  actionButton(inputId = "goterm",label = "GO terms analysis"),tags$br(),
+                                                  actionButton(inputId = "goterm",label = "GO terms analysis"),
+                                                  tags$br(),
+                                                 tags$br(),
                                                   shinyjs::useShinyjs(),
                                                   hidden(div(id='loading.div',h3('Loading..'))),
                                             tabsetPanel(type = "tabs",
@@ -669,22 +671,23 @@ ui <- fluidPage(
                                                            the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
                                                   tags$br(),
                                                   actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),tags$br(),
+                                                  tags$br(),
                                                   tabsetPanel(type = "tabs",
                                                              tabPanel(title = "Enriched Pathway Table",
                                                                       tags$br(), tags$br(),
                                                                       dataTableOutput(outputId = "output_pathway_table"),
-                                                                      tags$br(),
-                                                                      dataTableOutput(outputId = "output_pathway_table"))
-                                                             # tabPanel(title = "Enriched Pathway Visualization",
-                                                             #          uiOutput(outputId = "kegg_selectize"),
-                                                             #          imageOutput("kegg_image"),
-                                                             #          br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                                                             #          br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                                                             #          br(), br(), br(), br(), br(),
-                                                             #          htmlOutput(outputId = "text_module_kegg"),
-                                                             #          br(), br(),
-                                                             #          dataTableOutput(outputId = "output_module_table"))
-                                                  )
+                                                                      tags$br()
+                                                                      ),
+                                                             tabPanel(title = "Enriched Pathway Visualization",
+                                                                      uiOutput(outputId = "kegg_selectize"),
+                                                                      imageOutput("kegg_image"),
+                                                                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                                      br(), br(), br(), br(), br(),
+                                                                      htmlOutput(outputId = "text_module_kegg"),
+                                                                      br(), br(),
+                                                                      dataTableOutput(outputId = "output_module_table"))
+                                                             )
                                                  ),
                                         tabPanel(title = "TFBS Enrichment")
                             )
