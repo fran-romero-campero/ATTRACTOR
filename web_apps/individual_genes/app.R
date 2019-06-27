@@ -461,16 +461,22 @@ ui <- fluidPage(
                  transcription factors or regulators over an", tags$b("individually selected"), "gene as well as the effect observed in its
                  expression profile. Follow the steps below:",
                  tags$ol(
-                   tags$li("Select a specific gene with ryhtmic expression pattern from our network using the", tags$b("Target Gene"),
+                   tags$li("Select a specific gene from our network using the", tags$b("Target Gene"),
                            "dropdown menu on the left below. You can enter either the AGI identifier or primary symbol for the",
                            "gene of interest."), 
-                   tags$li("Select several transcription factors or regulators for which you want to explore their regulation over the
+                   tags$li("Select several transcription factors (TFs) to explore their regulation over the
                            previously selected target gene using the",tags$b("Select Transcription Factors"), "checkboxes on the left below."), 
-                   tags$li("Results will be depicted on the tabs below. The Clock Visualizer tab will show in a circular representation
-                            of the diurnal cycle the binding of the selected transcription factors on the target gene promoter and 
-                            the observed effect over its expression. The Expression Visualizer tab will show the target gene expression
-                            profile over the diurnal cycle 
-                           ")
+                   tags$li("Results will be depicted on the tabs below. The", tags$b("Clock Visualizer tab"), "shows a circular 
+                            representation of the diurnal cycle with the selected TFs and target gene located at
+                            the time point of their expression peak. Binding of TFs to the target gene and 
+                            the observed effect over its expression are represented using colored arrows. The", tags$b("Expression 
+                            Visualizer tab"),  "shows the target gene expression profile in a linear representation with the selected
+                            TFs located over the time point of their expression peak. The binding of 
+                            the selected TFs to the target gene promoter and the observed effect is represented using colored arrows.
+                            The", tags$b("Peak Visualizer tab"), "shows the selected target gene genomic location and the peaks detected
+                            in our analysis of the correspondig TFs ChIP-seq data. Here you can specify the length of the gene promoter and 
+                            5' region as well as DNA TFs binding motifs to search for in the detected peak regions with the specified score
+                            for identity.")
                    # tags$li("On the tab", tags$b("Clock Visualizer"), "a circular representation of the diurnal cycle under study
                    #         will be depicted. The selected transcription factors will be located close to the edge of the circle at the
                    #         specific time point when the corresponding ChIP-seq data were generated. The selected target gene will be 
@@ -672,9 +678,10 @@ server <- function(input, output) {
   ## clock visualizer code
   output$clock <- renderPlot({
     
-    ## Error message for the user
+    ## Error messages for the user
     validate(
-      need(input$selected.tfs, "Please select some transcription factor")
+      need(input$selected.tfs, "Please select some transcription factor"),
+      need(input$target.gene, "Please select a target gene")
     )
     
     ## Extracting agi ID for selected gene
@@ -803,7 +810,8 @@ server <- function(input, output) {
     
     ## Error message for the user
     validate(
-        need(input$selected.tfs, "Please select some transcription factor")
+        need(input$selected.tfs, "Please select some transcription factor"),
+        need(input$target.gene, "Please select a target gene")
       )
     
     
@@ -885,6 +893,12 @@ server <- function(input, output) {
 
     output$peak_plot <- renderPlot({
       
+      ## Sanity checks
+      validate(
+        need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors"),
+        need(input$target.gene, "Please select a target gene")
+      )
+      
       ## Extract target gene annotation 
       gene.name <-  strsplit(input$target.gene,split=" - ")[[1]][1]
       
@@ -925,11 +939,6 @@ server <- function(input, output) {
       ## Draw DNA strand
       gene.height <- -25
       cord.x <- 1:current.length
-      
-      ## Sanity checks
-      validate(
-        need(length(input$selected.tfs) > 0 , "Please select a set of transcription factors")
-      )
       
       plot(cord.x, rep(gene.height,length(cord.x)),type="l",col="black",lwd=3,ylab="",
            cex.lab=2,axes=FALSE,xlab="",main="",cex.main=2,
