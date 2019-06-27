@@ -1489,7 +1489,11 @@ GO term. The length of the bar corresponds to the number of genes in the
       
       ## GO map
       output$gomap_text <- renderText("The following figure corresponds to a subgraph
-                                      induced by most significant GO terms.")
+                                      induced by most significant GO terms from 
+                                      Biological Process subcategory. Enriched terms 
+                                      are colored and the color depends on the 
+                                      adjusted p-value according to the Benjamini & Hochberg 
+                                      method, increasing the p-value from purple to red")
       
       output$gomap <- renderPlot(
         width     = 870,
