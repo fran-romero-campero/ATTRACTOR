@@ -476,7 +476,7 @@ ui <- fluidPage(
                             the selected TFs to the target gene promoter and the observed effect is represented using colored arrows.
                             The", tags$b("Peak Visualizer tab"), "shows the selected target gene genomic location and the peaks detected
                             in our analysis of the correspondig TFs ChIP-seq data. Here you can specify the length of the gene promoter and 
-                            5' region as well as DNA TFs binding motifs to search for in the detected peak regions with the specified score
+                            3' region as well as DNA TFs binding motifs to search for in the detected peak regions with the specified score
                             for identity.")
                    # tags$li("On the tab", tags$b("Clock Visualizer"), "a circular representation of the diurnal cycle under study
                    #         will be depicted. The selected transcription factors will be located close to the edge of the circle at the
@@ -540,9 +540,9 @@ ui <- fluidPage(
                                                                 min = 500,
                                                                 max = 2000,
                                                                 step = 100),
-                                                   ## Numeric input for 5' length
-                                                   numericInput(inputId = "fiveprime.length",
-                                                                label = "5' Length",
+                                                   ## Numeric input for 3' length
+                                                   numericInput(inputId = "threeprime.length",
+                                                                label = "3' Length",
                                                                 value = 500,
                                                                 min = 100,
                                                                 max = 500,
@@ -682,8 +682,9 @@ ui <- fluidPage(
                                                   tabsetPanel(type = "tabs",
                                                              tabPanel(title = "Enriched Pathway Table",
                                                                       tags$br(), tags$br(),
+                                                                      htmlOutput(outputId = "no_kegg_enrichment"),
                                                                       dataTableOutput(outputId = "output_pathway_table"),
-                                                                      tags$br()
+                                                                      uiOutput(outputId = "download_ui_for_kegg_table")
                                                                       ),
                                                              tabPanel(title = "Enriched Pathway Visualization",
                                                                       uiOutput(outputId = "kegg_selectize"),
@@ -950,18 +951,18 @@ server <- function(input, output) {
       ## Extract exons annotation
       exons.data.target.gene <- subset(exons.data, seqnames == target.gene.chr & (start >= target.gene.start & end <= target.gene.end))
       
-      ## Determine the genome range to plot including promoter, gene body and 5' UTR
+      ## Determine the genome range to plot including promoter, gene body and 3' UTR
       ## This depends on whether the gene is on the forward or reverse strand
       range.to.plot <- target.gene.body
       
       if(target.gene.strand == "+")
       {
         range.to.plot$start <- range.to.plot$start - input$promoter.length
-        range.to.plot$end <- range.to.plot$end + input$fiveprime.length
+        range.to.plot$end <- range.to.plot$end + input$threeprime.length
       } else if (target.gene.strand == "-")
       {
         range.to.plot$end <- range.to.plot$end + input$promoter.length
-        range.to.plot$start <- range.to.plot$start - input$fiveprime.length
+        range.to.plot$start <- range.to.plot$start - input$threeprime.length
       }
       
       ## Compute the length of the genome range to represent
@@ -992,8 +993,8 @@ server <- function(input, output) {
         exons.data.target.gene$end <- exons.data.target.gene$end - min.pos + input$promoter.length
       } else if(target.gene.strand == "-")
       {
-        exons.data.target.gene$start <- exons.data.target.gene$start - min.pos + input$fiveprime.length
-        exons.data.target.gene$end <- exons.data.target.gene$end - min.pos + input$fiveprime.length
+        exons.data.target.gene$start <- exons.data.target.gene$start - min.pos + input$threeprime.length
+        exons.data.target.gene$end <- exons.data.target.gene$end - min.pos + input$threeprime.length
       }
       
       ## Represent exons
@@ -1021,8 +1022,8 @@ server <- function(input, output) {
         cds.data.target.gene$end <- cds.data.target.gene$end - min.pos + input$promoter.length
       } else if (target.gene.strand == "-")
       {
-        cds.data.target.gene$start <- cds.data.target.gene$start - min.pos + input$fiveprime.length
-        cds.data.target.gene$end <- cds.data.target.gene$end - min.pos + input$fiveprime.length
+        cds.data.target.gene$start <- cds.data.target.gene$start - min.pos + input$threeprime.length
+        cds.data.target.gene$end <- cds.data.target.gene$end - min.pos + input$threeprime.length
       }
       
       cds.width <- 3
@@ -1586,7 +1587,6 @@ with the corresponding GO term.")
   
   ##Perform KEGG pathway enrichment analysis when button is clicked
   observeEvent(input$pathway_button,{
-    print("Enter KEGG enrichment")
     ## Sanity checks
     validate(
       need(input$selected.multiple.tfs, "Please select a set of transcription factors")
@@ -1610,7 +1610,6 @@ with the corresponding GO term.")
     {
       pathway.universe <- network.data$name
     }
-    
 
     ## Compute KEGG pathway enrichment
     pathway.enrichment <- enrichKEGG(gene = selected.genes.df$name, 
@@ -1619,6 +1618,80 @@ with the corresponding GO term.")
                                      universe = pathway.universe,
                                      qvalueCutoff = 0.05)
     pathway.enrichment.result <- as.data.frame(pathway.enrichment)
+    
+    ## Generate output table
+    if(nrow(pathway.enrichment.result) > 0)
+    {
+      pathways.enrichment <- compute.enrichments(gene.ratios = pathway.enrichment.result$GeneRatio,
+                                                 bg.ratios = pathway.enrichment.result$BgRatio)
+      
+      ## Separate genes with blank spaces
+      kegg.enriched.genes <- pathway.enrichment.result$geneID
+      for(i in 1:length(kegg.enriched.genes))
+      {
+        kegg.enriched.genes[i] <- paste(vocar.ids[strsplit(kegg.enriched.genes[i],split="/")[[1]]],collapse=" ")
+      }
+      
+      ## Generate data frame with output table
+      pathways.result.table <- data.frame(pathway.enrichment.result$ID, pathway.enrichment.result$Description,
+                                          pathway.enrichment.result$pvalue, pathway.enrichment.result$qvalue,
+                                          pathways.enrichment, 
+                                          kegg.enriched.genes,
+                                          stringsAsFactors = FALSE)
+      
+      colnames(pathways.result.table) <- c("KEGG ID", "Description", "p-value", "q-value",
+                                           "Enrichment (Target Ratio; BG Ration)","Genes")
+      
+      kegg.result.table.with.links <- pathways.result.table
+      
+      ## Add links to genes
+      for(i in 1:length(kegg.enriched.genes))
+      {
+        kegg.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(kegg.enriched.genes[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
+      }
+      
+      ## Add links to kegg pathways
+      kegg.result.table.with.links[["KEGG ID"]] <- sapply(X=kegg.result.table.with.links[["KEGG ID"]],FUN = kegg.pathway.link)
+
+      output$output_pathway_table <- renderDataTable({
+        kegg.result.table.with.links
+      },escape=FALSE,options =list(pageLength = 5)) 
+      
+      
+      output$download_ui_for_kegg_table<- renderUI(
+        tagList(downloadButton(outputId= "downloadKEGGData", "Download KEGG Pathway Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+      )
+      
+      output$downloadKEGGData<- downloadHandler(
+        filename= function() {
+          paste0(paste(c("KEGG_enrichment",input$selected.tfs),collapse = "_"), ".tsv")
+        },
+        content= function(file) {
+          write.table(pathways.result.table, 
+                      file=file, 
+                      sep = "\t", 
+                      quote = FALSE,
+                      row.names = FALSE)
+        })
+      
+      ## Download result
+      output$downloadData<- downloadHandler(
+        filename= function() {
+          paste("keggdata" , ".csv", sep="")
+        },
+        content= function(file) {
+          write.csv(pathways.result.table,
+                    file,
+                    row.names=TRUE
+          )
+        })
+    } else
+    {
+      output$no_kegg_enrichment <- renderText(expr = tags$b("No enriched KEGG pathway was detected in the selected genes."))
+    }
+      
+    
+    
     print(pathway.enrichment.result)
     
     
