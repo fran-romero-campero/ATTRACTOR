@@ -69,6 +69,7 @@ cds.data <- as.data.frame(cds(txdb))
 alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
                                             keys=keys(org.At.tair.db, keytype="ENTREZID"), 
                                             columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
+ath.universe <- alias2symbol.table$TAIR
 alias2symbol.table <- subset(alias2symbol.table, TAIR %in% genes)
 alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
@@ -670,6 +671,12 @@ ui <- fluidPage(
                                                            of all, choose the background set of genes to detecting enrichment;
                                                            the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
                                                   tags$br(),
+                                                  radioButtons(inputId = "pathway_background", width="100%",selected="allgenome",
+                                                               label="",
+                                                               choices=c(
+                                                                "Complete genome" = "allgenome",
+                                                                "Genes in network" = "onlynet"
+                                                              )),
                                                   actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),tags$br(),
                                                   tags$br(),
                                                   tabsetPanel(type = "tabs",
@@ -683,12 +690,15 @@ ui <- fluidPage(
                                                                       imageOutput("kegg_image"),
                                                                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                                                                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                                                                      br(), br(), br(), br(), br(),
+                                                                      br(), br(), br(), br(), br()
+                                                                      ),
+                                                             tabPanel(title = "Enriched Module Table",
                                                                       htmlOutput(outputId = "text_module_kegg"),
                                                                       br(), br(),
-                                                                      dataTableOutput(outputId = "output_module_table"))
+                                                                      dataTableOutput(outputId = "output_module_table")
                                                              )
-                                                 ),
+                                                  )
+                                        ),
                                         tabPanel(title = "TFBS Enrichment")
                             )
                      )
@@ -916,9 +926,7 @@ server <- function(input, output) {
   })
   
   ## Peak visualizer code
-  #observeEvent(input$go,{
-
-    output$peak_plot <- renderPlot({
+  output$peak_plot <- renderPlot({
       
       ## Sanity checks
       validate(
@@ -1284,9 +1292,7 @@ server <- function(input, output) {
       }
       
     })
-    
-  #})
-  
+
   ## Multiple transcription factor code
   
   ## Initial/default visualization of ATTRACTOR
@@ -1413,14 +1419,18 @@ server <- function(input, output) {
     ## Set the background to perform the GO terms enrichment analysis depending on the user selection
     if (input$go.background == "allgenome")
     {
-      genes <- agis
+      go.universe <- ath.universe
+    } else
+    {
+      go.universe <- network.data$name
     }
+    
     
     # Show element once submit button is pressed
     shinyjs::showElement(id = 'loading.div')
 
     enrich.go <- enrichGO(gene          = selected.genes.df$name,
-                          universe      = genes,
+                          universe      = go.universe,
                           OrgDb         = org.At.tair.db,
                           ont           = "BP",
                           pAdjustMethod = "BH",
@@ -1571,22 +1581,49 @@ with the corresponding GO term.")
          expr = {
            cnetplot(enrich.go)
          })
-       
-       
-       
-       
-       
-       
-       
-      
-      
-      
-      
-      
-      
-      
     }
   })
+  
+  ##Perform KEGG pathway enrichment analysis when button is clicked
+  observeEvent(input$pathway_button,{
+    print("Enter KEGG enrichment")
+    ## Sanity checks
+    validate(
+      need(input$selected.multiple.tfs, "Please select a set of transcription factors")
+    )
+    
+    ## Determine targets of selected TFs
+    selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
+    selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
+    selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
+    
+    gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
+    
+    ## Determine targets with the specified expression profile
+    selected.genes.df <- network.data[gene.selection,]    
+    
+    ## Set the background to perform pathway enrichment analysis depending on the user selection
+    if (input$pathway_background == "allgenome")
+    {
+      pathway.universe <- ath.universe
+    } else
+    {
+      pathway.universe <- network.data$name
+    }
+    
+
+    ## Compute KEGG pathway enrichment
+    pathway.enrichment <- enrichKEGG(gene = selected.genes.df$name, 
+                                     organism = "ath", 
+                                     keyType = "kegg",
+                                     universe = pathway.universe,
+                                     qvalueCutoff = 0.05)
+    pathway.enrichment.result <- as.data.frame(pathway.enrichment)
+    print(pathway.enrichment.result)
+    
+    
+  })
+    
   
 
 }
