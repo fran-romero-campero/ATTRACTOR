@@ -407,6 +407,18 @@ gene.link.function <- function(gene.name)
   return(gene.link)
 }
 
+## KEGG pathway link
+kegg.pathway.link <- function(kegg.pathway)
+{
+  link <- paste0("https://www.genome.jp/kegg-bin/show_pathway?",kegg.pathway)
+  complete.link <- paste(c("<a href=\"",
+                           link,
+                           "\" target=\"_blank\">",
+                           kegg.pathway, "</a>"),
+                         collapse = "")
+  return(complete.link)
+}
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -1629,7 +1641,7 @@ with the corresponding GO term.")
       kegg.enriched.genes <- pathway.enrichment.result$geneID
       for(i in 1:length(kegg.enriched.genes))
       {
-        kegg.enriched.genes[i] <- paste(vocar.ids[strsplit(kegg.enriched.genes[i],split="/")[[1]]],collapse=" ")
+        kegg.enriched.genes[i] <- paste(strsplit(kegg.enriched.genes[i],split="/")[[1]],collapse=" ")
       }
       
       ## Generate data frame with output table
