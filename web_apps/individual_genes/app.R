@@ -1701,11 +1701,40 @@ with the corresponding GO term.")
     {
       output$no_kegg_enrichment <- renderText(expr = tags$b("No enriched KEGG pathway was detected in the selected genes."))
     }
+
+    ## Visualization of specific enriched pathways
+    genes.pathway <- rep(0, length(pathway.universe))
+    names(genes.pathway) <- pathway.universe
+    
+    genes.pathway[selected.genes.df$name] <- 1
+    
+    pathways.for.select <- paste(pathways.result.table[["KEGG ID"]], pathways.result.table[["Description"]], sep=" - ")
+    
+    output$kegg_selectize <- renderUI({
+      selectInput(inputId = "kegg_pathway", 
+                  label="Choose Pathway for Representation",
+                  multiple = FALSE,
+                  selected = pathways.for.select[1],
+                  choices=pathways.for.select)
+    })
+    
+    ## Enriched pathway image
+    output$kegg_image <- renderImage({
+      pathview(gene.data = sort(genes.pathway,decreasing = TRUE),
+               pathway.id = strsplit(input$kegg_pathway,split=" - ")[[1]][1],
+               species = "ath",
+               limit = list(gene=max(abs(genes.pathway)), cpd=1),
+               gene.idtype ="kegg")
+      
+      list(src = paste(c(strsplit(input$kegg_pathway,split=" - ")[[1]][1],"pathview","png"), collapse="."),
+           contentType="image/png",width=1200,height=900)
+    },deleteFile = T)
+    
+    
       
     
     
-    print(pathway.enrichment.result)
-    
+
     
   })
     
