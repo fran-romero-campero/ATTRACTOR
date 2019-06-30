@@ -419,6 +419,17 @@ kegg.pathway.link <- function(kegg.pathway)
   return(complete.link)
 }
 
+## KEGG module link
+kegg.module.link <- function(kegg.module)
+{
+  link <- paste0("https://www.genome.jp/kegg-bin/show_module?",kegg.module)
+  complete.link <- paste(c("<a href=\"",
+                           link,
+                           "\" target=\"_blank\">",
+                           kegg.module, "</a>"),
+                         collapse = "")
+  return(complete.link)
+}
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -1699,7 +1710,7 @@ with the corresponding GO term.")
         })
     } else
     {
-      output$no_kegg_enrichment <- renderText(expr = tags$b("No enriched KEGG pathway was detected in the selected genes."))
+      output$no_kegg_enrichment <- renderText(expr = "No enriched KEGG pathway was detected in the selected genes.")
     }
 
     ## Visualization of specific enriched pathways
@@ -1730,7 +1741,54 @@ with the corresponding GO term.")
            contentType="image/png",width=1200,height=900)
     },deleteFile = T)
     
+
+    ## KEGG module enrichment analysis
+    modules.enrichment <- enrichMKEGG(gene = selected.genes.df$name, 
+                                      universe = pathway.universe, 
+                                      organism = "ath", 
+                                      keyType = "kegg",
+                                      minGSSize = 4)
     
+    modules.enrichment.result <- as.data.frame(modules.enrichment)
+    if(nrow(modules.enrichment.result) > 0)
+    {
+      modules.enrichment <- compute.enrichments(gene.ratios = modules.enrichment.result$GeneRatio,
+                                                bg.ratios = modules.enrichment.result$BgRatio)
+      
+      modules.enriched.genes <- modules.enrichment.result$geneID
+      for(i in 1:length(modules.enriched.genes))
+      {
+        modules.enriched.genes[i] <- paste(strsplit(modules.enriched.genes[i],split="/")[[1]],collapse=" ")
+      }
+      
+      modules.result.table <- data.frame(modules.enrichment.result$ID, modules.enrichment.result$Description,
+                                         modules.enrichment.result$pvalue, modules.enrichment.result$qvalue,
+                                         modules.enrichment, 
+                                         modules.enriched.genes,
+                                         stringsAsFactors = FALSE)
+      
+      colnames(modules.result.table) <- c("KEGG ID", "Description", "p-value", "q-value",
+                                          "Enrichment (Target Ratio; BG Ration)","Genes")
+      
+      modules.result.table.with.links <- modules.result.table
+      
+      ## Add links to genes
+      for(i in 1:length(modules.enriched.genes))
+      {
+        modules.result.table.with.links$Genes[i] <- paste(sapply(X = strsplit(modules.enriched.genes[i],split=" ")[[1]],FUN = gene.link.function),collapse=" ")
+      }
+      
+      ## Add links to kegg pathways
+      modules.result.table.with.links[["KEGG ID"]] <- sapply(X=modules.result.table.with.links[["KEGG ID"]],FUN = kegg.module.link)
+      
+      ## Generate output table
+      output$output_module_table <- renderDataTable({
+        modules.result.table.with.links
+      },escape=FALSE,options =list(pageLength = 5)) 
+    } else
+    {
+      output$text_module_kegg <- renderText(expr = "No enriched KEGG module was detected in the selected genes.")
+    }
       
     
     
