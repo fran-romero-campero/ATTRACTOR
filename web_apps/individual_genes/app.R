@@ -628,7 +628,7 @@ ui <- fluidPage(
                                         selected = NULL,
                                         multiple = FALSE, selectize = TRUE),
                             checkboxInput(inputId =  "edges",label = "Visualize Edges",value = FALSE),
-                            actionButton(inputId = "go_multiple",label = "GO")
+                            actionButton(inputId = "go_multiple",label = "Select Genes")
                      ),
                      
                      column(width = 9,
