@@ -683,6 +683,7 @@ ui <- fluidPage(
                                                                 htmlOutput(outputId = "textGOTable"),
                                                                 tags$br(), tags$br(),
                                                                 dataTableOutput(outputId = "output_go_table"),
+                                                                htmlOutput(outputId = "revigo"),
                                                                 uiOutput(outputId = "download_ui_for_go_table")
                                                        )
                                             )
@@ -1563,6 +1564,21 @@ server <- function(input, output) {
                     row.names=TRUE
           )
         })
+      
+      ## Link to REVIGO 
+      revigo.data <- paste(revigo.data <- apply(go.result.table[,c("GO ID", "q-value")], 1, paste, collapse = " "), collapse="\n")
+      
+      url1 <- tags$a("here", href="#", onclick="document.revigoForm.submit();")
+      url2 <- tags$form(
+        name="revigoForm", action="http://revigo.irb.hr/", method="post", target="_blank",
+        tags$textarea(name="inputGoList", rows="1", cols="8", class="revigoText",
+                      style="visibility: hidden", revigo.data)
+      )
+      
+      output$revigo<- renderUI(
+        tagList("The enriched GO terms above may be redundant. Visualize these results in REViGO in order to remove redundancy. Click", url1, url2)
+      )
+      
       
       output$barplot_text <- renderText("In the following barplot each bar represents a significantly enriched 
 GO term. The length of the bar corresponds to the number of genes in the
