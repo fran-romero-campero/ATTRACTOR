@@ -1339,7 +1339,14 @@ server <- function(input, output) {
     selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
     selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
     
-    gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
+    if(length(selected.tfs.with.zts) > 1)
+    {
+      gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
+    } else if (length(selected.tfs.with.zts) == 1)
+    {
+      gene.selection <- as.vector(selected.tfs.adj)
+    }
+    
     
     ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
