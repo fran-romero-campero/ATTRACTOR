@@ -659,6 +659,14 @@ ui <- fluidPage(
                                                   shinyjs::useShinyjs(),
                                                   hidden(div(id='loading.div',h3('Loading..'))),
                                             tabsetPanel(type = "tabs",
+                                                       tabPanel(title = "GO table",
+                                                                 tags$br(), tags$br(),
+                                                                 htmlOutput(outputId = "textGOTable"),
+                                                                 tags$br(), tags$br(),
+                                                                 dataTableOutput(outputId = "output_go_table"),
+                                                                 htmlOutput(outputId = "revigo"),
+                                                                 uiOutput(outputId = "download_ui_for_go_table")
+                                                       ),
                                                        tabPanel(title = "GO map",
                                                                 # withSpinner(ui_element =
                                                                   # plotOutput(outputId = "gomap"),type = 4)),
@@ -677,15 +685,7 @@ ui <- fluidPage(
                                                                 tags$br(), 
                                                                 htmlOutput(outputId = "cnetplot_text"),
                                                                 tags$br(),
-                                                                addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE))),
-                                                       tabPanel(title = "GO table",
-                                                                tags$br(), tags$br(),
-                                                                htmlOutput(outputId = "textGOTable"),
-                                                                tags$br(), tags$br(),
-                                                                dataTableOutput(outputId = "output_go_table"),
-                                                                htmlOutput(outputId = "revigo"),
-                                                                uiOutput(outputId = "download_ui_for_go_table")
-                                                       )
+                                                                addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE)))
                                             )
                                         ),
                                         tabPanel(title = "KEGG Pathway Enrichment",
