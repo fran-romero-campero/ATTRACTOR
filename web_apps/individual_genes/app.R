@@ -655,9 +655,10 @@ ui <- fluidPage(
                                                                )), tags$br(),
                                                   actionButton(inputId = "goterm",label = "GO terms analysis"),
                                                   tags$br(),
-                                                 tags$br(),
+                                                  tags$br(),
                                                   shinyjs::useShinyjs(),
-                                                  hidden(div(id='loading.div',h3('Loading..'))),
+                                                  hidden(div(id='loading.div',h3('Please be patient, computing GO enrichment ...'))),
+                                                  tags$br(),
                                             tabsetPanel(type = "tabs",
                                                        tabPanel(title = "GO table",
                                                                  tags$br(), tags$br(),
@@ -673,7 +674,8 @@ ui <- fluidPage(
                                                                 tags$br(), tags$br(),
                                                                 htmlOutput(outputId = "gomap_text"),
                                                                 tags$br(),
-                                                                addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C")),
+                                                                div(style= "overflow:scroll; height:500px;",
+                                                                  addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C"))),
                                                        tabPanel(title = "GO barplot",
                                                                 tags$br(),
                                                                 htmlOutput(outputId = "barplot_text"),
@@ -736,6 +738,11 @@ ui <- fluidPage(
 
 ## ATTRACTOR server
 server <- function(input, output) {
+  
+  ## Initialising empty plots
+  # output$gomap <- renderPlot({ 
+  #   plot(0,type="n",axes=FALSE,ann=FALSE)
+  #   }) 
  
   ## clock visualizer code
   output$clock <- renderPlot({
@@ -1595,8 +1602,8 @@ GO term. The length of the bar corresponds to the number of genes in the
                                       method, increasing the p-value from purple to red")
       
       output$gomap <- renderPlot(
-        width     = 870,
-        height    = 600,
+        width     = 1040,
+        height    = 1000,
         res       = 120,
         expr = {
           ## Error message for the user
