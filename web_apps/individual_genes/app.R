@@ -3,7 +3,7 @@
 #          Francisco J. Romero-Campero
 # 
 # Contact: Francisco J. Romero-Campero - fran@us.es 
-# Date: June 2019
+# Date: July 2019
 
 ## Input to test 
 ## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak0", trough = "trough12")
@@ -744,11 +744,6 @@ ui <- fluidPage(
 ## ATTRACTOR server
 server <- function(input, output) {
   
-  ## Initialising empty plots
-  # output$gomap <- renderPlot({ 
-  #   plot(0,type="n",axes=FALSE,ann=FALSE)
-  #   }) 
- 
   ## clock visualizer code
   output$clock <- renderPlot({
     
