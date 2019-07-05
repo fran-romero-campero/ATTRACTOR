@@ -24,6 +24,7 @@ library(pathview)
 library(shinycssloaders)
 library(shinyWidgets)
 library(shinyjs)
+library(SuperExactTest)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -1376,6 +1377,21 @@ server <- function(input, output) {
     
     ## Node colors for representation
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
+    
+    ## Determine significance of overlap
+    
+    ## Number of sets to overlap
+    if(input$peak != "any" || input$trough != "any")
+    {
+      number.of.sets <- length(input$selected.multiple.tfs) + 1
+    } else
+    {
+      number.of.sets <- length(input$selected.multiple.tfs)
+    }
+    
+    list.of.sets <- vector(mode = "list",length=number.of.sets)
+    
+    
     
     ## Target gene representation on the network
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
