@@ -643,11 +643,11 @@ ui <- fluidPage(
                                         tabPanel(title = "GO Enrichment",
                                                   tags$br(),
                                                   tags$div(align="justify", "In this section you can perform a GO term
-                                                           enrichment analysis over the genes in the intersection. First
-                                                           of all, choose the background set of genes to detecting enrichment;
-                                                           the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
+                                                           enrichment analysis over the selected genes. First
+                                                           of all, you need to choose the background set of genes between
+                                                           the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
                                                   tags$br(),
-                                                  radioButtons(inputId = "go.background", width="100%",selected="onlynet",
+                                                  radioButtons(inputId = "go.background", width="100%",selected="allgenome",
                                                                label="",
                                                                choices=c(
                                                                  "Complete genome" = "allgenome",
@@ -692,10 +692,10 @@ ui <- fluidPage(
                                         ),
                                         tabPanel(title = "KEGG Pathway Enrichment",
                                                  tags$br(),
-                                                 tags$div(align="justify", "In this section you can perform a KEGG pathway 
+                                                 tags$div(align="justify", "In this section you can perform a KEGG pathways and modules
                                                            enrichment analysis over the selected genes. First
-                                                           of all, choose the background set of genes to detecting enrichment;
-                                                           the entire genome of Arabidopsis thaliana or just the genes in ATTRACTOR:"),
+                                                           of all, you need to choose the background set of genes between
+                                                           the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
                                                   tags$br(),
                                                   radioButtons(inputId = "pathway_background", width="100%",selected="allgenome",
                                                                label="",
@@ -703,7 +703,11 @@ ui <- fluidPage(
                                                                 "Complete genome" = "allgenome",
                                                                 "Genes in network" = "onlynet"
                                                               )),
-                                                  actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),tags$br(),
+                                                  actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),
+                                                  tags$br(),
+                                                  tags$br(),
+                                                  shinyjs::useShinyjs(),
+                                                  hidden(div(id='loading.div.kegg',h3('Please be patient, computing KEGG pathway enrichment ...'))),
                                                   tags$br(),
                                                   tabsetPanel(type = "tabs",
                                                              tabPanel(title = "Enriched Pathway Table",
@@ -1471,7 +1475,7 @@ server <- function(input, output) {
     }
     
     
-    # Show element once submit button is pressed
+    ## Show element when GO term enrichment analysis starts
     shinyjs::showElement(id = 'loading.div')
 
     enrich.go <- enrichGO(gene          = selected.genes.df$name,
@@ -1484,7 +1488,7 @@ server <- function(input, output) {
                           readable      = FALSE,
                           keyType = "TAIR")
 
-    # Hide loading element when done
+    ## Hide loading element when GO term enrichment is done
     shinyjs::hideElement(id = 'loading.div')
     
     ## Generate ouput table
@@ -1675,6 +1679,9 @@ with the corresponding GO term.")
     {
       pathway.universe <- network.data$name
     }
+    
+    ## Show element when kegg pathway enrichment starts
+    shinyjs::showElement(id = 'loading.div.kegg')
 
     ## Compute KEGG pathway enrichment
     pathway.enrichment <- enrichKEGG(gene = selected.genes.df$name, 
@@ -1683,6 +1690,9 @@ with the corresponding GO term.")
                                      universe = pathway.universe,
                                      qvalueCutoff = 0.05)
     pathway.enrichment.result <- as.data.frame(pathway.enrichment)
+    
+    ## Hide loading element when KEGG pathway enrichment is done
+    shinyjs::hideElement(id = 'loading.div.kegg')
     
     ## Generate output table
     if(nrow(pathway.enrichment.result) > 0)
