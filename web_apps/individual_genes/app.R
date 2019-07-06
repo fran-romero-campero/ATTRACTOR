@@ -434,6 +434,10 @@ kegg.module.link <- function(kegg.module)
   return(complete.link)
 }
 
+## Red gradient for animation
+red.gradient <- colorRampPalette(c("red", "white"))
+current.red.gradient <- c(colfunc(5),rep("#FFFFFF",15))
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -481,6 +485,7 @@ ui <- fluidPage(
           is also included in our network."),
         tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
                  tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial."))),
+        tags$br(), tags$br(),
         actionButton("run", "Run Animation"),
         plotOutput("networkAnimation")
       ),
@@ -747,7 +752,38 @@ ui <- fluidPage(
 ## ATTRACTOR server
 server <- function(input, output, session) {
 
-  ## Animation in main page
+  ## Animation in main page with node size
+  # rv <- reactiveValues(i = 0)
+  # 
+  # increase.step <- 2
+  # max.steps <- 1000
+  # 
+  # output$networkAnimation <- renderPlot( {
+  #   ggplot(network.data, aes(x.pos,y.pos)) + 
+  #     theme(panel.background = element_blank(), 
+  #           panel.grid.major = element_blank(), 
+  #           panel.grid.minor = element_blank(),
+  #           axis.title = element_blank(),
+  #           axis.text = element_blank(),
+  #           axis.ticks.y = element_blank()) + 
+  #     geom_point(fill=node.colors,size=1.65^norm.data[[(rv$i %% 48)+1]],pch=21)
+  # },height = 600)
+  # 
+  # observeEvent(input$run, {
+  #   rv$i <- 0
+  #   observe({
+  #     isolate({
+  #       rv$i <- rv$i + increase.step
+  #       print(rv$i)
+  #     })
+  #     
+  #     if(rv$i < max.steps) {
+  #       invalidateLater(5, session)
+  #     }
+  #   })
+  # })
+  
+  ## Animation in main page with red gradient
   rv <- reactiveValues(i = 0)
   
   increase.step <- 2
@@ -761,7 +797,7 @@ server <- function(input, output, session) {
             axis.title = element_blank(),
             axis.text = element_blank(),
             axis.ticks.y = element_blank()) + 
-      geom_point(fill=node.colors,size=1.65^norm.data[[(rv$i %% 48)+1]],pch=21)
+      geom_point(fill=current.red.gradient[ceiling(1.7^norm.data[[(rv$i %% 48)+1]])],size=5,pch=21)
   },height = 600)
   
   observeEvent(input$run, {
@@ -777,10 +813,7 @@ server <- function(input, output, session) {
       }
     })
   })
-  
-  
-  
-  
+
     
   ## clock visualizer code
   output$clock <- renderPlot({
