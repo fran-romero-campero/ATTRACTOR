@@ -46,6 +46,9 @@ rotated.pos <- t(rotation.matrix %*% pos.data)
 network.data$x.pos <- rotated.pos[,1]
 network.data$y.pos <- rotated.pos[,2]
 
+## Load normalized gene expression data for animation
+norm.data <- read.table(file = "data/normalized_gene_expression.txt",header = T,sep = "\t")
+
 ## Transcription factors AGI ids and names
 tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
                "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
@@ -76,7 +79,6 @@ alias <- alias2symbol.table$SYMBOL
 names(alias) <- alias2symbol.table$TAIR
 alias[is.na(alias)] <- "" 
 genes.selectize <- paste(names(alias), alias, sep=" - ")
-
 
 ## Setting conversion between alias and agis
 agis <-alias2symbol.table$TAIR
@@ -478,7 +480,9 @@ ui <- fluidPage(
           family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3."),"Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
           is also included in our network."),
         tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
-                 tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial.")))
+                 tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial."))),
+        actionButton("run", "Run Animation"),
+        plotOutput("networkAnimation")
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
@@ -737,13 +741,47 @@ ui <- fluidPage(
                                                  
                    )
   )
-                     
 
 )
 
 ## ATTRACTOR server
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+  ## Animation in main page
+  rv <- reactiveValues(i = 0)
   
+  increase.step <- 2
+  max.steps <- 1000
+  
+  output$networkAnimation <- renderPlot( {
+    ggplot(network.data, aes(x.pos,y.pos)) + 
+      theme(panel.background = element_blank(), 
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) + 
+      geom_point(fill=node.colors,size=1.65^norm.data[[(rv$i %% 48)+1]],pch=21)
+  },height = 600)
+  
+  observeEvent(input$run, {
+    rv$i <- 0
+    observe({
+      isolate({
+        rv$i <- rv$i + increase.step
+        print(rv$i)
+      })
+      
+      if(rv$i < max.steps) {
+        invalidateLater(5, session)
+      }
+    })
+  })
+  
+  
+  
+  
+    
   ## clock visualizer code
   output$clock <- renderPlot({
     
@@ -1858,8 +1896,6 @@ with the corresponding GO term.")
 
     
   })
-    
-  
 
 }
 
