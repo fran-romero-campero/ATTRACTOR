@@ -7,6 +7,7 @@
 
 ## Input to test 
 ## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak0", trough = "trough12")
+## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak8", trough = "any")
 
 # Load neccesary libraries
 library(shiny)
@@ -436,7 +437,7 @@ kegg.module.link <- function(kegg.module)
 
 ## Red gradient for animation
 red.gradient <- colorRampPalette(c("red", "white"))
-current.red.gradient <- c(colfunc(5),rep("#FFFFFF",15))
+current.red.gradient <- c(red.gradient(5),rep("#FFFFFF",15))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -645,6 +646,14 @@ ui <- fluidPage(
                             tabsetPanel(type = "tabs",
                                         tabPanel(title = "Network Visualization",
                                                  plotOutput("networkPlot")
+                                        ),
+                                        tabPanel(title = "Overlap Significance",
+                                                 tags$br(),
+                                                 tags$div(align="justify", "In this section, we present the results of a significance analysis of the
+                                                           overlap between the targets of the selected transcription factors and gene
+                                                           with a specific expresion pattern."),
+                                                 tags$br(),
+                                                 textOutput("overlap.message")
                                         ),
                                         tabPanel(title = "Gene Table",
                                                  dataTableOutput(outputId = "outputTable"),
@@ -1425,8 +1434,7 @@ server <- function(input, output, session) {
     {
       gene.selection <- as.vector(selected.tfs.adj)
     }
-    
-    
+
     ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
     
@@ -1445,7 +1453,6 @@ server <- function(input, output, session) {
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
     ## Determine significance of overlap
-    
     ## Number of sets to overlap
     if(input$peak != "any" || input$trough != "any")
     {
@@ -1457,7 +1464,64 @@ server <- function(input, output, session) {
     
     list.of.sets <- vector(mode = "list",length=number.of.sets)
     
+    ## TFs targets
+    for(i in 1:length(selected.tfs.with.zts))
+    {
+      list.of.sets[[i]] <- rownames(network.data)[which(network.data[,selected.tfs.with.zts[[i]]] != 0)]
+    }
     
+    ## Gene cluster with specified expression pattern
+    if(input$peak != "any" && input$trough != "any")
+    {
+      list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, (peak.zt == input$peak & trough.zt == input$trough)))
+    } else if(input$peak == "any" && input$trough != "any")
+    {
+      list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, trough.zt == input$trough))
+    } else if(input$peak != "any" && input$trough == "any")
+    {
+      list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, peak.zt == input$peak))
+    }
+    
+    ## Compute overlap p value and enrichment
+    overlap.results <- summary(supertest(x = list.of.sets, n = nrow(network.data)))
+    overlap.p.value <- tail(overlap.results$P.value, n=1)
+    overlap.p.value <- round(overlap.p.value,digits = -log10(overlap.p.value)+2)
+    overlap.enrichment <- round((overlap.results$Table)[["FE"]][nrow(overlap.results$Table)],digits=2)
+    
+    ## Ouput text for the overlap
+    overlap.message <- "The overlap between the targets of the transcription factors"
+    text.first.tfs <- paste(input$selected.multiple.tfs[1:(length(input$selected.multiple.tfs)-1)],collapse=",")
+    text.all.tfs <- paste(c(text.first.tfs, "and", input$selected.multiple.tfs[length(input$selected.multiple.tfs)]),collapse=" ")
+    overlap.message <- paste(overlap.message,text.all.tfs,sep=" ")
+    
+    if(input$peak != "any" && input$trough != "any")
+    {
+      overlap.message <- paste(overlap.message, paste(c("and the genes with expression peaks at ZT", substr(x=input$peak, start = 5,stop = nchar(input$peak)), 
+      "and expression troughs at", substr(x=input$trough, start = 5,stop = nchar(input$trough))), collapse=" "),sep= " ")
+    } else if(input$peak == "any" && input$trough != "any")
+    {
+      overlap.message <- paste(overlap.message, paste(c("and the genes with expression troughs at", input$trough), collapse=" "), sep = " ")
+    } else if(input$peak != "any" && input$trough == "any")
+    {
+      overlap.message <- paste(overlap.message, paste(c("and the genes with expression peaks at ZT", substr(x=input$peak, start = 5,stop = nchar(input$peak))), collapse=" "), sep = " ")
+    }
+    
+    if(overlap.p.value < 0.05)
+    {
+      overlap.message <- paste(overlap.message, paste0(paste(c("is significant with a p-value of",overlap.p.value,"and an enrichment of", overlap.enrichment),collapse=" "),"."), sep=" ")
+    } else
+    {
+      overlap.message <- paste(overlap.message, paste0(paste(c("is NOT significant according to a p-value of",overlap.p.value),collapse=" "),"."), sep = " ")
+    }
+      
+    ## Draw venn diagram
+    if(number.of.sets <= 4)
+    {
+      
+    } else
+    {
+      
+    }
     
     ## Target gene representation on the network
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
