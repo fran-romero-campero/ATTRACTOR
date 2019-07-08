@@ -749,7 +749,56 @@ ui <- fluidPage(
                                                              )
                                                   )
                                         ),
-                                        tabPanel(title = "TFBS Enrichment")
+                                        tabPanel(title = "TFBS Enrichment",
+                                                 tags$br(),
+                                                 tags$div(align="justify", "In this section you can perform a 
+                                                          Transcription Factor Binding Sites (TFBS) enrichment analysis 
+                                                          over the promoters of the selected genes. First of all, you 
+                                                          have to set the some required parameters: the background and 
+                                                          the length of what will be considered the promoter of each gene"),
+                                                 column(wellPanel(
+                                                   ## Select the background
+                                                   tags$div(align="justify", "Please, choose the background set of genes between
+                                                          the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
+                                                   # tags$br(),
+                                                   radioButtons(inputId = "tfbs_background", width="100%",selected="allgenome",
+                                                                label="",
+                                                                choices=c(
+                                                                  "Complete genome" = "allgenome",
+                                                                  "Genes in network" = "onlynet")
+                                                                )),width = 4),
+                                                   column(wellPanel(
+                                                     tags$div(align="justify", "Promoter length upstream of the start codon:"),
+                                                     radioButtons(inputId = "upstream_promoter", width="100%",selected="2000",
+                                                                  label="",
+                                                                  choices=c(
+                                                                    "500 bp" = "500",
+                                                                    "100 bp" = "1000",
+                                                                    "1500 bp" = "1500",
+                                                                    "2000 bp" = "2000")
+                                                                  )),width = 4),
+                                                 column(wellPanel(
+                                                   tags$div(align="justify", "Promoter length downstream of the start codon:"),
+                                                   radioButtons(inputId = "downstream.promoter", width="100%",selected="500",
+                                                                label="",
+                                                                choices=c(
+                                                                  "0 bp" = "0",
+                                                                  "200 bp" = "200",
+                                                                  "500 bp" = "500")
+                                                                )),width = 4),
+                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+                                                 tags$br(),
+                                                 tags$br(),
+                                                 tags$br(),
+                                                 actionButton(inputId = "tfbs_button",label = "TFBS enrichment analysis"),
+                                                 tags$br(),
+                                                 tags$br(),
+                                                 shinyjs::useShinyjs(),
+                                                 hidden(div(id='loading.div.tfbs',h3('Please be patient, computing TFBS enrichment ...'))),
+                                                 tags$br(),
+                                                 dataTableOutput(outputId = "output_tfbs_table"),
+                                                 uiOutput(outputId = "download_ui_tfbs_table")
+                                                 )
                             )
                      )
                                                  

@@ -1,0 +1,478 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "http://www.kegg.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- Creation date: Sep 6, 2016 14:34:24 +0900 (GMT+9) -->
+<pathway name="path:ath04075" org="ath" number="04075"
+         title="Plant hormone signal transduction"
+         image="http://www.kegg.jp/kegg/pathway/ath/ath04075.png"
+         link="http://www.kegg.jp/kegg-bin/show_pathway?ath04075">
+    <entry id="1" name="path:ath04075" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath04075">
+        <graphics name="TITLE:Plant hormone signal transduction" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="190" y="38" width="324" height="25"/>
+    </entry>
+    <entry id="2" name="ath:AT1G04310 ath:AT1G66340 ath:AT2G40940 ath:AT3G04580 ath:AT3G23150" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G04310+ath:AT1G66340+ath:AT2G40940+ath:AT3G04580+ath:AT3G23150">
+        <graphics name="ERS2..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="371" y="848" width="46" height="17"/>
+    </entry>
+    <entry id="3" name="cpd:C06547" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06547">
+        <graphics name="C06547" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="817" width="8" height="8"/>
+    </entry>
+    <entry id="4" name="cpd:C00954" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00954">
+        <graphics name="C00954" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="175" width="8" height="8"/>
+    </entry>
+    <entry id="5" name="cpd:C00859 cpd:C11864" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00859+C11864">
+        <graphics name="C00859..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="506" width="8" height="8"/>
+    </entry>
+    <entry id="6" name="cpd:C06082" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C06082">
+        <graphics name="C06082" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="667" width="8" height="8"/>
+    </entry>
+    <entry id="7" name="cpd:C08814" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C08814">
+        <graphics name="C08814" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="987" width="8" height="8"/>
+    </entry>
+    <entry id="8" name="cpd:C00371 cpd:C04083 cpd:C02029" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00371+C04083+C02029">
+        <graphics name="C00371..." fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="338" width="8" height="8"/>
+    </entry>
+    <entry id="9" name="ath:AT1G27320 ath:AT2G01830 ath:AT5G35750" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G27320+ath:AT2G01830+ath:AT5G35750">
+        <graphics name="HK3..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="295" y="338" width="47" height="18"/>
+    </entry>
+    <entry id="10" name="ath:AT3G05120 ath:AT3G63010 ath:AT5G27320" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT3G05120+ath:AT3G63010+ath:AT5G27320">
+        <graphics name="GID1A..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="397" y="507" width="46" height="17"/>
+    </entry>
+    <entry id="11" name="ath:AT4G39400" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT4G39400">
+        <graphics name="BRI1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="296" y="987" width="46" height="17"/>
+    </entry>
+    <entry id="12" name="cpd:C08491" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C08491">
+        <graphics name="C08491" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="1156" width="8" height="8"/>
+    </entry>
+    <entry id="13" name="cpd:C00805" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C00805">
+        <graphics name="C00805" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="229" y="1324" width="8" height="8"/>
+    </entry>
+    <entry id="14" name="ath:AT1G32640" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G32640">
+        <graphics name="MYC2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="651" y="1157" width="46" height="17"/>
+    </entry>
+    <entry id="18" name="ath:AT5G03730" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT5G03730">
+        <graphics name="CTR1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="449" y="848" width="46" height="17"/>
+    </entry>
+    <entry id="19" name="ath:AT1G51660 ath:AT3G21220" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G51660+ath:AT3G21220">
+        <graphics name="MKK4..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="449" y="900" width="46" height="17"/>
+    </entry>
+    <entry id="20" name="ath:AT2G43790" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT2G43790">
+        <graphics name="MPK6" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="533" y="900" width="46" height="17"/>
+    </entry>
+    <entry id="21" name="ath:AT5G03280" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT5G03280">
+        <graphics name="EIN2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="618" y="900" width="46" height="17"/>
+    </entry>
+    <entry id="22" name="ath:AT1G73730 ath:AT2G27050 ath:AT3G20770 ath:AT5G10120 ath:AT5G21120 ath:AT5G65100" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G73730+ath:AT2G27050+ath:AT3G20770+ath:AT5G10120+ath:AT5G21120+ath:AT5G65100">
+        <graphics name="EIL3..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="726" y="900" width="46" height="17"/>
+    </entry>
+    <entry id="23" name="ath:AT2G25490 ath:AT5G25350" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT2G25490+ath:AT5G25350">
+        <graphics name="EBF1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="726" y="848" width="46" height="17"/>
+    </entry>
+    <entry id="26" name="ath:AT3G23240 ath:AT5G47220" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT3G23240+ath:AT5G47220">
+        <graphics name="ERF1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="824" y="901" width="46" height="17"/>
+    </entry>
+    <entry id="28" name="ath:AT1G04100 ath:AT1G04240 ath:AT1G04250 ath:AT1G04550 ath:AT1G15050 ath:AT1G15580 ath:AT1G51950 ath:AT1G52830 ath:AT1G80390 ath:AT2G01200 ath:AT2G22670 ath:AT2G33310 ath:AT2G46990 ath:AT3G04730 ath:AT3G15540 ath:AT3G16500 ath:AT3G17600 ath:AT3G23030 ath:AT3G23050 ath:AT3G62100 ath:AT4G14550 ath:AT4G14560 ath:AT4G28640 ath:AT4G29080 ath:AT4G32280 ath:AT5G25890 ath:AT5G43700 ath:AT5G65670" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G04100+ath:AT1G04240+ath:AT1G04250+ath:AT1G04550+ath:AT1G15050+ath:AT1G15580+ath:AT1G51950+ath:AT1G52830+ath:AT1G80390+ath:AT2G01200+ath:AT2G22670+ath:AT2G33310+ath:AT2G46990+ath:AT3G04730+ath:AT3G15540+ath:AT3G16500+ath:AT3G17600+ath:AT3G23030+ath:AT3G23050+ath:AT3G62100+ath:AT4G14550+ath:AT4G14560+ath:AT4G28640+ath:AT4G29080+ath:AT4G32280+ath:AT5G25890+ath:AT5G43700+ath:AT5G65670">
+        <graphics name="IAA10..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="519" y="176" width="46" height="17"/>
+    </entry>
+    <entry id="29" name="ath:AT1G03430 ath:AT1G80100 ath:AT3G16360 ath:AT3G21510 ath:AT3G29350 ath:AT4G04402 ath:AT5G39340" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G03430+ath:AT1G80100+ath:AT3G16360+ath:AT3G21510+ath:AT3G29350+ath:AT4G04402+ath:AT5G39340">
+        <graphics name="AHP5..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="419" y="338" width="46" height="17"/>
+    </entry>
+    <entry id="30" name="ath:AT1G19850 ath:AT1G59750 ath:AT2G33860 ath:AT5G20730" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G19850+ath:AT1G59750+ath:AT2G33860+ath:AT5G20730">
+        <graphics name="MP..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="615" y="176" width="46" height="17"/>
+    </entry>
+    <entry id="34" name="ath:AT1G49190 ath:AT1G67710 ath:AT1G68210 ath:AT2G01760 ath:AT2G25180 ath:AT2G27070 ath:AT3G16857 ath:AT3G62670 ath:AT4G16110 ath:AT4G31920 ath:AT5G07210 ath:AT5G49240 ath:AT5G58080" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G49190+ath:AT1G67710+ath:AT1G68210+ath:AT2G01760+ath:AT2G25180+ath:AT2G27070+ath:AT3G16857+ath:AT3G62670+ath:AT4G16110+ath:AT4G31920+ath:AT5G07210+ath:AT5G49240+ath:AT5G58080">
+        <graphics name="RR19..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="543" y="338" width="46" height="17"/>
+    </entry>
+    <entry id="36" name="ath:AT1G01360 ath:AT1G73000 ath:AT2G26040 ath:AT2G38310 ath:AT2G40330 ath:AT4G01026 ath:AT4G17870 ath:AT4G18620 ath:AT4G27920 ath:AT5G05440 ath:AT5G45860 ath:AT5G45870 ath:AT5G46790 ath:AT5G53160" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G01360+ath:AT1G73000+ath:AT2G26040+ath:AT2G38310+ath:AT2G40330+ath:AT4G01026+ath:AT4G17870+ath:AT4G18620+ath:AT4G27920+ath:AT5G05440+ath:AT5G45860+ath:AT5G45870+ath:AT5G46790+ath:AT5G53160">
+        <graphics name="RCAR1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="398" y="668" width="46" height="17"/>
+    </entry>
+    <entry id="38" name="ath:AT1G07430 ath:AT1G17550 ath:AT1G72770 ath:AT2G29380 ath:AT3G11410 ath:AT4G26080 ath:AT5G51760 ath:AT5G57050 ath:AT5G59220" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G07430+ath:AT1G17550+ath:AT1G72770+ath:AT2G29380+ath:AT3G11410+ath:AT4G26080+ath:AT5G51760+ath:AT5G57050+ath:AT5G59220">
+        <graphics name="HAI2..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="494" y="668" width="46" height="17"/>
+    </entry>
+    <entry id="39" name="ath:AT1G10940 ath:AT1G60940 ath:AT1G78290 ath:AT2G23030 ath:AT3G50500 ath:AT4G33950 ath:AT4G40010 ath:AT5G08590 ath:AT5G63650 ath:AT5G66880" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G10940+ath:AT1G60940+ath:AT1G78290+ath:AT2G23030+ath:AT3G50500+ath:AT4G33950+ath:AT4G40010+ath:AT5G08590+ath:AT5G63650+ath:AT5G66880">
+        <graphics name="SNRK2.4..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="590" y="668" width="46" height="17"/>
+    </entry>
+    <entry id="40" name="ath:AT4G33430" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT4G33430">
+        <graphics name="BAK1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="296" y="970" width="46" height="17"/>
+    </entry>
+    <entry id="42" name="ath:AT4G18710" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT4G18710">
+        <graphics name="BIN2" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="524" y="1031" width="46" height="17"/>
+    </entry>
+    <entry id="43" name="ath:AT1G01740 ath:AT1G63500 ath:AT4G00710 ath:AT4G35230 ath:AT5G41260 ath:AT5G46570" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G01740+ath:AT1G63500+ath:AT4G00710+ath:AT4G35230+ath:AT5G41260+ath:AT5G46570">
+        <graphics name="BSK4..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="344" y="1031" width="46" height="17"/>
+    </entry>
+    <entry id="44" name="ath:AT5G42750" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT5G42750">
+        <graphics name="BKI1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="382" y="987" width="46" height="17"/>
+    </entry>
+    <entry id="45" name="ath:AT1G19350 ath:AT1G75080" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G19350+ath:AT1G75080">
+        <graphics name="BES1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="626" y="1031" width="46" height="17"/>
+    </entry>
+    <entry id="46" name="ath:AT1G03445" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G03445">
+        <graphics name="BSU1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="432" y="1031" width="46" height="17"/>
+    </entry>
+    <entry id="51" name="ath:AT1G08320 ath:AT1G22070 ath:AT1G68640 ath:AT1G77920 ath:AT3G12250 ath:AT5G06839 ath:AT5G06950 ath:AT5G06960 ath:AT5G10030 ath:AT5G65210" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G08320+ath:AT1G22070+ath:AT1G68640+ath:AT1G77920+ath:AT3G12250+ath:AT5G06839+ath:AT5G06950+ath:AT5G06960+ath:AT5G10030+ath:AT5G65210">
+        <graphics name="TGA9..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="497" y="1325" width="46" height="17"/>
+    </entry>
+    <entry id="52" name="ath:AT1G64280 ath:AT2G41370 ath:AT3G57130 ath:AT4G19660 ath:AT4G26120 ath:AT5G45110" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G64280+ath:AT2G41370+ath:AT3G57130+ath:AT4G19660+ath:AT4G26120+ath:AT5G45110">
+        <graphics name="NPR1..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="400" y="1325" width="46" height="17"/>
+    </entry>
+    <entry id="54" name="ath:AT1G17380 ath:AT1G19180 ath:AT1G48500 ath:AT1G70700 ath:AT1G72450 ath:AT1G74950 ath:AT3G17860 ath:AT3G43440 ath:AT5G13220 ath:AT5G20900" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G17380+ath:AT1G19180+ath:AT1G48500+ath:AT1G70700+ath:AT1G72450+ath:AT1G74950+ath:AT3G17860+ath:AT3G43440+ath:AT5G13220+ath:AT5G20900">
+        <graphics name="JAZ5..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="571" y="1157" width="46" height="17"/>
+    </entry>
+    <entry id="56" name="ath:AT1G14920 ath:AT1G66350 ath:AT2G01570 ath:AT3G03450 ath:AT5G17490" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G14920+ath:AT1G66350+ath:AT2G01570+ath:AT3G03450+ath:AT5G17490">
+        <graphics name="GAI..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="494" y="507" width="46" height="17"/>
+    </entry>
+    <entry id="59" name="cpd:C18699" type="compound"
+        link="http://www.kegg.jp/dbget-bin/www_bget?C18699">
+        <graphics name="C18699" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="circle" x="385" y="1156" width="8" height="8"/>
+    </entry>
+    <entry id="61" name="ath:AT2G46370" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT2G46370">
+        <graphics name="JAR1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="339" y="1169" width="46" height="17"/>
+    </entry>
+    <entry id="64" name="path:ath04120" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath04120">
+        <graphics name="Ubiquitin mediated proteolysis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="653" y="1204" width="116" height="34"/>
+    </entry>
+    <entry id="65" name="path:ath04120" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath04120">
+        <graphics name="Ubiquitin mediated proteolysis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="587" y="554" width="116" height="35"/>
+    </entry>
+    <entry id="66" name="path:ath04120" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath04120">
+        <graphics name="Ubiquitin mediated proteolysis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="609" y="225" width="116" height="35"/>
+    </entry>
+    <entry id="67" name="path:ath04120" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath04120">
+        <graphics name="Ubiquitin mediated proteolysis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="818" y="951" width="116" height="35"/>
+    </entry>
+    <entry id="68" name="ath:AT3G62980" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT3G62980">
+        <graphics name="TIR1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="422" y="176" width="46" height="17"/>
+    </entry>
+    <entry id="69" name="ath:AT1G10470 ath:AT1G19050 ath:AT1G59940 ath:AT1G74890 ath:AT2G40670 ath:AT2G41310 ath:AT3G48100 ath:AT3G56380 ath:AT3G57040 ath:AT5G62920" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G10470+ath:AT1G19050+ath:AT1G59940+ath:AT1G74890+ath:AT2G40670+ath:AT2G41310+ath:AT3G48100+ath:AT3G56380+ath:AT3G57040+ath:AT5G62920">
+        <graphics name="ARR4..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="699" y="338" width="46" height="17"/>
+    </entry>
+    <entry id="71" name="ath:AT4G24210" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT4G24210">
+        <graphics name="SLY1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="495" y="457" width="46" height="17"/>
+    </entry>
+    <entry id="72" name="ath:AT1G09530 ath:AT2G43010" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G09530+ath:AT2G43010">
+        <graphics name="PIF3..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="590" y="507" width="46" height="17"/>
+    </entry>
+    <entry id="74" name="ath:AT2G39940" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT2G39940">
+        <graphics name="COI1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="463" y="1157" width="46" height="17"/>
+    </entry>
+    <entry id="76" name="ath:AT1G50060 ath:AT2G14580 ath:AT2G14610 ath:AT3G19690 ath:AT4G33720" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G50060+ath:AT2G14580+ath:AT2G14610+ath:AT3G19690+ath:AT4G33720">
+        <graphics name="AT1G50060..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="659" y="1324" width="46" height="17"/>
+    </entry>
+    <entry id="78" name="ko:K14507" type="ortholog"
+        link="http://www.kegg.jp/dbget-bin/www_bget?K14507">
+        <graphics name="K14507" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="810" y="1158" width="46" height="17"/>
+    </entry>
+    <entry id="79" name="ath:AT3G50070 ath:AT4G34160 ath:AT5G67260" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT3G50070+ath:AT4G34160+ath:AT5G67260">
+        <graphics name="CYCD3;3..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="793" y="1053" width="46" height="17"/>
+    </entry>
+    <entry id="80" name="ath:AT1G23160 ath:AT1G28130 ath:AT1G48660 ath:AT1G48670 ath:AT1G59500 ath:AT2G14960 ath:AT2G23170 ath:AT2G47750 ath:AT4G03400 ath:AT4G27260 ath:AT4G37390 ath:AT5G13320 ath:AT5G13350 ath:AT5G13360 ath:AT5G13370 ath:AT5G13380 ath:AT5G51470 ath:AT5G54510" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G23160+ath:AT1G28130+ath:AT1G48660+ath:AT1G48670+ath:AT1G59500+ath:AT2G14960+ath:AT2G23170+ath:AT2G47750+ath:AT4G03400+ath:AT4G27260+ath:AT4G37390+ath:AT5G13320+ath:AT5G13350+ath:AT5G13360+ath:AT5G13370+ath:AT5G13380+ath:AT5G51470+ath:AT5G54510">
+        <graphics name="AT1G23160..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="797" y="176" width="46" height="17"/>
+    </entry>
+    <entry id="81" name="ath:AT1G04100 ath:AT1G04240 ath:AT1G04250 ath:AT1G04550 ath:AT1G15050 ath:AT1G15580 ath:AT1G51950 ath:AT1G52830 ath:AT1G80390 ath:AT2G01200 ath:AT2G22670 ath:AT2G33310 ath:AT2G46990 ath:AT3G04730 ath:AT3G15540 ath:AT3G16500 ath:AT3G17600 ath:AT3G23030 ath:AT3G23050 ath:AT3G62100 ath:AT4G14550 ath:AT4G14560 ath:AT4G28640 ath:AT4G29080 ath:AT4G32280 ath:AT5G25890 ath:AT5G43700 ath:AT5G65670" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G04100+ath:AT1G04240+ath:AT1G04250+ath:AT1G04550+ath:AT1G15050+ath:AT1G15580+ath:AT1G51950+ath:AT1G52830+ath:AT1G80390+ath:AT2G01200+ath:AT2G22670+ath:AT2G33310+ath:AT2G46990+ath:AT3G04730+ath:AT3G15540+ath:AT3G16500+ath:AT3G17600+ath:AT3G23030+ath:AT3G23050+ath:AT3G62100+ath:AT4G14550+ath:AT4G14560+ath:AT4G28640+ath:AT4G29080+ath:AT4G32280+ath:AT5G25890+ath:AT5G43700+ath:AT5G65670">
+        <graphics name="IAA10..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="797" y="156" width="46" height="17"/>
+    </entry>
+    <entry id="82" name="ath:AT1G16510 ath:AT1G19830 ath:AT1G19840 ath:AT1G56150 ath:AT1G75580 ath:AT1G75590 ath:AT1G79130 ath:AT2G16580 ath:AT2G18010 ath:AT2G21200 ath:AT2G21210 ath:AT2G21220 ath:AT2G24400 ath:AT2G28085 ath:AT2G36210 ath:AT2G37030 ath:AT2G45210 ath:AT2G46690 ath:AT3G03820 ath:AT3G03830 ath:AT3G03840 ath:AT3G03850 ath:AT3G09870 ath:AT3G12830 ath:AT3G20220 ath:AT3G43120 ath:AT3G51200 ath:AT3G53250 ath:AT3G60690 ath:AT3G61900 ath:AT4G00880 ath:AT4G09530 ath:AT4G12410 ath:AT4G13790 ath:AT4G22620 ath:AT4G31320 ath:AT4G34750 ath:AT4G34760 ath:AT4G34770 ath:AT4G34780 ath:AT4G34790 ath:AT4G34800 ath:AT4G34810 ath:AT4G36110 ath:AT4G38825 ath:AT4G38840 ath:AT4G38850 ath:AT4G38860 ath:AT5G10990 ath:AT5G18010 ath:AT5G18020 ath:AT5G18030 ath:AT5G18050 ath:AT5G18060 ath:AT5G18080 ath:AT5G20810 ath:AT5G50760 ath:AT5G53590 ath:AT5G66260" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G16510+ath:AT1G19830+ath:AT1G19840+ath:AT1G56150+ath:AT1G75580+ath:AT1G75590+ath:AT1G79130+ath:AT2G16580+ath:AT2G18010+ath:AT2G21200+ath:AT2G21210+ath:AT2G21220+ath:AT2G24400+ath:AT2G28085+ath:AT2G36210+ath:AT2G37030+ath:AT2G45210+ath:AT2G46690+ath:AT3G03820+ath:AT3G03830+ath:AT3G03840+ath:AT3G03850+ath:AT3G09870+ath:AT3G12830+ath:AT3G20220+ath:AT3G43120+ath:AT3G51200+ath:AT3G53250+ath:AT3G60690+ath:AT3G61900+ath:AT4G00880+ath:AT4G09530+ath:AT4G12410+ath:AT4G13790+ath:AT4G22620+ath:AT4G31320+ath:AT4G34750+ath:AT4G34760+ath:AT4G34770+ath:AT4G34780+ath:AT4G34790+ath:AT4G34800+ath:AT4G34810+ath:AT4G36110+ath:AT4G38825+ath:AT4G38840+ath:AT4G38850+ath:AT4G38860+ath:AT5G10990+ath:AT5G18010+ath:AT5G18020+ath:AT5G18030+ath:AT5G18050+ath:AT5G18060+ath:AT5G18080+ath:AT5G20810+ath:AT5G50760+ath:AT5G53590+ath:AT5G66260">
+        <graphics name="AT1G16510..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="797" y="196" width="46" height="17"/>
+    </entry>
+    <entry id="83" name="ath:AT5G57560" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT5G57560">
+        <graphics name="TCH4" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="792" y="1030" width="46" height="17"/>
+    </entry>
+    <entry id="90" name="ath:AT1G77690 ath:AT2G21050 ath:AT2G38120 ath:AT5G01240" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G77690+ath:AT2G21050+ath:AT2G38120+ath:AT5G01240">
+        <graphics name="LAX3..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="296" y="176" width="46" height="17"/>
+    </entry>
+    <entry id="91" name="ath:AT1G03970 ath:AT1G45249 ath:AT1G49720 ath:AT2G36270 ath:AT2G41070 ath:AT3G19290 ath:AT3G44460 ath:AT3G56850 ath:AT4G34000 ath:AT5G42910 ath:AT5G44080" type="gene"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath:AT1G03970+ath:AT1G45249+ath:AT1G49720+ath:AT2G36270+ath:AT2G41070+ath:AT3G19290+ath:AT3G44460+ath:AT3G56850+ath:AT4G34000+ath:AT5G42910+ath:AT5G44080">
+        <graphics name="GBF4..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="688" y="668" width="46" height="17"/>
+    </entry>
+    <entry id="103" name="path:ath00901" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00901">
+        <graphics name="Indole alkaloid biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="928" y="1172" width="157" height="25"/>
+    </entry>
+    <entry id="104" name="path:ath00902" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00902">
+        <graphics name="Monoterpenoid biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="927" y="1143" width="157" height="25"/>
+    </entry>
+    <entry id="105" name="path:ath00380" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00380">
+        <graphics name="Tryptophan metabolism" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="115" y="176" width="128" height="25"/>
+    </entry>
+    <entry id="106" name="path:ath00360" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00360">
+        <graphics name="Phenylalanine metabolism" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="94" y="1324" width="85" height="34"/>
+    </entry>
+    <entry id="107" name="path:ath00904" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00904">
+        <graphics name="Diterpenoid biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="117" y="507" width="131" height="25"/>
+    </entry>
+    <entry id="108" name="path:ath00906" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00906">
+        <graphics name="Carotenoid biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="116" y="667" width="129" height="25"/>
+    </entry>
+    <entry id="109" name="path:ath00270" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00270">
+        <graphics name="Cysteine and methionine metabolism" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="114" y="817" width="125" height="34"/>
+    </entry>
+    <entry id="110" name="path:ath00905" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00905">
+        <graphics name="Brassinosteroid biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="97" y="988" width="92" height="34"/>
+    </entry>
+    <entry id="111" name="path:ath00908" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00908">
+        <graphics name="Zeatin biosynthesis" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="104" y="338" width="106" height="25"/>
+    </entry>
+    <entry id="112" name="path:ath00592" type="map"
+        link="http://www.kegg.jp/dbget-bin/www_bget?ath00592">
+        <graphics name="alpha-Linolenic acid metabolism" fgcolor="#000000" bgcolor="#FFFFFF"
+             type="roundrectangle" x="97" y="1157" width="92" height="34"/>
+    </entry>
+    <entry id="113" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="296" y="978" width="46" height="34"/>
+        <component id="11"/>
+        <component id="40"/>
+    </entry>
+    <relation entry1="4" entry2="68" type="PCrel">
+    </relation>
+    <relation entry1="68" entry2="28" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="ubiquitination" value="+u"/>
+    </relation>
+    <relation entry1="28" entry2="30" type="PPrel">
+        <subtype name="dissociation" value="-+-"/>
+    </relation>
+    <relation entry1="30" entry2="81" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="30" entry2="80" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="30" entry2="82" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="8" entry2="9" type="PCrel">
+    </relation>
+    <relation entry1="9" entry2="29" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="29" entry2="34" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="34" entry2="69" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="5" entry2="10" type="PCrel">
+    </relation>
+    <relation entry1="10" entry2="56" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="71" entry2="56" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="ubiquitination" value="+u"/>
+    </relation>
+    <relation entry1="56" entry2="72" type="PPrel">
+        <subtype name="dissociation" value="-+-"/>
+    </relation>
+    <relation entry1="6" entry2="36" type="PCrel">
+    </relation>
+    <relation entry1="36" entry2="38" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+    </relation>
+    <relation entry1="38" entry2="39" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="dephosphorylation" value="-p"/>
+    </relation>
+    <relation entry1="39" entry2="91" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="3" entry2="2" type="PCrel">
+    </relation>
+    <relation entry1="2" entry2="18" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="18" entry2="19" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="indirect effect" value="..&gt;"/>
+    </relation>
+    <relation entry1="19" entry2="20" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="20" entry2="21" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+        <subtype name="indirect effect" value="..&gt;"/>
+    </relation>
+    <relation entry1="21" entry2="22" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="23" entry2="22" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="ubiquitination" value="+u"/>
+    </relation>
+    <relation entry1="22" entry2="26" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="7" entry2="11" type="PCrel">
+    </relation>
+    <relation entry1="113" entry2="43" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="43" entry2="46" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="113" entry2="44" type="PPrel">
+        <subtype name="dissociation" value="-+-"/>
+    </relation>
+    <relation entry1="46" entry2="42" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+    </relation>
+    <relation entry1="42" entry2="45" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="45" entry2="83" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="45" entry2="79" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="59" entry2="74" type="PCrel">
+    </relation>
+    <relation entry1="74" entry2="54" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="ubiquitination" value="+u"/>
+    </relation>
+    <relation entry1="54" entry2="14" type="PPrel">
+        <subtype name="dissociation" value="-+-"/>
+    </relation>
+    <relation entry1="13" entry2="52" type="PCrel">
+    </relation>
+    <relation entry1="52" entry2="51" type="PPrel">
+        <subtype name="activation" value="--&gt;"/>
+    </relation>
+    <relation entry1="51" entry2="76" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+</pathway>
