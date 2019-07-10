@@ -114,6 +114,7 @@ seqLogo(makePWM(current.pwm),xaxis = F, yaxis = F)
 
 
 
+
 m["GBF3"]
 x["GBF3"]
 

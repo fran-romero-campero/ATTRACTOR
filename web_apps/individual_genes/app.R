@@ -769,23 +769,33 @@ ui <- fluidPage(
                                                                 )),width = 4),
                                                    column(wellPanel(
                                                      tags$div(align="justify", "Promoter length upstream of the start codon:"),
-                                                     radioButtons(inputId = "upstream_promoter", width="100%",selected="2000",
+                                                     radioButtons(inputId = "up_promoter", width="100%",selected="2000",
                                                                   label="",
                                                                   choices=c(
                                                                     "500 bp" = "500",
-                                                                    "100 bp" = "1000",
+                                                                    "1000 bp" = "1000",
                                                                     "1500 bp" = "1500",
                                                                     "2000 bp" = "2000")
-                                                                  )),width = 4),
+                                                                  )),width = 3),
                                                  column(wellPanel(
                                                    tags$div(align="justify", "Promoter length downstream of the start codon:"),
-                                                   radioButtons(inputId = "downstream.promoter", width="100%",selected="500",
+                                                   radioButtons(inputId = "down_promoter", width="100%",selected="500",
                                                                 label="",
                                                                 choices=c(
                                                                   "0 bp" = "0",
                                                                   "200 bp" = "200",
                                                                   "500 bp" = "500")
-                                                                )),width = 4),
+                                                                )),width = 3),
+                                                 column(wellPanel(
+                                                   tags$div(align="justify", "Score blablabla bala bla:"),
+                                                   radioButtons(inputId = "score", width="100%",selected="90",
+                                                                label="",
+                                                                choices=c(
+                                                                  "80" = "80",
+                                                                  "85" = "85",
+                                                                  "90" = "90",
+                                                                  "95" = "95")
+                                                   )),width = 2),
                                                  tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
                                                  tags$br(),
                                                  tags$br(),
@@ -2040,6 +2050,129 @@ with the corresponding GO term.")
     
     
 
+    
+  })
+  
+  ##Perform TFBS enrichment analysis when button is clicked
+  observeEvent(input$tfbs_button,{
+    ## Sanity checks
+    validate(
+      need(input$selected.multiple.tfs, "Please select a set of transcription factors")
+    )
+    
+    ## Determine targets of selected TFs
+    selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
+    selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
+    selected.tfs.adj <- (network.data[,selected.tfs.with.zts] != 0)
+    
+    if(length(selected.tfs.with.zts) > 1)
+    {
+      gene.selection <- rowSums(selected.tfs.adj) == length(selected.tfs.with.zts)
+    } else if (length(selected.tfs.with.zts) == 1)
+    {
+      gene.selection <- as.vector(selected.tfs.adj)
+    }
+    
+    ## Determine targets with the specified expression profile
+    selected.genes.df <- network.data[gene.selection,]  
+    
+    if(input$peak != "any" && input$trough != "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, (peak.zt == input$peak & trough.zt == input$trough))
+    } else if(input$peak == "any" && input$trough != "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, trough.zt == input$trough)
+    } else if(input$peak != "any" && input$trough == "any")
+    {
+      selected.genes.df <- subset(selected.genes.df, peak.zt == input$peak)
+    }
+    
+    ## Set the background to perform TFBS enrichment analysis depending on the user selection
+    if (input$tfbs_background == "allgenome")
+    {
+      tfbs.universe <- 33323
+    } else
+    {
+      tfbs.universe <- 5778
+    }
+    
+    # ## Show element when TFBS enrichment starts
+    # shinyjs::showElement(id = 'loading.div.tfbs')
+    
+    file.precomputed <- paste0(c("precomputed_",input$up_promoter,"_",
+                                 input$down_promoter, "_",
+                                 input$score, "_",tfbs.universe,".tsv"),collapse="")
+    
+    ## Load file with precomputed results (background) and compute m and n
+    precomputed.result <- read.table(file=paste0("data/precomputed_results_tfbs/",file.precomputed),header = T)
+    m <- colSums(precomputed.result > 0) 
+    n <- nrow(precomputed.result) - m
+    
+    ## Compute selection size (k) and number of ocurrences (x).
+    # target.genes <- read.table(file = "peak_ZT0_trough_ZT12.txt",as.is = T)[[1]]
+    target.genes <- intersect(rownames(precomputed.result),selected.genes.df$names)
+    
+    
+    k <- length(target.genes)
+    x <- colSums(precomputed.result[target.genes,] > 0)
+    
+    ## Compute p-values for enrichment aocording to a hypergeometric distribution
+    p.values <- vector(mode="numeric", length=length(x))
+    names(p.values) <- colnames(precomputed.result)
+    
+    for(i in 1:length(x))
+    {
+      p.values[i] <- phyper(q = x[i] - 1, m = m[i], n = n[i], k = k, lower.tail = F)
+    }
+    
+    which(p.values < input$motif_significance)
+    p.values[which(p.values < input$motif_significance)]
+    
+    ## Adjust p-values using Benjamini Hochberg
+    q.values <- p.adjust(p = p.values,method = "BH")
+    
+    which(q.values < input$motif_significance)
+    q.values[which(q.values < input$motif_significance)]
+    
+    ## Compute enrichments
+    enrichments <- (x / k) / (m / nrow(precomputed.result))
+    
+    ## Final motifs, pvalues, qvalues and enrichments
+    input <- list(motif_significance = 0.05, enrichment_threshold = 2 )
+    
+    sig.enrich.motifs <- names(which(q.values < input$motif_significance & enrichments > input$enrichment_threshold))
+    final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+    final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+    final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+    
+    ## Store data
+    tfbs.result.table <- data.frame(sig.enrich.motifs, final.p.values, final.q.values, final.enrichments) 
+    colnames(tfbs.result.table) <- c("DNA motifs", "P-values", "Q-values", "Enrichments")
+     
+    
+    ## Output table with TFBS enrichment result
+    output$output_tfbs_table <- renderDataTable({
+      tfbs.result.table
+    },escape=FALSE,options =list(pageLength = 5))
+    
+    output$download_ui_tfbs_table<- renderUI(
+      tagList(downloadButton(outputId= "downloadTFBSData", "Download TFBS Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+    )
+    
+    output$downloadTFBSData<- downloadHandler(
+      filename= function() {
+        paste0(paste(c("TFBS_enrichment",selected.tfs.with.zts, input$peak, input$trough),collapse = "_"), ".tsv")
+      },
+      content= function(file) {
+        write.table(tfbs.result.table, 
+                    file=file, 
+                    sep = "\t", 
+                    quote = FALSE,
+                    row.names = FALSE)
+      })
+    
+    
+    
     
   })
 
