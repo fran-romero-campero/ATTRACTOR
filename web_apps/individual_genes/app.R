@@ -769,7 +769,7 @@ ui <- fluidPage(
                                                    tags$div(align="justify", "Please, choose the background set of genes between
                                                           the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
                                                    # tags$br(),
-                                                   radioButtons(inputId = "tfbs_background", width="100%",selected="allgenome",
+                                                   radioButtons(inputId = "tfbs_background", width="100%",selected="onlynet",
                                                                 label="",
                                                                 choices=c(
                                                                   "Complete genome" = "allgenome",
