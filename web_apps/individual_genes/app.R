@@ -667,95 +667,99 @@ ui <- fluidPage(
                                                  dataTableOutput(outputId = "outputTable"),
                                                  uiOutput(outputId = "download_ui_for_table")
                                          ),
-                                        tabPanel(title = "GO Enrichment",
-                                                  tags$br(),
-                                                  tags$div(align="justify", "In this section you can perform a GO term
-                                                           enrichment analysis over the selected genes. First
-                                                           of all, you need to choose the background set of genes between
-                                                           the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
-                                                  tags$br(),
-                                                  radioButtons(inputId = "go.background", width="100%",selected="allgenome",
-                                                               label="",
-                                                               choices=c(
-                                                                 "Complete genome" = "allgenome",
-                                                                 "Genes in network" = "onlynet"
-                                                               )), tags$br(),
-                                                  actionButton(inputId = "goterm",label = "GO terms analysis"),
-                                                  tags$br(),
-                                                  tags$br(),
-                                                  shinyjs::useShinyjs(),
-                                                  hidden(div(id='loading.div',h3('Please be patient, computing GO enrichment ...'))),
-                                                  tags$br(),
-                                            tabsetPanel(type = "tabs",
-                                                       tabPanel(title = "GO table",
-                                                                 tags$br(), tags$br(),
-                                                                 htmlOutput(outputId = "textGOTable"),
-                                                                 tags$br(), tags$br(),
-                                                                 dataTableOutput(outputId = "output_go_table"),
-                                                                 htmlOutput(outputId = "revigo"),
-                                                                 uiOutput(outputId = "download_ui_for_go_table")
-                                                       ),
-                                                       tabPanel(title = "GO map",
-                                                                # withSpinner(ui_element =
-                                                                  # plotOutput(outputId = "gomap"),type = 4)),
-                                                                tags$br(), tags$br(),
-                                                                htmlOutput(outputId = "gomap_text"),
-                                                                tags$br(),
-                                                                div(style= "overflow:scroll; height:500px;",
-                                                                  addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C"))),
-                                                       tabPanel(title = "GO barplot",
-                                                                tags$br(),
-                                                                htmlOutput(outputId = "barplot_text"),
-                                                                tags$br(),
-                                                                # withSpinner(ui_element = 
-                                                                #   plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
-                                                                addSpinner(plotOutput("bar.plot"), spin = "circle", color = "#E41A1C")),
-                                                       tabPanel(title = "GO concept network",
-                                                                tags$br(), 
-                                                                htmlOutput(outputId = "cnetplot_text"),
-                                                                tags$br(),
-                                                                addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE)))
-                                            )
-                                        ),
-                                        tabPanel(title = "KEGG Pathway Enrichment",
-                                                 tags$br(),
-                                                 tags$div(align="justify", "In this section you can perform a KEGG pathways and modules
-                                                           enrichment analysis over the selected genes. First
-                                                           of all, you need to choose the background set of genes between
-                                                           the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
-                                                  tags$br(),
-                                                  radioButtons(inputId = "pathway_background", width="100%",selected="allgenome",
-                                                               label="",
-                                                               choices=c(
-                                                                "Complete genome" = "allgenome",
-                                                                "Genes in network" = "onlynet"
-                                                              )),
-                                                  actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),
-                                                  tags$br(),
-                                                  tags$br(),
-                                                  shinyjs::useShinyjs(),
-                                                  hidden(div(id='loading.div.kegg',h3('Please be patient, computing KEGG pathway enrichment ...'))),
-                                                  tags$br(),
-                                                  tabsetPanel(type = "tabs",
-                                                             tabPanel(title = "Enriched Pathway Table",
-                                                                      tags$br(), tags$br(),
-                                                                      htmlOutput(outputId = "no_kegg_enrichment"),
-                                                                      dataTableOutput(outputId = "output_pathway_table"),
-                                                                      uiOutput(outputId = "download_ui_for_kegg_table")
+                                        tabPanel(title = "Functional Enrichment",
+                                                 tabsetPanel(type = "tabs",
+                                                             tabPanel(title = "GO Enrichment",
+                                                                      tags$br(),
+                                                                      tags$div(align="justify", "In this section you can perform a GO term
+                                                                               enrichment analysis over the selected genes. First
+                                                                               of all, you need to choose the background set of genes between
+                                                                               the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
+                                                                      tags$br(),
+                                                                      radioButtons(inputId = "go.background", width="100%",selected="allgenome",
+                                                                                   label="",
+                                                                                   choices=c(
+                                                                                     "Complete genome" = "allgenome",
+                                                                                     "Genes in network" = "onlynet"
+                                                                                   )), tags$br(),
+                                                                      actionButton(inputId = "goterm",label = "GO terms analysis"),
+                                                                      tags$br(),
+                                                                      tags$br(),
+                                                                      shinyjs::useShinyjs(),
+                                                                      hidden(div(id='loading.div',h3('Please be patient, computing GO enrichment ...'))),
+                                                                      tags$br(),
+                                                                      tabsetPanel(type = "tabs",
+                                                                                  tabPanel(title = "GO table",
+                                                                                           tags$br(), tags$br(),
+                                                                                           htmlOutput(outputId = "textGOTable"),
+                                                                                           tags$br(), tags$br(),
+                                                                                           dataTableOutput(outputId = "output_go_table"),
+                                                                                           htmlOutput(outputId = "revigo"),
+                                                                                           uiOutput(outputId = "download_ui_for_go_table")
+                                                                                  ),
+                                                                                  tabPanel(title = "GO map",
+                                                                                           # withSpinner(ui_element =
+                                                                                           # plotOutput(outputId = "gomap"),type = 4)),
+                                                                                           tags$br(), tags$br(),
+                                                                                           htmlOutput(outputId = "gomap_text"),
+                                                                                           tags$br(),
+                                                                                           div(style= "overflow:scroll; height:500px;",
+                                                                                               addSpinner(plotOutput("gomap"), spin = "circle", color = "#E41A1C"))),
+                                                                                  tabPanel(title = "GO barplot",
+                                                                                           tags$br(),
+                                                                                           htmlOutput(outputId = "barplot_text"),
+                                                                                           tags$br(),
+                                                                                           # withSpinner(ui_element = 
+                                                                                           #   plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
+                                                                                           addSpinner(plotOutput("bar.plot"), spin = "circle", color = "#E41A1C")),
+                                                                                  tabPanel(title = "GO concept network",
+                                                                                           tags$br(), 
+                                                                                           htmlOutput(outputId = "cnetplot_text"),
+                                                                                           tags$br(),
+                                                                                           addSpinner(plotOutput(outputId = "cnet.plot",inline=TRUE)))
+                                                                      )
                                                                       ),
-                                                             tabPanel(title = "Enriched Pathway Visualization",
-                                                                      uiOutput(outputId = "kegg_selectize"),
-                                                                      imageOutput("kegg_image"),
-                                                                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                                                                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                                                                      br(), br(), br(), br(), br()
-                                                                      ),
-                                                             tabPanel(title = "Enriched Module Table",
-                                                                      htmlOutput(outputId = "text_module_kegg"),
-                                                                      br(), br(),
-                                                                      dataTableOutput(outputId = "output_module_table")
-                                                             )
-                                                  )
+                                                             tabPanel(title = "KEGG Pathway Enrichment",
+                                                                      tags$br(),
+                                                                      tags$div(align="justify", "In this section you can perform a KEGG pathways and modules
+                                                                               enrichment analysis over the selected genes. First
+                                                                               of all, you need to choose the background set of genes between
+                                                                               the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
+                                                                      tags$br(),
+                                                                      radioButtons(inputId = "pathway_background", width="100%",selected="allgenome",
+                                                                                   label="",
+                                                                                   choices=c(
+                                                                                     "Complete genome" = "allgenome",
+                                                                                     "Genes in network" = "onlynet"
+                                                                                   )),
+                                                                      actionButton(inputId = "pathway_button",label = "KEGG pathway analysis"),
+                                                                      tags$br(),
+                                                                      tags$br(),
+                                                                      shinyjs::useShinyjs(),
+                                                                      hidden(div(id='loading.div.kegg',h3('Please be patient, computing KEGG pathway enrichment ...'))),
+                                                                      tags$br(),
+                                                                      tabsetPanel(type = "tabs",
+                                                                                  tabPanel(title = "Enriched Pathway Table",
+                                                                                           tags$br(), tags$br(),
+                                                                                           htmlOutput(outputId = "no_kegg_enrichment"),
+                                                                                           dataTableOutput(outputId = "output_pathway_table"),
+                                                                                           uiOutput(outputId = "download_ui_for_kegg_table")
+                                                                                  ),
+                                                                                  tabPanel(title = "Enriched Pathway Visualization",
+                                                                                           uiOutput(outputId = "kegg_selectize"),
+                                                                                           imageOutput("kegg_image"),
+                                                                                           br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                                                           br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                                                                                           br(), br(), br(), br(), br()
+                                                                                  ),
+                                                                                  tabPanel(title = "Enriched Module Table",
+                                                                                           htmlOutput(outputId = "text_module_kegg"),
+                                                                                           br(), br(),
+                                                                                           dataTableOutput(outputId = "output_module_table")
+                                                                                  )
+                                                                      )
+                                                                      )
+                                                 )
                                         ),
                                         tabPanel(title = "TFBS Enrichment",
                                                  tags$br(),
