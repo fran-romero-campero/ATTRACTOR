@@ -8,6 +8,8 @@
 ## Input to test 
 ## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak0", trough = "trough12")
 ## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "PRR5 ZT10"), peak = "peak8", trough = "any")
+## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "CCA1 ZT14", "PRR5 ZT10"), peak = "peak8", trough = "any")
+## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "CCA1 ZT14", "PRR5 ZT10", "TOC1 ZT15"), peak = "peak8", trough = "any")
 
 # Load neccesary libraries
 library(shiny)
@@ -26,6 +28,7 @@ library(shinycssloaders)
 library(shinyWidgets)
 library(shinyjs)
 library(SuperExactTest)
+library(VennDiagram)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -653,7 +656,12 @@ ui <- fluidPage(
                                                            overlap between the targets of the selected transcription factors and gene
                                                            with a specific expresion pattern."),
                                                  tags$br(),
-                                                 textOutput("overlap.message")
+                                                 textOutput("overlap.message"),
+                                                 textOutput("overlap.significance.text"),
+                                                 tags$br(),
+                                                 tags$br(),
+                                                 tags$div(align="center",
+                                                          plotOutput("venn.diagram.plot"))
                                         ),
                                         tabPanel(title = "Gene Table",
                                                  dataTableOutput(outputId = "outputTable"),
@@ -1523,16 +1531,32 @@ server <- function(input, output, session) {
     if(input$peak != "any" && input$trough != "any")
     {
       list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, (peak.zt == input$peak & trough.zt == input$trough)))
+      
+      expression.gene.set.name <- paste0(paste0("peak at ZT",paste(substr(start = 5,stop=nchar(input$peak),x = input$peak))),
+                                         paste0(" and trough at ZT",paste(substr(start = 5,stop=nchar(input$trough),x = input$trough))))
+      name.of.sets <- c(input$selected.multiple.tfs, expression.gene.set.name)
     } else if(input$peak == "any" && input$trough != "any")
     {
       list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, trough.zt == input$trough))
+      
+      expression.gene.set.name <- paste0(paste0("trough at ZT",paste(substr(start = 5,stop=nchar(input$trough),x = input$trough))))
+      name.of.sets <- c(input$selected.multiple.tfs, expression.gene.set.name)
     } else if(input$peak != "any" && input$trough == "any")
     {
       list.of.sets[[length(list.of.sets)]] <- rownames(subset(network.data, peak.zt == input$peak))
+      
+      expression.gene.set.name <- paste0(paste0("peak at ZT",paste(substr(start = 5,stop=nchar(input$peak),x = input$peak))))
+      name.of.sets <- c(input$selected.multiple.tfs, expression.gene.set.name)
+    } else
+    {
+      name.of.sets <- input$selected.multiple.tfs
     }
     
+    names(list.of.sets) <- name.of.sets
+    
     ## Compute overlap p value and enrichment
-    overlap.results <- summary(supertest(x = list.of.sets, n = nrow(network.data)))
+    overlap.output <- supertest(x = list.of.sets, n = nrow(network.data))
+    overlap.results <- summary(overlap.output)
     overlap.p.value <- tail(overlap.results$P.value, n=1)
     overlap.p.value <- round(overlap.p.value,digits = -log10(overlap.p.value)+2)
     overlap.enrichment <- round((overlap.results$Table)[["FE"]][nrow(overlap.results$Table)],digits=2)
@@ -1563,13 +1587,76 @@ server <- function(input, output, session) {
       overlap.message <- paste(overlap.message, paste0(paste(c("is NOT significant according to a p-value of",overlap.p.value),collapse=" "),"."), sep = " ")
     }
       
+    
+    output$overlap.significance.text <- renderText(expr = {
+      overlap.message
+    })
+    
     ## Draw venn diagram
-    if(number.of.sets <= 4)
+    if(number.of.sets == 1)
     {
-      
-    } else
+      output$overlap.significance.text <- renderText(expr = {
+        "A single transcription factor or set of genes with specific expression pattern was selected. The analysis of 
+        overlap significance is not applicable."
+      })
+    }
+    if(number.of.sets == 2)
     {
-      
+      output$venn.diagram.plot <- renderPlot(expr = {
+        grid.newpage()
+        draw.pairwise.venn(area1 = length(list.of.sets[[1]]),
+                           area2 = length(list.of.sets[[2]]),
+                           cross.area = length(intersect(list.of.sets[[1]],list.of.sets[[2]])),
+                           category = name.of.sets,
+                           scaled = TRUE,lwd = 2,col = "black",
+                           fill = c("blue","red"),alpha = 0.7,
+                           cex = 2,cat.cex = 1.5,cat.pos = c(0,0))
+      },width = 600,height = 600)
+    } else if (number.of.sets == 3)
+    {
+      output$venn.diagram.plot <- renderPlot(expr = {
+        grid.newpage()
+        draw.triple.venn(area1 = length(list.of.sets[[1]]),
+                         area2 = length(list.of.sets[[2]]),
+                         area3 = length(list.of.sets[[3]]),
+                         n12 = length(intersect(list.of.sets[[1]],list.of.sets[[2]])),
+                         n23 = length(intersect(list.of.sets[[2]],list.of.sets[[3]])),
+                         n13 = length(intersect(list.of.sets[[1]],list.of.sets[[3]])), 
+                         n123 =  length(intersect(intersect(list.of.sets[[1]],list.of.sets[[2]]),list.of.sets[[3]])),
+                         category = name.of.sets,
+                         scaled = TRUE,lwd = 2,col = "black",
+                         fill = c("blue","red","darkgreen"),alpha = 0.7,
+                         cex = 1.5,cat.cex = 1.5,cat.pos = c(-30,30,180))
+      }, width = 600, height = 600)
+    } else if (number.of.sets == 4)
+    {
+      output$venn.diagram.plot <- renderPlot(expr = {
+        grid.newpage()
+        draw.quad.venn(area1 = length(list.of.sets[[1]]),
+                       area2 = length(list.of.sets[[2]]),
+                       area3 = length(list.of.sets[[3]]),
+                       area4 = length(list.of.sets[[4]]),
+                       n12 = length(intersect(list.of.sets[[1]],list.of.sets[[2]])),
+                       n13 = length(intersect(list.of.sets[[1]],list.of.sets[[3]])), 
+                       n14 = length(intersect(list.of.sets[[1]],list.of.sets[[4]])),
+                       n23 = length(intersect(list.of.sets[[2]],list.of.sets[[3]])),
+                       n24 = length(intersect(list.of.sets[[2]],list.of.sets[[4]])),
+                       n34 = length(intersect(list.of.sets[[3]],list.of.sets[[4]])),
+                       n123 = length(intersect(intersect(list.of.sets[[1]],list.of.sets[[2]]),list.of.sets[[3]])), 
+                       n124 = length(intersect(intersect(list.of.sets[[1]],list.of.sets[[2]]),list.of.sets[[4]])),
+                       n134 = length(intersect(intersect(list.of.sets[[1]],list.of.sets[[3]]),list.of.sets[[4]])),
+                       n234 = length(intersect(intersect(list.of.sets[[2]],list.of.sets[[3]]),list.of.sets[[4]])),
+                       n1234 = length(intersect(intersect(list.of.sets[[1]],list.of.sets[[2]]), intersect(list.of.sets[[3]],list.of.sets[[4]]))),
+                       category = name.of.sets,
+                       scaled = TRUE,lwd = 2,col = "black",
+                       fill = c("blue","red","darkgreen","orange"),alpha = 0.7,
+                       cex = 1.5,cat.cex = 1.5,cat.pos = c(0,0,0,0))
+      }, width = 600, height = 600)
+    } else if (number.of.sets > 4)
+    {
+      output$venn.diagram.plot <- renderPlot(expr = {
+            plot(overlap.output, Layout = "landscape")
+      })
     }
     
     ## Target gene representation on the network
