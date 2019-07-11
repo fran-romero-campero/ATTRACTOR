@@ -438,6 +438,19 @@ kegg.module.link <- function(kegg.module)
   return(complete.link)
 }
 
+## TFBS jaspar link
+tfbs.link <- function(motif.id)
+{
+  link <- paste0("http://jaspar.genereg.net/matrix/",motif.id)
+  complete.link <- paste(c("<a href=\"",
+                           link,
+                           "\" target=\"_blank\">",
+                           motif.id, "</a>"),
+                         collapse = "")
+  return(complete.link)
+}
+
+
 ## Red gradient for animation
 red.gradient <- colorRampPalette(c("red", "white"))
 current.red.gradient <- c(red.gradient(5),rep("#FFFFFF",15))
@@ -2207,7 +2220,7 @@ with the corresponding GO term.")
     k <- length(target.genes)
     x <- colSums(precomputed.result[target.genes,] > 0)
     
-    ## Compute p-values for enrichment aocording to a hypergeometric distribution
+    ## Compute p-values for enrichment according to a hypergeometric distribution
     p.values <- vector(mode="numeric", length=length(x))
     names(p.values) <- colnames(precomputed.result)
     
@@ -2232,15 +2245,18 @@ with the corresponding GO term.")
     input <- list(motif_significance = 0.05, enrichment_threshold = 2 )
     
     sig.enrich.motifs <- names(which(q.values < input$motif_significance & enrichments > input$enrichment_threshold))
+    sig.enrich.ids <- motif.ids[sig.enrich.motifs]
     final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, final.p.values, final.q.values, final.enrichments) 
-    colnames(tfbs.result.table) <- c("DNA motifs", "P-values", "Q-values", "Enrichments")
-     
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, final.p.values, final.q.values, final.enrichments) 
+    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "P-values", "Q-values", "Enrichments")
     
+    ## Add links to jaspar motifs
+    tfbs.result.table[["Motif ID"]] <- sapply(X=sig.enrich.ids,FUN = tfbs.link)
+
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
       tfbs.result.table
