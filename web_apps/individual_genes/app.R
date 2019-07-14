@@ -983,21 +983,30 @@ server <- function(input, output, session) {
     edge.weights <- E(tfs.network)$weight
     
     ## Edge colors
-    for(k in 1:length(edge.weights))
+    if (length(edge.weights) == 0)
     {
-      if(edge.weights[k] == 1)
+      # E(tfs.network)$color[k] <- NULL
+      print("no edge")
+    }else 
+    {
+      for(k in 1:length(edge.weights))
       {
-        E(tfs.network)$color[k] <- activator.color #"darkgreen"
-      } else if(edge.weights[k] == -1)
-      {
-        E(tfs.network)$color[k] <- repressor.color  #"darkred"
-      } else if(edge.weights[k] == 2)
-      {
-        print(1)
-        E(tfs.network)$color[k] <- neutral.color
+        if(edge.weights[k] == 1)
+        {
+          E(tfs.network)$color[k] <- activator.color #"darkgreen"
+        } else if(edge.weights[k] == -1)
+        {
+          E(tfs.network)$color[k] <- repressor.color  #"darkred"
+        } else if(edge.weights[k] == 2)
+        {
+          print(1)
+          E(tfs.network)$color[k] <- neutral.color
+        }
       }
+      
     }
-
+    
+    
     ## Vertex colors
     node.colors <- vector(mode="character",length=nrow(new.matrix))
     for(k in 1:(length(node.colors)-1))
