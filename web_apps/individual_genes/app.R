@@ -725,6 +725,11 @@ ui <- fluidPage(
                                                                                            # withSpinner(ui_element = 
                                                                                            #   plotOutput(outputId = "bar.plot"),type = 4)),#,inline=TRUE))),
                                                                                            addSpinner(plotOutput("bar.plot"), spin = "circle", color = "#E41A1C")),
+                                                                                  tabPanel(title = "GO Enrichment Map",
+                                                                                           tags$br(), 
+                                                                                           htmlOutput(outputId = "emapplot_text"),
+                                                                                           tags$br(),
+                                                                                           addSpinner(plotOutput(outputId = "emap.plot",inline=TRUE))),
                                                                                   tabPanel(title = "GO concept network",
                                                                                            tags$br(), 
                                                                                            htmlOutput(outputId = "cnetplot_text"),
@@ -1948,14 +1953,28 @@ GO term. The length of the bar corresponds to the number of genes in the
           barplot(enrich.go,drop=TRUE,showCategory = 10)
         })
        
+       ##EMAP plot
+       output$emapplot_text <- renderText("The following figure consists of an enrichment map where nodes represent enriched GO terms. The
+        size of a node is proportional to the number of genes annotated with the corresponding GO term in the target set.
+The node colors represent the level of significance from less signficant in blue to more significant in red. Edges are drawn
+between two nodes when the corresponding GO terms are semantically related.")
+       
+       output$emap.plot <- renderPlot(
+         width     = 870,
+         height    = 600,
+         res       = 120,
+         expr = {
+           emapplot(enrich.go)
+         })
+       
+       
+       
        ## CNET plot
        output$cnetplot_text <- renderText("The following figure corresponds to a gene-concept network. The beige
 nodes represents GO terms and the grey nodes genes. An edge is drawn from a gene to a GO term when the gene is annotated
 with the corresponding gene. The size of nodes representing GO terms is proportional to the number of genes annotated
 with the corresponding GO term.")
-       
-       
-       ##CNET plot
+
        output$cnet.plot <- renderPlot(
          width     = 870,
          height    = 600,
