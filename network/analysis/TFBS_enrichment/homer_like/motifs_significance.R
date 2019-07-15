@@ -106,11 +106,27 @@ names(motifs.pwm) <- motif.names
 names(motif.ids) <- motif.names
 
 
-
-
+## Plot DNA motif
 current.pwm <- motifs.pwm[["HAT2"]]
-
 seqLogo(makePWM(current.pwm),xaxis = F, yaxis = F)
+length(motifs.pwm)
+motifs.pwm
+motifs.pwm[[453]]
+motif.names[453]
+
+## Generate all DNA motif images
+
+for (i in 1:length(motifs.pwm))
+{
+  print(i)
+  png(file=paste0("motif_images/",motif.names[i],".png"),
+      width     = 10,
+      height    = 10,
+      units     = "in",
+      res       = 600)
+  seqLogo(makePWM(motifs.pwm[[i]]),xaxis = F, yaxis = F)
+  dev.off()
+}
 
 
 
