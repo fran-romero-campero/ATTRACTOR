@@ -119,8 +119,8 @@ motif.names[453]
 for (i in 1:length(motifs.pwm))
 {
   print(i)
-  png(file=paste0("motif_images/",motif.names[i],".png"),
-      width     = 10,
+  png(file=paste0("motifs_images/",motif.names[i],".png"),
+      width     = 20,
       height    = 10,
       units     = "in",
       res       = 600)

@@ -2277,10 +2277,17 @@ with the corresponding GO term.")
     final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+    motifs.images <- paste0("motifs_images/",sig.enrich.motifs)
+    
+    for (i in 1:length(motifs.images))
+    {
+      motifs.images[i] <- paste0("<img src='",motifs.images[i],".png', align = 'center', width = 100>")
+    }
+    
     
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, final.p.values, final.q.values, final.enrichments) 
-    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "P-values", "Q-values", "Enrichments")
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments) 
+    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments")
     
     ## Add links to jaspar motifs
     tfbs.result.table[["Motif ID"]] <- sapply(X=sig.enrich.ids,FUN = tfbs.link)
@@ -2288,7 +2295,7 @@ with the corresponding GO term.")
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
       tfbs.result.table
-    },escape=FALSE,options =list(pageLength = 5))
+    },escape = FALSE,options =list(pageLength = 5))
     
     output$download_ui_tfbs_table<- renderUI(
       tagList(downloadButton(outputId= "downloadTFBSData", "Download TFBS Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
