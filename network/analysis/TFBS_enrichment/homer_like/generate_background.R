@@ -3,8 +3,16 @@
 
 library(seqinr)
 library(TxDb.Athaliana.BioMart.plantsmart28)
-promoter.length <- 1000
-downstream.promoter <- 0
+promoter.length <- 2000
+downstream.promoter <- 500
+
+# Extract sequences of the promoters
+chr1 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr1.fa",seqtype = "AA"))[[1]]
+chr2 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr2.fa",seqtype = "AA"))[[1]]
+chr3 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr3.fa",seqtype = "AA"))[[1]]
+chr4 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr4.fa",seqtype = "AA"))[[1]]
+chr5 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr5.fa",seqtype = "AA"))[[1]]
+
 
 # Extract info of promoters of genes
 txdb <- TxDb.Athaliana.BioMart.plantsmart28
@@ -36,24 +44,28 @@ for(i in 1:nrow(genes.promoters.coordinates))
     # genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 500
     genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - promoter.length
     genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + downstream.promoter
+    ## Si al restarle las pares de bases del promotor da negativo (porque está al princioio del cromosoma),
+    ## lo fijamos a 0. Ejemplo: i <- 8434
+    if (genes.promoters.coordinates$start[i] < 0) 
+    {
+      genes.promoters.coordinates$start[i] <- 0
+    }
   } else if(current.strand == "-")
   {
     # genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - 500
     # genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + 1000
     genes.promoters.coordinates$start[i] <- genes.promoters.coordinates$start[i] - downstream.promoter
     genes.promoters.coordinates$end[i] <- genes.promoters.coordinates$end[i] + promoter.length
+    ## Si al sumarle las pares de bases del promotor da más que la longitud del cromosoma,
+    ## lo fijamos en la longitud de éste. Esto lo tengo q hacer
+    
   } else
   {
     print("no strand!!!!")
   }
 }
 
-# Extract sequences of the promoters
-chr1 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr1.fa",seqtype = "AA"))[[1]]
-chr2 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr2.fa",seqtype = "AA"))[[1]]
-chr3 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr3.fa",seqtype = "AA"))[[1]]
-chr4 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr4.fa",seqtype = "AA"))[[1]]
-chr5 <- getSequence(read.fasta(file = "../../../../web_apps/peak_visualizer/data/athaliana_genome/chr5.fa",seqtype = "AA"))[[1]]
+
 
 
 background.sequences <- vector(mode = "list",length = nrow(genes.promoters.coordinates))
