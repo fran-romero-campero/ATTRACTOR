@@ -2298,19 +2298,22 @@ with the corresponding GO term.")
     
     
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif) 
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif, stringsAsFactors = FALSE) 
     colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments", "Genes")
     
     ## Add links to jaspar motifs
     tfbs.result.table[["Motif ID"]] <- sapply(X=sig.enrich.ids,FUN = tfbs.link)
     
-    ## Add links to genes FALTAAAAAAAA
-    # tfbs.result.table[["Genes"]] <- sapply(X = (strsplit(x = genes.with.motif[1][[1]], split = ",")),FUN = gene.link.function)
-
+    ## Add links to genes
+    for (i in 1:length(genes.with.motif))
+    {
+      tfbs.result.table$Genes[i] <- paste(sapply(X = strsplit(genes.with.motif[i], split = ",")[[1]],FUN = gene.link.function), collapse = ", ")
+    }
+    
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
       tfbs.result.table
-    },escape = FALSE,options =list(pageLength = 5))
+    },escape = FALSE,options =list(pageLength = 10))
     
     output$download_ui_tfbs_table<- renderUI(
       tagList(downloadButton(outputId= "downloadTFBSData", "Download TFBS Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())

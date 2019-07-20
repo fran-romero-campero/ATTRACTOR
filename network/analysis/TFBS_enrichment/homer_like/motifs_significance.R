@@ -134,7 +134,7 @@ for (i in 1:length(motifs.pwm))
       width     = 20,
       height    = 10,
       units     = "in",
-      res       = 600)
+      res       = 200)
   seqLogo(makePWM(motifs.pwm[[i]]),xaxis = F, yaxis = F)
   dev.off()
 }
