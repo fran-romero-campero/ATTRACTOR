@@ -2310,6 +2310,7 @@ with the corresponding GO term.")
       tfbs.result.table$Genes[i] <- paste(sapply(X = strsplit(genes.with.motif[i], split = ",")[[1]],FUN = gene.link.function), collapse = ", ")
     }
     
+    tfbs.result.table <- tfbs.result.table[order(final.q.values),]
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
       tfbs.result.table
