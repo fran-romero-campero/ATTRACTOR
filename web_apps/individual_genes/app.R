@@ -2277,6 +2277,18 @@ with the corresponding GO term.")
     final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
+    
+    ## Determine genes for each motif
+    genes.with.motif <- vector(length = length(sig.enrich.motifs))
+    for (i in 1:length(sig.enrich.motifs))
+    {
+      print(i)
+      rows.with.motif <- which(precomputed.result[,sig.enrich.motifs[i]] != 0)
+      all.genes.with.motif <- rownames(precomputed.result)[rows.with.motif]
+      genes.with.motif[i] <- paste(... = intersect(all.genes.with.motif,target.genes), collapse = ",")
+    }
+    
+    ## Motifs logos
     motifs.images <- paste0("motifs_images/",sig.enrich.motifs)
     
     for (i in 1:length(motifs.images))
@@ -2286,11 +2298,14 @@ with the corresponding GO term.")
     
     
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments) 
-    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments")
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif) 
+    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments", "Genes")
     
     ## Add links to jaspar motifs
     tfbs.result.table[["Motif ID"]] <- sapply(X=sig.enrich.ids,FUN = tfbs.link)
+    
+    ## Add links to genes FALTAAAAAAAA
+    # tfbs.result.table[["Genes"]] <- sapply(X = (strsplit(x = genes.with.motif[1][[1]], split = ",")),FUN = gene.link.function)
 
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
