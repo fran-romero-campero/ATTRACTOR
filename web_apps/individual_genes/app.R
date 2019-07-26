@@ -1966,9 +1966,7 @@ between two nodes when the corresponding GO terms are semantically related.")
          expr = {
            emapplot(enrich.go)
          })
-       
-       
-       
+
        ## CNET plot
        output$cnetplot_text <- renderText("The following figure corresponds to a gene-concept network. The beige
 nodes represents GO terms and the grey nodes genes. An edge is drawn from a gene to a GO term when the gene is annotated
