@@ -2276,17 +2276,43 @@ with the corresponding GO term.")
     final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     
+    ## Determine genes for each motif
+    genes.with.motif <- vector(length = length(sig.enrich.motifs))
+    for (i in 1:length(sig.enrich.motifs))
+    {
+      print(i)
+      rows.with.motif <- which(precomputed.result[,sig.enrich.motifs[i]] != 0)
+      all.genes.with.motif <- rownames(precomputed.result)[rows.with.motif]
+      genes.with.motif[i] <- paste(... = intersect(all.genes.with.motif,target.genes), collapse = ",")
+    }
+    
+    ## Motifs logos
+    motifs.images <- paste0("motifs_images/",sig.enrich.motifs)
+    
+    for (i in 1:length(motifs.images))
+    {
+      motifs.images[i] <- paste0("<img src='",motifs.images[i],".png', align = 'center', width = 100>")
+    }
+    
+    
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, final.p.values, final.q.values, final.enrichments) 
-    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "P-values", "Q-values", "Enrichments")
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif, stringsAsFactors = FALSE) 
+    colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments", "Genes")
     
     ## Add links to jaspar motifs
     tfbs.result.table[["Motif ID"]] <- sapply(X=sig.enrich.ids,FUN = tfbs.link)
-
+    
+    ## Add links to genes
+    for (i in 1:length(genes.with.motif))
+    {
+      tfbs.result.table$Genes[i] <- paste(sapply(X = strsplit(genes.with.motif[i], split = ",")[[1]],FUN = gene.link.function), collapse = ", ")
+    }
+    
+    tfbs.result.table <- tfbs.result.table[order(final.q.values),]
     ## Output table with TFBS enrichment result
     output$output_tfbs_table <- renderDataTable({
       tfbs.result.table
-    },escape=FALSE,options =list(pageLength = 5))
+    },escape = FALSE,options =list(pageLength = 10))
     
     output$download_ui_tfbs_table<- renderUI(
       tagList(downloadButton(outputId= "downloadTFBSData", "Download TFBS Enrichment"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())

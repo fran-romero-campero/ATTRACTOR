@@ -51,9 +51,20 @@ q.values[which(q.values < input$motif_significance)]
 ## Compute enrichments
 enrichments <- (x / k) / (m / nrow(precomputed.result))
 
-
 ## Final motifs
 sig.enrich.motifs <- names(which(p.values < input$motif_significance & enrichments > input$enrichment_threshold))
+
+## Determine genes for each motif
+genes.with.motif <- vector("list", length(sig.enrich.motifs))
+for (i in 1:length(sig.enrich.motifs))
+{
+  rows.with.motif <- which(precomputed.result[,sig.enrich.motifs[i]] != 0)
+  all.genes.with.motif <- rownames(precomputed.result)[rows.with.motif]
+  genes.with.motif[i] <- paste(... = intersect(all.genes.with.motif,target.genes), collapse = ",")
+}
+
+
+
 
 
 ## Graphical representation
@@ -106,11 +117,27 @@ names(motifs.pwm) <- motif.names
 names(motif.ids) <- motif.names
 
 
-
-
+## Plot DNA motif
 current.pwm <- motifs.pwm[["HAT2"]]
-
 seqLogo(makePWM(current.pwm),xaxis = F, yaxis = F)
+length(motifs.pwm)
+motifs.pwm
+motifs.pwm[[453]]
+motif.names[453]
+
+## Generate all DNA motif images
+
+for (i in 1:length(motifs.pwm))
+{
+  print(i)
+  png(file=paste0("motifs_images/",motif.names[i],".png"),
+      width     = 20,
+      height    = 10,
+      units     = "in",
+      res       = 200)
+  seqLogo(makePWM(motifs.pwm[[i]]),xaxis = F, yaxis = F)
+  dev.off()
+}
 
 
 
