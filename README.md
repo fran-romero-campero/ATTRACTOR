@@ -12,4 +12,4 @@ Authors
 Contact:
 ========
 
-Contact **Francisco J. Romero-Campero**
+* **Francisco J. Romero-Campero**, email: fran@us.es
