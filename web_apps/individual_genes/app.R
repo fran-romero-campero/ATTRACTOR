@@ -13,6 +13,7 @@
 
 # Load neccesary libraries
 library(shiny)
+library(shinythemes)
 library(ChIPpeakAnno)
 library(rtracklayer)
 library(TxDb.Athaliana.BioMart.plantsmart28)
@@ -457,6 +458,10 @@ current.red.gradient <- c(red.gradient(5),rep("#FFFFFF",15))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  ##shinythemes::themeSelector(),
+  theme = shinytheme("sandstone"),
+  ##theme = shinytheme("simplex"),
+  ##theme = shinytheme("journal"),
   
   # Application title, introductory text and sidebar navigation
   fluidRow(
