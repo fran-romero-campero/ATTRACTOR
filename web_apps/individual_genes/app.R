@@ -510,6 +510,7 @@ ui <- fluidPage(
         tags$br(), tags$br(),
         actionButton("run", "Run Animation"),
         plotOutput("networkAnimation"),
+        tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
         plotOutput("clockAnimation")
       ),
       
@@ -891,7 +892,7 @@ server <- function(input, output, session) {
   rv <- reactiveValues(i = 0)
   
   increase.step <- 2
-  increase.step.clock <- 1
+  increase.step.sec <- 0.2
   max.steps <- 1000
   
   output$networkAnimation <- renderPlot( {
@@ -926,10 +927,10 @@ server <- function(input, output, session) {
     }
     
     radio.flecha <- 80
-    angle.zt <- radian.conversion(alpha = 10*rv$i)
-    lines(x = c(0, sin(angle.zt)*radio.flecha), y = c(0, cos(angle.zt)*radio.flecha), lwd = 5)
+    angle.zt <- radian.conversion(alpha = 8*rv$i)
+    arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt)*radio.flecha, y1 = cos(angle.zt)*radio.flecha,lwd = 5)
     
-  }, height = 500)
+  }, height = 100)
   
   observeEvent(input$run, {
     rv$i <- 0

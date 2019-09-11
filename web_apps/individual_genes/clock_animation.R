@@ -39,6 +39,9 @@ radio.flecha <- 80
 
 i <- 3
 angle.zt <- radian.conversion(alpha = 60*i)
+angle.zt.sec <- radian.conversion(alpha = 6*i) ##10 veces más rápido, 10 veces más pequeño el ángulo
 
-lines(x = c(0, sin(angle.zt)*radio.flecha), y = c(0, cos(angle.zt)*radio.flecha), lwd = 5)
+# lines(x = c(0, sin(angle.zt)*radio.flecha), y = c(0, cos(angle.zt)*radio.flecha), lwd = 5)
+arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt)*radio.flecha, y1 = cos(angle.zt)*radio.flecha,lwd = 5)
+arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt.sec)*radio.flecha, y1 = cos(angle.zt.sec)*radio.flecha,lwd = 5)
 
