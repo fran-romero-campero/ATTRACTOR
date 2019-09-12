@@ -509,9 +509,14 @@ ui <- fluidPage(
                  tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial."))),
         tags$br(), tags$br(),
         actionButton("run", "Run Animation"),
-        plotOutput("networkAnimation"),
-        tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
-        plotOutput("clockAnimation")
+        fluidRow(column(width = 9,
+                        plotOutput("networkAnimation")),
+                 column(width = 3,
+                        tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),
+                        plotOutput("clockAnimation")))
+        # plotOutput("networkAnimation"),
+        # tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
+        # plotOutput("clockAnimation")
       ),
       
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
@@ -904,7 +909,7 @@ server <- function(input, output, session) {
             axis.text = element_blank(),
             axis.ticks.y = element_blank()) + 
       geom_point(fill=current.red.gradient[ceiling(1.7^norm.data[[(rv$i %% 48)+1]])],size=5,pch=21)
-  },height = 600)
+  },height = 600, width = 600)
   
   output$clockAnimation <- renderPlot({
     #Plot circle
@@ -930,7 +935,7 @@ server <- function(input, output, session) {
     angle.zt <- radian.conversion(alpha = 8*rv$i)
     arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt)*radio.flecha, y1 = cos(angle.zt)*radio.flecha,lwd = 5)
     
-  }, height = 100)
+  }, height = 300, width = 300)
   
   observeEvent(input$run, {
     rv$i <- 0
