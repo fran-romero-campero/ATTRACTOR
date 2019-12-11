@@ -545,8 +545,22 @@ ui <- fluidPage(
       
       conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
                        tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
-                 transcription factors or regulators over their common targets. TeirGO term and pathways enrichment can be performed  Select your transcription factors "),
-                       tags$div(align="justify", "lalala" )
+                                transcription factors or regulators over their common targets. Follow the steps below:", 
+                                
+                                tags$ol(
+                                  tags$li("Select your TFs of interest using the", tags$b("Select Transcription Factors"),
+                                          "checkbox menu on the left below."),
+                                  tags$li("You can also select a cluster of genes exhibiting a specific rythmic pattern of expression by chosing
+                                          the time point for their peak and trough using the dropdown menus", 
+                                          tags$b("Select a specific rythmic gene expression pattern with peak at: ... and trough at:")),
+                                  tags$li("Check the box", tags$b("Visualize Edges"), "when you want to depict arrows from TFs to their target genes."),
+                                  tags$li("Click on the", tags$b("SELECT GENES"), "to visualize your selected TFs common target genes exhibiting the 
+                                           specified rythmic expression pattern in our transcriptional network. Explore the different tabs to 
+                                           download a table with the selected genes, perform a signficance analysis of the overlap between the selected 
+                                           TFs targets and the specified expression pattern as weel as", tags$b("GO term, pathways 
+                                           and binding motifs enrichment analysis"), ".")
+                                )
+                                )
       )
       
     ),
@@ -668,6 +682,10 @@ ui <- fluidPage(
                                         tabPanel(title = "Network Visualization",
                                                  plotOutput("networkPlot")
                                         ),
+                                        tabPanel(title = "Gene Table",
+                                                 dataTableOutput(outputId = "outputTable"),
+                                                 uiOutput(outputId = "download_ui_for_table")
+                                         ),
                                         tabPanel(title = "Overlap Significance",
                                                  tags$br(),
                                                  tags$div(align="justify", "In this section, we present the results of a significance analysis of the
@@ -681,10 +699,6 @@ ui <- fluidPage(
                                                  tags$div(align="center",
                                                           plotOutput("venn.diagram.plot"))
                                         ),
-                                        tabPanel(title = "Gene Table",
-                                                 dataTableOutput(outputId = "outputTable"),
-                                                 uiOutput(outputId = "download_ui_for_table")
-                                         ),
                                         tabPanel(title = "Functional Enrichment",
                                                  tabsetPanel(type = "tabs",
                                                              tabPanel(title = "GO Enrichment",
