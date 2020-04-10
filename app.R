@@ -483,6 +483,15 @@ ui <- fluidPage(
       tags$div(align = "center", 
                tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk")),
       tags$br(),tags$br(),
+      
+      conditionalPanel(condition = "input.navigation_bar == 'github'",
+        tags$div(align = "justify", tags$b("ATTRACTOR,"), "is entirely developed using 
+        the R package", tags$b( tags$a(href="https://shiny.rstudio.com/", "shiny.")), "The 
+        source code is released under", tags$b("GNU General Public License v3.0"), "and is hosted at",
+        tags$b("GitHub."), "If you experience any problem using ATTRACTOR please create an", tags$b(tags$a(href="https://github.com/fran-romero-campero/ATTRACTOR/issues","issue")), "in GitHub and we will address it."),
+        tags$div(align="center",tags$h1(tags$b(tags$a(href="https://github.com/fran-romero-campero/ATTRACTOR", "ATTRACTOR at GitHub"))))
+      ),
+      
       conditionalPanel(condition = "input.navigation_bar == 'home'",
         tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
           tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
