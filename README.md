@@ -12,3 +12,5 @@ Arabidopsis Thaliana TRanscriptionAl Circadian neTwORk, a web based tool develop
 ## Contact:
 
 * **Francisco J. Romero-Campero**, email: fran@us.es
+
+[![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/intent/tweet?hashtags=ATTRACTOR&url=https://greennetworks.us.es/attractor&screen_name=FranRomeroCampero)
