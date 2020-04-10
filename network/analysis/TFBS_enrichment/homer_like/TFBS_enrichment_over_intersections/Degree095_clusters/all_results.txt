@@ -1,4 +1,0 @@
-"Peak"	"Trough"	"Significant enriched Motifs"
-"ZT0"	"Any"	"BZR1_1,FHY3,ABF2,FAR1,HY5,PIF1,SOC1,TCP2"
-"ZT0"	"ZT12"	""
-"ZT0"	"ZT8"	"G.box,ABI5,ABF2,BEE2,BIM2,BIM3,CMTA2,HY5,PIF4,MYC3"

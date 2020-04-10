@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"ATHB53"	3.48889062311838e-05	0.0157697856164951	2.62913114282977

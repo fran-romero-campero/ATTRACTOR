@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"MYC4"	0.000143359599280452	0.0323992694373821	2.34449178332319

@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"FHY3"	7.05478313028591e-05	0.0318876197488923	15.6585365853659

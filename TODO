@@ -1,7 +1,0 @@
-To Do List:
-
-1) Fusionar peakvisualizer y network visualizer dentro de un tab en ATTRACTOR. Arreglar que sólo aparezcan los reguladores en network y peak visualizer además de darle la
-opción al usuario de visualizar otros factores de transcripción. 
-2) Reparar reactividad en peakvisualizer
-5) Añadir sanity tests
-7) Hacer la representación gráfica de la red interactiva. 

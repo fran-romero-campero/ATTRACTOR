@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"AT1G19210"	0.000690067617455605	0.0445586518699905	2.1621014818141

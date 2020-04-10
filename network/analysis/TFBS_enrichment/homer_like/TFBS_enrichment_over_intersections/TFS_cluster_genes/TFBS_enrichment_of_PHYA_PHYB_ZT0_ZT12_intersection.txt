@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"ARF5"	3.1764519224928e-05	0.0143575626896674	2.87631039531479

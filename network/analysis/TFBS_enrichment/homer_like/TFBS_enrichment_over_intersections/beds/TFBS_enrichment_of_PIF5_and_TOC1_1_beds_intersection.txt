@@ -1,2 +1,0 @@
-"sig.enrich.motifs"	"final.p.values"	"final.q.values"	"final.enrichments"
-"CMTA2"	3.81922614104463e-07	0.000172629021575217	2.1502021604007
