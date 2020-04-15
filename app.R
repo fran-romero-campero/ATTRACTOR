@@ -883,6 +883,9 @@ ui <- fluidPage(
 )
 
 ## ATTRACTOR server
+
+#library(ChIPpeakAnno)
+
 server <- function(input, output, session) {
 
   ## Animation in main page with node size
