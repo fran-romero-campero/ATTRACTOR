@@ -13,7 +13,7 @@
 # Load neccesary libraries
 library(shiny)
 library(shinythemes)
-library(ChIPpeakAnno)
+#library(ChIPpeakAnno)
 library(rtracklayer)
 library(TxDb.Athaliana.BioMart.plantsmart28)
 library(Biostrings)
@@ -1354,10 +1354,10 @@ server <- function(input, output, session) {
       names(cvglists) <- input$selected.tfs
       
       ## Compute signal in the region to plot
-      chip.signal <- featureAlignedSignal(cvglists, regions.plot, 
-                                          upstream=ceiling(current.length/2), 
-                                          downstream=ceiling(current.length/2),
-                                          n.tile=current.length) 
+      chip.signal <- ChIPpeakAnno::featureAlignedSignal(cvglists, regions.plot, 
+                                                        upstream=ceiling(current.length/2), 
+                                                        downstream=ceiling(current.length/2),
+                                                        n.tile=current.length) 
       
       ## Compute mean signal 
       chip.signal.means <- matrix(nrow=length(input$selected.tfs), ncol=ncol(chip.signal[[1]]))
