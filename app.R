@@ -852,7 +852,7 @@ ui <- fluidPage(
                                                                   "500 bp" = "500")
                                                                 )),width = 3),
                                                  column(wellPanel(
-                                                   tags$div(align="justify", "Score blablabla bala bla:"),
+                                                   tags$div(align="justify", "Motif Identification Score:"),
                                                    radioButtons(inputId = "score", width="100%",selected="90",
                                                                 label="",
                                                                 choices=c(
