@@ -497,16 +497,16 @@ ui <- fluidPage(
         tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
           tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
           tags$b("omics data"), " have been generated to characterize their individual components. Nonetheless, 
-          these data remain fragmented and researchers who want to explore the synergistic regulation exherted by the 
+          these data remain fragmented and researchers who want to explore the synergistic regulation exerted by the 
           circadian clock and light signalling need to consult different papers and resources making imperative 
           the use of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
           all the generated information."),
         tags$div(align="justify", tags$b("ATTRACTOR,"),"is a web based tool for the analysis of the synergistic transcriptional control 
-          exherted by the circadian clock and light signalling over genes exhibiting rythmic expression profiles in the model plant ", 
+          exerted by the circadian clock and light signalling over genes exhibiting rhythmic expression profiles in the model plant ", 
           tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR,"), "consists of a ", tags$b("transcriptional network"), 
           " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
           with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
-          and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rythmic expression profiles and
+          and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rhythmic expression profiles and
           14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
           components of the morning and central loops", tags$b("CCA1, LHY,"), "the pseudo response regulator family members", 
           tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9;"), "as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4."),
@@ -566,12 +566,12 @@ ui <- fluidPage(
                                 tags$ol(
                                   tags$li("Select your TFs of interest using the", tags$b("Select Transcription Factors"),
                                           "checkbox menu on the left below."),
-                                  tags$li("You can also select a cluster of genes exhibiting a specific rythmic pattern of expression by chosing
+                                  tags$li("You can also select a cluster of genes exhibiting a specific rhythmic pattern of expression by chosing
                                           the time point for their peak and trough using the dropdown menus", 
-                                          tags$b("Select a specific rythmic gene expression pattern with peak at: ... and trough at:")),
+                                          tags$b("Select a specific rhythmic gene expression pattern with peak at: ... and trough at:")),
                                   tags$li("Check the box", tags$b("Visualize Edges"), "when you want to depict arrows from TFs to their target genes."),
                                   tags$li("Click on the", tags$b("SELECT GENES"), "to visualize your selected TFs common target genes exhibiting the 
-                                           specified rythmic expression pattern in our transcriptional network. Explore the different tabs to 
+                                           specified rhythmic expression pattern in our transcriptional network. Explore the different tabs to 
                                            download a table with the selected genes, perform a signficance analysis of the overlap between the selected 
                                            TFs targets and the specified expression pattern as weel as", tags$b("GO term, pathways 
                                            and binding motifs enrichment analysis"), ".")
@@ -679,7 +679,7 @@ ui <- fluidPage(
                                                               "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", 
                                                               "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
                                                inline = TRUE,width = "100%"),
-                            tags$b("Select a specific rythmic gene expression pattern with peak at:"),
+                            tags$b("Select a specific rhythmic gene expression pattern with peak at:"),
                             selectInput(inputId = "peak", label="", 
                                         choices = c("Any ZT" = "any", "ZT0" = "peak0", "ZT4" = "peak4", "ZT8" = "peak8",
                                                                       "ZT12" = "peak12", "ZT16" = "peak16", "ZT20" = "peak20"),
