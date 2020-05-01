@@ -1017,7 +1017,7 @@ server <- function(input, output, session) {
 
   ## video tutorial
   output$video_tutorial <- renderUI({
-    HTML("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=8eJN5zrMZbI\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>")
+    HTML("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/8eJN5zrMZbI\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>")
   })  
 
   ## clock visualizer code
