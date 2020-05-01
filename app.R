@@ -543,7 +543,7 @@ ui <- fluidPage(
                        
                        tags$br(),
                        tags$br(),
-                       tags$div(align="center", img(src='smiley.png', align = "center", width=200,hight=200)),
+                       #tags$div(align="center", img(src='smiley.png', align = "center", width=200,hight=200)),
                        tags$br()
                        
       ),
