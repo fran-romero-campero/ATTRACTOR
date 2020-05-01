@@ -616,7 +616,12 @@ ui <- fluidPage(
       img(src='logo_ibvf.jpg', align = "center", width=100),
       img(src='logo_us.png', align = "center", width=100),
       tags$br(),tags$br(),tags$br(),
-      img(src='logo_csic.jpg', align = "center", width=100)
+      img(src='logo_csic.jpg', align = "center", width=100),
+      tags$br(),
+      tags$br(),
+      tags$div(
+        HTML("<script type=\"text/javascript\" id=\"clstr_globe\" src=\"//cdn.clustrmaps.com/globe.js?d=_vn8-gT1zeKYdG0FCV7CsZkw0zisYiGXkw3ZoGonziU\"></script>")
+      )
     )
   ),
   
