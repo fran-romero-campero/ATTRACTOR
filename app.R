@@ -493,6 +493,27 @@ ui <- fluidPage(
         tags$div(align="center",tags$h1(tags$b(tags$a(href="https://github.com/fran-romero-campero/ATTRACTOR", "ATTRACTOR at GitHub"))))
       ),
       
+      conditionalPanel(condition = "input.navigation_bar == 'citation'",
+                       tags$div(align = "justify", "We are strongly committed to", tags$b("open access software"), 
+                       "and", tags$b("open science."),"Following our philosophy we have deposited our GitHub code 
+                       into", tags$a(href="https://zenodo.org/record/3780022#.XqwzNvlS9uQ", target="_blank",tags$b("Zenodo")), ", a
+                       general-purpose open-access repository developed under the", 
+                       tags$a(href="https://www.openaire.eu/", target="_blank", tags$b("European OpenAIRE program.")), "Meanwhile we publish 
+                       our work in a journal if you find", tags$b("ATTRACTOR"), "useful in your research we would be most grateful if you cite 
+                       our GitHub repository with a,", tags$b("DOI"),  "as follows:",
+                       tags$br(),
+                       tags$br(),
+                       tags$div(tags$h4(tags$b("de los Reyes, P., Romero-Losada, A.B., Romero-Campero, F.J. (2020) ATTRACTOR, 
+                       Arabidopsis Thaliana TRanscriptionAl Circadian neTwORk v1.0, Zenodo, doi:10.5381/zenodo.3780022")))),
+                       
+                       tags$br(),
+                       tags$br(),
+                       tags$div(align="center", img(src='smiley.png', align = "center", width=200,hight=200)),
+                       tags$br()
+                       
+      ),
+      
+      
       conditionalPanel(condition = "input.navigation_bar == 'home'",
         tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
           tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
