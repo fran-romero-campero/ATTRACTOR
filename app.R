@@ -485,6 +485,41 @@ ui <- fluidPage(
                tags$h1(tags$b("ATTRACTOR,"),tags$i("Arabidopsis Thaliana"), "TRanscriptionAl Circadian neTwORk")),
       tags$br(),tags$br(),
       
+      conditionalPanel(condition = "input.navigation_bar == 'home'",
+                       tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
+                                tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
+                                tags$b("omics data"), " have been generated to characterize their individual components. Nonetheless, 
+                                these data remain fragmented and researchers who want to explore the synergistic regulation exerted by the 
+                                circadian clock and light signalling need to consult different papers and resources making imperative 
+                                the use of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
+                                all the generated information."),
+                       tags$div(align="justify", tags$b("ATTRACTOR,"),"is a web based tool for the analysis of the synergistic transcriptional control 
+                                exerted by the circadian clock and light signalling over genes exhibiting rhythmic expression profiles in the model plant ", 
+                                tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR,"), "consists of a ", tags$b("transcriptional network"), 
+                                " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
+                                with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
+                                and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rhythmic expression profiles and
+                                14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
+                                components of the morning and central loops", tags$b("CCA1, LHY,"), "the pseudo response regulator family members", 
+          tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9;"), "as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4."),
+          "In order to capture synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes",
+          tags$b("PHYA"), "and", tags$b("PHYB,"),"the cryptochrome ", tags$b("CRY2"), "as well as the light transcriptional factors from the phytochrome interacting factor
+          family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3."),"Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
+          is also included in our network."),
+        tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
+                 tags$a(href="https://www.youtube.com/watch?v=8eJN5zrMZbI", target="_blank", tags$b("view our video tutorial."))),
+        tags$br(), tags$br()#,
+        # actionButton("run", "Run Animation"),
+        # fluidRow(column(width = 9,
+        #                 plotOutput("networkAnimation")),
+        #          column(width = 3,
+        #                 tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),
+        #                 plotOutput("clockAnimation")))
+        # plotOutput("networkAnimation"),
+        # tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
+        # plotOutput("clockAnimation")
+      ),
+      
       conditionalPanel(condition = "input.navigation_bar == 'github'",
         tags$div(align = "justify", tags$b("ATTRACTOR,"), "is entirely developed using 
         the R package", tags$b( tags$a(href="https://shiny.rstudio.com/", "shiny.")), "The 
@@ -513,42 +548,17 @@ ui <- fluidPage(
                        
       ),
       
-      
-      conditionalPanel(condition = "input.navigation_bar == 'home'",
-        tags$div(align="justify", "The", tags$b("circadian clock"), "and", tags$b("light signalling"), "play central roles in", 
-          tags$i("plant physiology"), "and", tags$i("development."), "As a consequence, massive amounts of",
-          tags$b("omics data"), " have been generated to characterize their individual components. Nonetheless, 
-          these data remain fragmented and researchers who want to explore the synergistic regulation exerted by the 
-          circadian clock and light signalling need to consult different papers and resources making imperative 
-          the use of", tags$b("molecular systems biology"), "techniques to integrate and make easily accesible 
-          all the generated information."),
-        tags$div(align="justify", tags$b("ATTRACTOR,"),"is a web based tool for the analysis of the synergistic transcriptional control 
-          exerted by the circadian clock and light signalling over genes exhibiting rhythmic expression profiles in the model plant ", 
-          tags$i(tags$b("Arabidopsis thaliana.")), tags$b("ATTRACTOR,"), "consists of a ", tags$b("transcriptional network"), 
-          " that integrates transcriptomic data collected over diurnal cycles with 12 hours of light and 12 hours of darkness 
-          with cistromic data generated using ChIP-seq for key transcriptional factors and regulators in the circadian clock 
-          and light signalling. Specifically, our network is composed of 5778 nodes or genes with diurnal rhythmic expression profiles and
-          14529 edges or transcriptional regulations. The transcription factors and regulators included in our network comprise the
-          components of the morning and central loops", tags$b("CCA1, LHY,"), "the pseudo response regulator family members", 
-          tags$b("TOC1,PRR5, PRR7"), "and ", tags$b("PRR9;"), "as well as some components of the evening loop such as", tags$b("LUX, ELF3"), "and", tags$b("ELF4."),
-          "In order to capture synergistic regulations with light signalling we added the light sensors and transcriptional regulators phytochromes",
-          tags$b("PHYA"), "and", tags$b("PHYB,"),"the cryptochrome ", tags$b("CRY2"), "as well as the light transcriptional factors from the phytochrome interacting factor
-          family", tags$b("PIF5, PIF4"), " and ", tags$b("PIF3."),"Finally, the phytochrome interacting transcriptional factor", tags$b("FHY1"), "(Far-red elongated Hypocotyl 1)
-          is also included in our network."),
-        tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
-                 tags$a(href="https://www.youtube.com/watch?v=8o2otN-DY4c&t=1220s", target="_blank", tags$b("view our video tutorial."))),
-        tags$br(), tags$br()#,
-        # actionButton("run", "Run Animation"),
-        # fluidRow(column(width = 9,
-        #                 plotOutput("networkAnimation")),
-        #          column(width = 3,
-        #                 tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),
-        #                 plotOutput("clockAnimation")))
-        # plotOutput("networkAnimation"),
-        # tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
-        # plotOutput("clockAnimation")
+      conditionalPanel(condition = "input.navigation_bar == 'tutorials'",
+                       tags$div(align="center",uiOutput("video_tutorial")),
+                       tags$div(align = "justify", 
+                                tags$br(),
+                                tags$br(),
+                                tags$div(tags$h4(tags$b("Above you can find a video tutorial on how to use the different tools implemented 
+                                in ATTRACTOR to explore the transcriptional regulation exerted by the circadian clock and light signalling in 
+                                the model plant", tags$i("Arabidopsis thaliana")))))
+                       
       ),
-      
+
       conditionalPanel(condition = "input.navigation_bar == 'individual_gene'",
         tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
                  transcription factors or regulators over an", tags$b("individually selected"), "gene as well as the effect observed in its
@@ -1000,7 +1010,11 @@ server <- function(input, output, session) {
   #   
   # })
 
-    
+  ## video tutorial
+  output$video_tutorial <- renderUI({
+    HTML("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/watch?v=8eJN5zrMZbI\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>")
+  })  
+
   ## clock visualizer code
   output$clock <- renderPlot({
     
