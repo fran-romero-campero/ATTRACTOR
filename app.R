@@ -735,15 +735,20 @@ ui <- fluidPage(
                                                  plotOutput("networkPlot")
                                         ),
                                         tabPanel(title = "Gene Table",
+                                                 tags$br(),
+                                                 tags$br(),
+                                                 textOutput("empty_overlap_message_1"),
                                                  dataTableOutput(outputId = "outputTable"),
                                                  uiOutput(outputId = "download_ui_for_table")
                                          ),
                                         tabPanel(title = "Overlap Significance",
                                                  tags$br(),
+                                                 tags$br(),
                                                  tags$div(align="justify", "In this section, we present the results of a significance analysis of the
                                                            overlap between the targets of the selected transcription factors and gene
                                                            with a specific expresion pattern."),
                                                  tags$br(),
+                                                 textOutput("empty_overlap_message_2"),
                                                  textOutput("overlap.message"),
                                                  textOutput("overlap.significance.text"),
                                                  tags$br(),
@@ -1626,7 +1631,7 @@ server <- function(input, output, session) {
   
   ## Determine common targets and perform analysis when button is clicked
   observeEvent(input$go_multiple, {
-
+    
     ## Determine targets of selected TFs
     selected.tfs.with.zts <- str_replace(string = input$selected.multiple.tfs,pattern = " ",replacement = "_")
     selected.only.tfs <- sapply(X = strsplit(x = input$selected.multiple.tfs,split = " "), FUN = get.first)
@@ -1654,6 +1659,14 @@ server <- function(input, output, session) {
       selected.genes.df <- subset(selected.genes.df, peak.zt == input$peak)
     }
     
+    if(nrow(selected.genes.df) == 0)
+    {
+      output$empty_overlap_message_2 <- renderText(expr = "The intersection between the taget genes of the
+                                                   selected transcription factors is empty. 
+                                                   The selected TFs do no have any common target genes. No
+                                                   further analysis can be performed.")
+    } else
+    {
     ## Node colors for representation
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
@@ -1806,7 +1819,6 @@ server <- function(input, output, session) {
             plot(overlap.output, Layout = "landscape")
       })
     }
-    
     ## Target gene representation on the network
     network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
       theme(panel.background = element_blank(), 
@@ -1842,30 +1854,39 @@ server <- function(input, output, session) {
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
+    }
     
-    ## Output table with gene info
-    output$outputTable <- renderDataTable({
-      create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
-    },escape=FALSE)
-    
-    ## Generate UI to download table and creating a downlodable table
-    output$download_ui_for_table<- renderUI(
-      tagList(downloadButton(outputId= "downloadData", "Download Selected Genes"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
-    )
-    
-    output$downloadData<- downloadHandler(
-      filename= function() {
-        paste0(paste(input$selected.tfs,collapse = "_"), ".tsv")
-      },
-      content= function(file) {
-        write.table(create.downloadable.output.table(input.gene.df=selected.genes.df,alias,tfs.names), 
-                    file=file, 
-                    sep = "\t", 
-                    quote = FALSE,
-                    row.names = FALSE)
-      })
-    
-    
+    ## Output message when empty information
+    if(nrow(selected.genes.df) == 0)
+    {
+      output$empty_overlap_message_1 <- renderText(expr = "The intersection between the taget genes of the
+                                                   selected transcription factors is empty. 
+                                                   The selected TFs do no have any common target genes. No
+                                                   further analysis can be performed.")
+    } else
+    {
+      ## Output table with gene info
+      output$outputTable <- renderDataTable({
+        create.output.table(input.gene.df=selected.genes.df,alias,tfs.names)
+      },escape=FALSE)
+      
+      ## Generate UI to download table and creating a downlodable table
+      output$download_ui_for_table<- renderUI(
+        tagList(downloadButton(outputId= "downloadData", "Download Selected Genes"),tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),tags$br())
+      )
+      
+      output$downloadData<- downloadHandler(
+        filename= function() {
+          paste0(paste(input$selected.tfs,collapse = "_"), ".tsv")
+        },
+        content= function(file) {
+          write.table(create.downloadable.output.table(input.gene.df=selected.genes.df,alias,tfs.names), 
+                      file=file, 
+                      sep = "\t", 
+                      quote = FALSE,
+                      row.names = FALSE)
+        })
+    }
     
   })
   
