@@ -765,6 +765,8 @@ ui <- fluidPage(
                                                                                of all, you need to choose the background set of genes between
                                                                                the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
                                                                       tags$br(),
+                                                                      textOutput("empty_overlap_message_3"),
+                                                                      tags$br(),
                                                                       radioButtons(inputId = "go.background", width="100%",selected="allgenome",
                                                                                    label="",
                                                                                    choices=c(
@@ -773,6 +775,8 @@ ui <- fluidPage(
                                                                                    )), tags$br(),
                                                                       actionButton(inputId = "goterm",label = "GO terms analysis"),
                                                                       tags$br(),
+                                                                      tags$br(),
+                                                                      textOutput(outputId = "no_go_results"),
                                                                       tags$br(),
                                                                       shinyjs::useShinyjs(),
                                                                       hidden(div(id='loading.div',h3('Please be patient, computing GO enrichment ...'))),
@@ -820,6 +824,8 @@ ui <- fluidPage(
                                                                                of all, you need to choose the background set of genes between
                                                                                the entire genome of", tags$i("Arabidopsis thaliana"), "or just the genes in ATTRACTOR:"),
                                                                       tags$br(),
+                                                                      textOutput("empty_overlap_message_4"),
+                                                                      tags$br(),
                                                                       radioButtons(inputId = "pathway_background", width="100%",selected="allgenome",
                                                                                    label="",
                                                                                    choices=c(
@@ -860,8 +866,12 @@ ui <- fluidPage(
                                                  tags$div(align="justify", "In this section you can perform a 
                                                           Transcription Factor Binding Sites (TFBS) enrichment analysis 
                                                           over the promoters of the selected genes. First of all, you 
-                                                          have to set the some required parameters: the background and 
-                                                          the length of what will be considered the promoter of each gene"),
+                                                          need to set the some required parameters: the background, 
+                                                          the promoter length around the transcriptional start site (TSS) and 
+                                                          the motif identification score."),
+                                                 tags$br(),
+                                                 textOutput("empty_overlap_message_5"),
+                                                 tags$br(),
                                                  column(wellPanel(
                                                    ## Select the background
                                                    tags$div(align="justify", "Please, choose the background set of genes between
@@ -874,7 +884,8 @@ ui <- fluidPage(
                                                                   "Genes in network" = "onlynet")
                                                                 )),width = 4),
                                                    column(wellPanel(
-                                                     tags$div(align="justify", "Promoter length upstream of the start codon:"),
+                                                     tags$div(align="justify", "Length of the region upstream of the TSS that will be
+                                                              considered gene promoter:"),
                                                      radioButtons(inputId = "up_promoter", width="100%",selected="2000",
                                                                   label="",
                                                                   choices=c(
@@ -884,7 +895,8 @@ ui <- fluidPage(
                                                                     "2000 bp" = "2000")
                                                                   )),width = 3),
                                                  column(wellPanel(
-                                                   tags$div(align="justify", "Promoter length downstream of the start codon:"),
+                                                   tags$div(align="justify", "Length of the region downstream of the TSS that will be
+                                                            considered gene promoter:"),
                                                    radioButtons(inputId = "down_promoter", width="100%",selected="500",
                                                                 label="",
                                                                 choices=c(
@@ -899,7 +911,8 @@ ui <- fluidPage(
                                                                 choices=c(
                                                                   "80" = "80",
                                                                   "85" = "85",
-                                                                  "90" = "90",
+                                                                  "90" = "90
+                                                                  ",
                                                                   "95" = "95")
                                                    )),width = 2),
                                                  tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
@@ -1661,12 +1674,28 @@ server <- function(input, output, session) {
     
     if(nrow(selected.genes.df) == 0)
     {
-      output$empty_overlap_message_2 <- renderText(expr = "The intersection between the taget genes of the
+      output$empty_overlap_message_2 <- renderText(expr = "The intersection between the target genes of the
                                                    selected transcription factors is empty. 
                                                    The selected TFs do no have any common target genes. No
                                                    further analysis can be performed.")
+      
+      network.representation <- ggplot(network.data, aes(x.pos,y.pos)) + 
+        theme(panel.background = element_blank(), 
+              panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              axis.title = element_blank(),
+              axis.text = element_blank(),
+              axis.ticks.y = element_blank()) + 
+        geom_point(color=node.colors,size=1)
+      
+      output$overlap.significance.text <- renderText(expr = {""})
+      output$venn.diagram.plot <- renderPlot(expr = {})
+
     } else
     {
+      
+    output$empty_overlap_message_2 <- renderText(expr = "")
+
     ## Node colors for representation
     selected.nodes.colors <- selected.colors[selected.genes.df$peak.zt]
     
@@ -1722,7 +1751,7 @@ server <- function(input, output, session) {
     overlap.p.value <- round(overlap.p.value,digits = -log10(overlap.p.value)+2)
     overlap.enrichment <- round((overlap.results$Table)[["FE"]][nrow(overlap.results$Table)],digits=2)
     
-    ## Ouput text for the overlap
+    ## Output text for the overlap
     overlap.message <- "The overlap between the targets of the transcription factors"
     text.first.tfs <- paste(input$selected.multiple.tfs[1:(length(input$selected.multiple.tfs)-1)],collapse=",")
     text.all.tfs <- paste(c(text.first.tfs, "and", input$selected.multiple.tfs[length(input$selected.multiple.tfs)]),collapse=" ")
@@ -1850,19 +1879,23 @@ server <- function(input, output, session) {
         geom_point(data = selected.genes.df,aes(x.pos,y.pos), size=4, fill=selected.nodes.colors,colour="black",pch=21)
     }
     
+    }
+    
     ## Update network representation on the app
     output$networkPlot <- renderPlot({
       network.representation
     },height = 700)
-    }
+    
     
     ## Output message when empty information
     if(nrow(selected.genes.df) == 0)
     {
-      output$empty_overlap_message_1 <- renderText(expr = "The intersection between the taget genes of the
+      output$empty_overlap_message_1 <- renderText(expr = "The intersection between the target genes of the
                                                    selected transcription factors is empty. 
                                                    The selected TFs do no have any common target genes. No
                                                    further analysis can be performed.")
+      output$outputTable <- renderDataTable({})
+      output$download_ui_for_table<- renderUI("")
     } else
     {
       ## Output table with gene info
@@ -1914,8 +1947,19 @@ server <- function(input, output, session) {
     ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
     
+    ## Check whether or not the selected TFs share some common targets
+    if(nrow(selected.genes.df) == 0)
+    {
+      output$empty_overlap_message_3 <- renderText(expr = "The intersection between the target genes of the
+                                                   selected transcription factors is empty. 
+                                                   The selected TFs do no have any common target genes. No
+                                                   further analysis can be performed.")
+    } else
+    {
     ## GO enrichment analysis
     
+    output$empty_overlap_message_3 <- renderText(expr = "")
+
     ## Set the background to perform the GO terms enrichment analysis depending on the user selection
     if (input$go.background == "allgenome")
     {
@@ -1942,11 +1986,14 @@ server <- function(input, output, session) {
     ## Hide loading element when GO term enrichment is done
     shinyjs::hideElement(id = 'loading.div')
     
-    ## Generate ouput table
+    ## Generate output table
     enrich.go.result <- as.data.frame(enrich.go)
     
     if(nrow(enrich.go.result) > 0)
     {
+      ## Set to empty the message stating no go enrichment found
+      output$no_go_results <- renderText({""})
+      
       ## GO term Description P-value Q-value Enrichment (SetRatio, BgRatio) Genes
       go.term.enrichments <- compute.enrichments(gene.ratios = enrich.go.result$GeneRatio,
                                                  bg.ratios = enrich.go.result$BgRatio)
@@ -2108,6 +2155,24 @@ with the corresponding GO term.")
          expr = {
            cnetplot(enrich.go)
          })
+    } else
+    {
+      output$no_go_results <- renderText({"No GO term enrichment was found."})
+      output$textGOTable <- renderText("")
+      output$output_go_table <- renderDataTable({}) 
+      output$download_ui_for_go_table<- renderUI("")
+      #output$downloadGOData<- downloadHandler("")
+      #output$downloadData<- downloadHandler("")
+      output$revigo<- renderUI("")
+      output$barplot_text <- renderText("")
+      output$gomap_text <- renderText("")
+      output$gomap <- renderPlot("")
+      output$bar.plot <- renderPlot("")
+      output$emapplot_text <- renderText("")
+      output$emap.plot <- renderPlot("")
+      output$cnetplot_text <- renderText("")
+      output$cnet.plot <- renderPlot("")
+    }
     }
   })
   
