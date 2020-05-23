@@ -846,6 +846,8 @@ ui <- fluidPage(
                                                                                            uiOutput(outputId = "download_ui_for_kegg_table")
                                                                                   ),
                                                                                   tabPanel(title = "Enriched Pathway Visualization",
+                                                                                           br(),
+                                                                                           textOutput("no_pathway_visualization"),
                                                                                            uiOutput(outputId = "kegg_selectize"),
                                                                                            imageOutput("kegg_image"),
                                                                                            br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
@@ -853,6 +855,7 @@ ui <- fluidPage(
                                                                                            br(), br(), br(), br(), br()
                                                                                   ),
                                                                                   tabPanel(title = "Enriched Module Table",
+                                                                                           br(),
                                                                                            htmlOutput(outputId = "text_module_kegg"),
                                                                                            br(), br(),
                                                                                            dataTableOutput(outputId = "output_module_table")
@@ -911,16 +914,17 @@ ui <- fluidPage(
                                                                 choices=c(
                                                                   "80" = "80",
                                                                   "85" = "85",
-                                                                  "90" = "90
-                                                                  ",
+                                                                  "90" = "90",
                                                                   "95" = "95")
                                                    )),width = 2),
-                                                 tags$br(),tags$br(),tags$br(),tags$br(),tags$br(),
+                                                 tags$br(),tags$br(),
+                                                 tags$br(),tags$br(),tags$br(),
                                                  tags$br(),
                                                  tags$br(),
                                                  tags$br(),
                                                  actionButton(inputId = "tfbs_button",label = "TFBS enrichment analysis"),
                                                  tags$br(),
+                                                 textOutput(outputId = "no_tfbs_enrichment"),
                                                  tags$br(),
                                                  shinyjs::useShinyjs(),
                                                  hidden(div(id='loading.div.tfbs',h3('Please be patient, computing TFBS enrichment ...'))),
@@ -2199,6 +2203,21 @@ with the corresponding GO term.")
     ## Determine targets with the specified expression profile
     selected.genes.df <- network.data[gene.selection,]    
     
+    if(nrow(selected.genes.df) == 0)
+    {
+      output$empty_overlap_message_4 <- renderText(expr = "The intersection between the target genes of the
+                                                   selected transcription factors is empty. 
+                                                   The selected TFs do no have any common target genes. No
+                                                   further analysis can be performed.")
+      output$output_pathway_table <- renderDataTable({""})
+      output$download_ui_for_kegg_table<- renderUI("")
+      output$kegg_selectize <- renderUI({""})
+      output$output_module_table <- renderDataTable({""}) 
+      output$kegg_image <- renderImage({filename = "blank.png"})
+    } else
+    {
+      output$empty_overlap_message_4 <- renderText(expr = "")
+
     ## Set the background to perform pathway enrichment analysis depending on the user selection
     if (input$pathway_background == "allgenome")
     {
@@ -2288,39 +2307,46 @@ with the corresponding GO term.")
                     row.names=TRUE
           )
         })
+      
+      
+      ## Visualization of specific enriched pathways
+      genes.pathway <- rep(0, length(pathway.universe))
+      names(genes.pathway) <- pathway.universe
+      
+      genes.pathway[selected.genes.df$name] <- 1
+      
+      pathways.for.select <- paste(pathways.result.table[["KEGG ID"]], pathways.result.table[["Description"]], sep=" - ")
+      
+      output$kegg_selectize <- renderUI({
+        selectInput(inputId = "kegg_pathway", 
+                    label="Choose Pathway for Representation",
+                    multiple = FALSE,
+                    selected = pathways.for.select[1],
+                    choices=pathways.for.select)
+      })
+      
+      ## Enriched pathway image
+      output$kegg_image <- renderImage({
+        pathview(gene.data = sort(genes.pathway,decreasing = TRUE),
+                 pathway.id = strsplit(input$kegg_pathway,split=" - ")[[1]][1],
+                 species = "ath",
+                 limit = list(gene=max(abs(genes.pathway)), cpd=1),
+                 gene.idtype ="kegg")
+        
+        list(src = paste(c(strsplit(input$kegg_pathway,split=" - ")[[1]][1],"pathview","png"), collapse="."),
+             contentType="image/png",width=1200,height=900)
+      },deleteFile = T)
+      
     } else
     {
       output$no_kegg_enrichment <- renderText(expr = "No enriched KEGG pathway was detected in the selected genes.")
+      output$no_pathway_visualization <- renderText(expr = "No enriched KEGG pathway was detected in the selected genes.")
+      output$output_pathway_table <- renderDataTable({""})
+      output$download_ui_for_kegg_table<- renderUI("")
+      output$kegg_selectize <- renderUI("")
+      print("llego aqui perfe")
+      output$kegg_image <- renderImage({filename = "blank.png"})
     }
-
-    ## Visualization of specific enriched pathways
-    genes.pathway <- rep(0, length(pathway.universe))
-    names(genes.pathway) <- pathway.universe
-    
-    genes.pathway[selected.genes.df$name] <- 1
-    
-    pathways.for.select <- paste(pathways.result.table[["KEGG ID"]], pathways.result.table[["Description"]], sep=" - ")
-    
-    output$kegg_selectize <- renderUI({
-      selectInput(inputId = "kegg_pathway", 
-                  label="Choose Pathway for Representation",
-                  multiple = FALSE,
-                  selected = pathways.for.select[1],
-                  choices=pathways.for.select)
-    })
-    
-    ## Enriched pathway image
-    output$kegg_image <- renderImage({
-      pathview(gene.data = sort(genes.pathway,decreasing = TRUE),
-               pathway.id = strsplit(input$kegg_pathway,split=" - ")[[1]][1],
-               species = "ath",
-               limit = list(gene=max(abs(genes.pathway)), cpd=1),
-               gene.idtype ="kegg")
-      
-      list(src = paste(c(strsplit(input$kegg_pathway,split=" - ")[[1]][1],"pathview","png"), collapse="."),
-           contentType="image/png",width=1200,height=900)
-    },deleteFile = T)
-    
 
     ## KEGG module enrichment analysis
     modules.enrichment <- enrichMKEGG(gene = selected.genes.df$name, 
@@ -2368,10 +2394,11 @@ with the corresponding GO term.")
     } else
     {
       output$text_module_kegg <- renderText(expr = "No enriched KEGG module was detected in the selected genes.")
+      output$output_module_table <- renderDataTable({""}) 
     }
       
     
-    
+    }
 
     
   })
@@ -2435,7 +2462,17 @@ with the corresponding GO term.")
     # target.genes <- read.table(file = "peak_ZT0_trough_ZT12.txt",as.is = T)[[1]]
     target.genes <- intersect(rownames(precomputed.result),selected.genes.df$names)
     
-    
+    if(length(target.genes) == 0)
+    {
+      output$output_tfbs_table <- renderDataTable("")
+      output$download_ui_tfbs_table<- renderUI("")
+      output$empty_overlap_message_5 <- renderText(expr = "The intersection between the target genes of the
+                                                   selected transcription factors is empty. 
+                                                   The selected TFs do no have any common target genes. No
+                                                   further analysis can be performed.")
+    } else
+    {
+      output$empty_overlap_message_5 <- renderText(expr = "")
     k <- length(target.genes)
     x <- colSums(precomputed.result[target.genes,] > 0)
     
@@ -2468,15 +2505,19 @@ with the corresponding GO term.")
     final.q.values <- q.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.p.values <- p.values[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
     final.enrichments <- enrichments[which(q.values < input$motif_significance & enrichments > input$enrichment_threshold)]
-    
+
+    if(length(sig.enrich.motifs) > 0)
+    { 
+      ## Set message of no TFBS enrichment to the empty string
+      output$no_tfbs_enrichment <- renderText("")
     ## Determine genes for each motif
     genes.with.motif <- vector(length = length(sig.enrich.motifs))
     for (i in 1:length(sig.enrich.motifs))
     {
-      print(i)
+      #print(i)
       rows.with.motif <- which(precomputed.result[,sig.enrich.motifs[i]] != 0)
       all.genes.with.motif <- rownames(precomputed.result)[rows.with.motif]
-      genes.with.motif[i] <- paste(... = intersect(all.genes.with.motif,target.genes), collapse = ",")
+      genes.with.motif[i] <- paste(intersect(all.genes.with.motif,target.genes), collapse = ",")
     }
     
     ## Motifs logos
@@ -2486,10 +2527,9 @@ with the corresponding GO term.")
     {
       motifs.images[i] <- paste0("<img src='",motifs.images[i],".png', align = 'center', width = 100>")
     }
-    
-    
+
     ## Store data
-    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif, stringsAsFactors = FALSE) 
+    tfbs.result.table <- data.frame(sig.enrich.motifs, sig.enrich.ids, motifs.images, final.p.values, final.q.values, final.enrichments, genes.with.motif, stringsAsFactors = FALSE,row.names = NULL) 
     colnames(tfbs.result.table) <- c("DNA motifs", "Motif ID", "DNA logo", "P-values", "Q-values", "Enrichments", "Genes")
     
     ## Add links to jaspar motifs
@@ -2522,7 +2562,14 @@ with the corresponding GO term.")
                     quote = FALSE,
                     row.names = FALSE)
       })
+    } else
+    {
+      output$no_tfbs_enrichment <- renderText("No TFBS enrichment found on the selected set of genes.")
+      output$output_tfbs_table <- renderDataTable({""})
+      output$download_ui_tfbs_table<- renderUI("")
+    }
     
+    }
     
     
     
