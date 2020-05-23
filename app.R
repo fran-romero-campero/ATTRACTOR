@@ -475,6 +475,7 @@ ui <- fluidPage(
                       "Home" = "home",
                      "Individual gene analysis" = "individual_gene",
                      "Multiple transcription factor analysis" = "multiple_gene",
+                     "Bulk data retrieval" = "data_retrieval",
                      "Tutorials" = "tutorials",
                      "GitHub repository" = "github",
                      "Citation" = "citation"
@@ -590,6 +591,32 @@ ui <- fluidPage(
                  ))
       ),
       
+      conditionalPanel(condition = "input.navigation_bar == 'data_retrieval'",
+                       checkboxGroupInput(inputId = "tfs_retrieval",
+                                          label = "Select Transcription Factors:",
+                                          choices = list("PHYA ZT00", "PHYB ZT00", "ELF3 ZT00", "CCA1 ZT02", 
+                                                         "LHY ZT02", "ELF3 ZT04","FHY1 ZT04", "PIF4 ZT04", 
+                                                         "PIF5 ZT04", "PRR9 ZT04", "CRY2 ZT08", "PIF3 ZT08", 
+                                                         "ELF4 ZT10", "PRR5 ZT10", "LUX ZT10", "PRR7 ZT12", 
+                                                         "LUX ZT12","CCA1 ZT14", "TOC1 ZT15"),
+                                          inline = TRUE,width = "100%"),
+                       checkboxGroupInput(inputId = "data_retrieval",
+                                          label = "Select Transcription Factors:",
+                                          choices = list("Target Gene List",
+                                                         "Genomic Location of Binding Sites (BED format)",
+                                                         "Genomic Signal (BigWig format)"),
+                                          inline = TRUE,width = "100%"),
+                       
+                       
+                       
+                       tags$div(align = "justify", "is entirely developed using 
+        the R package", tags$b( tags$a(href="https://shiny.rstudio.com/", "shiny.")), "The 
+        source code is released under", tags$b("GNU General Public License v3.0"), "and is hosted at",
+                                tags$b("GitHub."), "If you experience any problem using ATTRACTOR please create an", tags$b(tags$a(href="https://github.com/fran-romero-campero/ATTRACTOR/issues","issue")), "in GitHub and we will address it."),
+                       tags$div(align="center",tags$h1(tags$b(tags$a(href="https://github.com/fran-romero-campero/ATTRACTOR", "ATTRACTOR at GitHub"))))
+      ),
+      
+      
       conditionalPanel(condition = "input.navigation_bar == 'multiple_gene'",
                        tags$div(align="justify", tags$b("ATTRACTOR"), "allows researchers to explore the coordinated regulation of several 
                                 transcription factors or regulators over their common targets. Follow the steps below:", 
@@ -604,7 +631,7 @@ ui <- fluidPage(
                                   tags$li("Click on the", tags$b("SELECT GENES"), "to visualize your selected TFs common target genes exhibiting the 
                                            specified rhythmic expression pattern in our transcriptional network. Explore the different tabs to 
                                            download a table with the selected genes, perform a signficance analysis of the overlap between the selected 
-                                           TFs targets and the specified expression pattern as weel as", tags$b("GO term, pathways 
+                                           TFs targets and the specified expression pattern as well as", tags$b("GO term, pathways 
                                            and binding motifs enrichment analysis"), ".")
                                 )
                                 )
