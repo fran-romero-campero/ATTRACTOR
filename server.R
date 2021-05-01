@@ -100,6 +100,9 @@ server <- function(input, output, session) {
     HTML("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/8eJN5zrMZbI\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>")
   })  
   
+  ## Server side for target.gene selectize
+  updateSelectizeInput(session,inputId =  "target.gene", choices = genes.selectize, server = TRUE)
+  
   ## clock visualizer code
   output$clock <- renderPlot({
     
