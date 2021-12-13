@@ -27,10 +27,6 @@ library(seqinr)
 library(igraph)
 library(ggplot2)
 library(stringr)
-library(clusterProfiler)
-library(pathview)
-library(SuperExactTest)
-library(VennDiagram)
 
 ##Load the network data
 network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
@@ -1773,6 +1769,7 @@ server <- function(input, output, session) {
    names(list.of.sets) <- name.of.sets
    
    ## Compute overlap p value and enrichment
+   library(SuperExactTest)
    overlap.output <- supertest(x = list.of.sets, n = nrow(network.data))
    overlap.results <- summary(overlap.output)
    overlap.p.value <- tail(overlap.results$P.value, n=1)
@@ -1811,6 +1808,7 @@ server <- function(input, output, session) {
    })
    
    ## Draw venn diagram
+   library(VennDiagram)
    if(number.of.sets == 1)
    {
     output$overlap.significance.text <- renderText(expr = {
@@ -2000,7 +1998,7 @@ server <- function(input, output, session) {
    
    ## Show element when GO term enrichment analysis starts
    shinyjs::showElement(id = 'loading.div')
-   
+   library(clusterProfiler)
    enrich.go <- enrichGO(gene          = selected.genes.df$name,
                          universe      = go.universe,
                          OrgDb         = org.At.tair.db,
@@ -2255,6 +2253,7 @@ with the corresponding GO term.")
    shinyjs::showElement(id = 'loading.div.kegg')
    
    ## Compute KEGG pathway enrichment
+   #library(clusterProfiler)
    pathway.enrichment <- enrichKEGG(gene = selected.genes.df$name, 
                                     organism = "ath", 
                                     keyType = "kegg",
@@ -2350,6 +2349,7 @@ with the corresponding GO term.")
     })
     
     ## Enriched pathway image
+    library(pathview)
     output$kegg_image <- renderImage({
      pathview(gene.data = sort(genes.pathway,decreasing = TRUE),
               pathway.id = strsplit(input$kegg_pathway,split=" - ")[[1]][1],
