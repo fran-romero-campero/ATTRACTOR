@@ -20,7 +20,6 @@ library(shinythemes)
 library(shinycssloaders)
 library(shinyWidgets)
 library(shinyjs)
-#library(ChIPpeakAnno)
 library(rtracklayer)
 library(Biostrings)
 library(seqinr)
@@ -49,7 +48,10 @@ network.data$x.pos <- rotated.pos[,1]
 network.data$y.pos <- rotated.pos[,2]
 
 ## Load normalized gene expression data for animation
-norm.data <- read.table(file = "data/normalized_gene_expression.txt",header = T,sep = "\t")
+##norm.data <- read.table(file = "data/normalized_gene_expression.txt",header = T,sep = "\t")
+
+## Load motif names
+motif.names <- read.table(file = "data/motif_names.txt",header = F,as.is=T)[[1]]
 
 ## Transcription factors AGI ids and names
 tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
@@ -98,50 +100,6 @@ reverse.complement <- function(dna.sequence)
 {
  return(c2s(comp(rev(s2c(dna.sequence)),forceToLower = FALSE)))
 }
-
-## Load Position Weight Matrices
-## Open file connection
-con <- file("data/jaspar_motifs/pfm_plants_20180911.txt",open = "r")
-
-## Empty list for storing PWM
-motifs.pwm <- vector(mode="list",length = 453)
-motif.ids <- vector(mode="character",length=453)
-motif.names <- vector(mode="character",length=453)
-
-## Load 64 PWM
-for(j in 1:453)
-{
- ## First line contains motif id and name
- first.line <- readLines(con,1)
- 
- motif.ids[j] <- strsplit(first.line,split=" ")[[1]][1]
- motif.names[j] <- strsplit(first.line,split=" ")[[1]][2]
- 
- ## Next four line contians probabilites for each nucleotide
- a.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
- c.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
- g.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
- t.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
- 
- ## Construct PWM
- motif.pwm <- matrix(nrow = 4,ncol=length(a.row))
- 
- motif.pwm[1,] <- a.row
- motif.pwm[2,] <- c.row 
- motif.pwm[3,] <- g.row
- motif.pwm[4,] <- t.row
- 
- rownames(motif.pwm) <- c("A","C","G","T")
- 
- motifs.pwm[[j]] <- prop.table(motif.pwm,2)
-}
-
-## Close file connection
-close(con)
-
-## Naming list with PWM
-names(motifs.pwm) <- motif.names
-names(motif.ids) <- motif.names
 
 ## Load bigwig files for each transcription factor
 bigwig.files <- c("data/bw_files/PHYA.bw",
@@ -1446,6 +1404,51 @@ server <- function(input, output, session) {
     chip.signal.means[i, ] <- rev(colMeans(chip.signal[[i]],na.rm = TRUE))
    }
   }
+  
+  ## Load Position Weight Matrices
+  ## Open file connection
+  con <- file("data/jaspar_motifs/pfm_plants_20180911.txt",open = "r")
+  
+  ## Empty list for storing PWM
+  motifs.pwm <- vector(mode="list",length = 453)
+  motif.ids <- vector(mode="character",length=453)
+  motif.names <- vector(mode="character",length=453)
+  
+  ## Load 64 PWM
+  for(j in 1:453)
+  {
+     ## First line contains motif id and name
+     first.line <- readLines(con,1)
+     
+     motif.ids[j] <- strsplit(first.line,split=" ")[[1]][1]
+     motif.names[j] <- strsplit(first.line,split=" ")[[1]][2]
+     
+     ## Next four line contians probabilites for each nucleotide
+     a.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
+     c.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
+     g.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
+     t.row <- as.numeric(strsplit(readLines(con,1),split="( )+")[[1]])
+     
+     ## Construct PWM
+     motif.pwm <- matrix(nrow = 4,ncol=length(a.row))
+     
+     motif.pwm[1,] <- a.row
+     motif.pwm[2,] <- c.row 
+     motif.pwm[3,] <- g.row
+     motif.pwm[4,] <- t.row
+     
+     rownames(motif.pwm) <- c("A","C","G","T")
+     
+     motifs.pwm[[j]] <- prop.table(motif.pwm,2)
+  }
+  
+  ## Close file connection
+  close(con)
+  
+  ## Naming list with PWM
+  names(motifs.pwm) <- motif.names
+  names(motif.ids) <- motif.names
+  
   
   ## Draw peak regions for each TF and determing TF binding sequences
   
