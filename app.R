@@ -11,8 +11,8 @@
 ## input <- list(selected.multiple.tfs = c("CCA1 ZT02", "CCA1 ZT14", "PRR5 ZT10", "TOC1 ZT15"), peak = "peak8", trough = "any")
 
 ## Red gradient for animation
-##red.gradient <- colorRampPalette(c("red", "white"))
-##current.red.gradient <- c(red.gradient(5),rep("#FFFFFF",15))
+red.gradient <- colorRampPalette(c("red", "white"))
+current.red.gradient <- c(red.gradient(5),rep("#FFFFFF",15))
 
 # Load neccesary libraries
 library(shiny)
@@ -20,388 +20,9 @@ library(shinythemes)
 library(shinycssloaders)
 library(shinyWidgets)
 library(shinyjs)
-library(rtracklayer)
-library(Biostrings)
-library(seqinr)
-library(igraph)
-library(ggplot2)
-library(stringr)
-
-##Load the network data
-network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
-rownames(network.data) <- network.data$names
-
-## Tranforming coordinates for a better visualization
-x.coord <- as.numeric(network.data$y.pos)
-y.coord <- as.numeric(network.data$x.pos)
-
-network.data$x.pos <- x.coord
-network.data$y.pos <- y.coord
-
-pos.data <- t(matrix(data=c(x.coord,y.coord),ncol=2))
-
-rotation.angle <- -pi/2
-rotation.matrix <- matrix(data = c(cos(rotation.angle),sin(rotation.angle),-sin(rotation.angle),cos(rotation.angle)),nrow = 2,ncol = 2)
-rotated.pos <- t(rotation.matrix %*% pos.data)
-
-network.data$x.pos <- rotated.pos[,1]
-network.data$y.pos <- rotated.pos[,2]
-
-## Load normalized gene expression data for animation
-##norm.data <- read.table(file = "data/normalized_gene_expression.txt",header = T,sep = "\t")
 
 ## Load motif names
 motif.names <- read.table(file = "data/motif_names.txt",header = F,as.is=T)[[1]]
-
-## Transcription factors AGI ids and names
-tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
-               "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
-
-tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
-            "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
-            "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
-
-names(tf.ids) <- tfs.names
-
-## Extract gene ids
-genes <- sort(network.data$name)
-
-## Load and extract Arabidopsis thaliana annotation regarding genes, exons and cds 
-library(TxDb.Athaliana.BioMart.plantsmart28)
-library(org.At.tair.db)
-txdb <- TxDb.Athaliana.BioMart.plantsmart28
-genes.data <- subset(genes(txdb), seqnames %in% c("1","2","3","4","5")) ## only nuclear genes are considered
-genes.data <- as.data.frame(genes.data)
-exons.data <- as.data.frame(exons(txdb))
-cds.data <- as.data.frame(cds(txdb))
-
-## Load all and circadian genes
-alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
-                                            keys=keys(org.At.tair.db, keytype="ENTREZID"), 
-                                            columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
-ath.universe <- alias2symbol.table$TAIR
-alias2symbol.table <- subset(alias2symbol.table, TAIR %in% genes)
-alias <- alias2symbol.table$SYMBOL
-names(alias) <- alias2symbol.table$TAIR
-alias[is.na(alias)] <- "" 
-genes.selectize <- paste(names(alias), alias, sep=" - ")
-
-## Setting conversion between alias and agis
-agis <-alias2symbol.table$TAIR
-names(agis) <- alias2symbol.table$SYMBOL
-agis[is.na(agis)] <- ""
-
-## Color vectors
-line.colors <- c("blue","red", "darkgreen","black","#663300","#99003d","#b3b300","#4d0039","#4d2600","#006666","#000066","#003300","#333300","#660066")
-area.colors <- c("skyblue","salmon", "lightgreen","lightgrey","#ffcc99","#ff99c2","#ffffb3","#ffe6f9","#ffe6cc","#80ffff","#b3b3ff","#99ff99","#e6e600","#ffb3ff")
-
-## Function to compute the reverse complement
-reverse.complement <- function(dna.sequence)
-{
- return(c2s(comp(rev(s2c(dna.sequence)),forceToLower = FALSE)))
-}
-
-## Load bigwig files for each transcription factor
-bigwig.files <- c("data/bw_files/PHYA.bw",
-                  "data/bw_files/PHYB_FLAG_27_1.bw",
-                  "data/bw_files/PRR5_1.bw",
-                  "data/bw_files/TOC1.bw",
-                  "data/bw_files/CCA1_ZT02.bw",
-                  "data/bw_files/CCA1_ZT14_1.bw",
-                  "data/bw_files/LHY_1.bw",
-                  "data/bw_files/CRY2.bw",
-                  "data/bw_files/FHY1.bw",
-                  "data/bw_files/LUX_ZT10.bw",
-                  "data/bw_files/LUX_ZT12.bw",
-                  "data/bw_files/PIF3.bw",
-                  "data/bw_files/PIF4.bw",
-                  "data/bw_files/PIF5.bw",
-                  "data/bw_files/PRR7.bw",
-                  "data/bw_files/PRR9_1.bw",
-                  "data/bw_files/ELF3_ZT0.bw",
-                  "data/bw_files/ELF3_ZT4.bw",
-                  "data/bw_files/ELF4.bw")
-
-names(bigwig.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
-                         "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
-                         "LUX ZT12","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
-                         "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
-
-## Load bed files for each transcription factor
-bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
-               "data/bed_files/PHYB_peaks.narrowPeak",
-               "data/bed_files/PRR5_1_peaks.narrowPeak",
-               "data/bed_files/TOC1_1_peaks.narrowPeak",
-               "data/bed_files/CCA1_ZT02_peaks.narrowPeak",
-               "data/bed_files/CCA1_ZT14_peaks.narrowPeak",
-               "data/bed_files/LHY_1_peaks.narrowPeak",
-               "data/bed_files/CRY2_peaks.narrowPeak",
-               "data/bed_files/FHY1_peaks.narrowPeak",
-               "data/bed_files/LUX_ZT10_1_peaks.narrowPeak",
-               "data/bed_files/LUX_ZT12_1_peaks.narrowPeak",
-               "data/bed_files/PIF3_peaks.narrowPeak",
-               "data/bed_files/PIF4_peaks.narrowPeak",
-               "data/bed_files/PIF5_peaks.narrowPeak",
-               "data/bed_files/PRR7_peaks.narrowPeak",
-               "data/bed_files/PRR9_1_peaks.narrowPeak",
-               "data/bed_files/ELF3_ZT0_1_peaks.narrowPeak",
-               "data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
-               "data/bed_files/ELF4_1_peaks.narrowPeak")
-
-names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
-                      "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
-                      "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
-                      "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
-
-## TF binding sites colors and symbol shapes
-symbol.shapes <- c(17, 18, 19, 15)
-symbol.color <- c("blue", "red", "darkgreen", "magenta")
-
-## Colors used to represent repression/activation/neutrality in clock visualizer
-repressor.color <- "firebrick1"
-activator.color <- "seagreen3"
-neutral.color <- "lightgrey"
-
-## Colors to represent gene expression profiles in clock visualizer
-selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
-peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
-names(selected.colors) <- peak.times
-
-## Node colors to represent in the global transcriptional network
-node.colors <- selected.colors[network.data$peak.zt]
-names(node.colors) <- NULL
-
-## Auxiliary function to determine surrounding ZTs in clock visualizer
-zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
-zts.to.consider <- function(zt.point, zts=zts)
-{
- zts.numeric <- seq(from=0,to=20,by=4)
- 
- if(zt.point %in% zts.numeric)
- {
-  return(c(zt.point,zt.point))
- } else
- {
-  next.zt <- zts.numeric[which(zts.numeric >= zt.point)[1]]
-  previous.zt <- zts.numeric[which(zts.numeric >= zt.point)[1] - 1]
-  return(c(previous.zt, next.zt))
- }
-}
-
-# Circle and profile parameters for clock visualizer
-radius.1 <- 100 #Outer circle radius
-height <- 4 ## highest point in ylim for profile plot
-
-#Function for radian conversion
-radian.conversion <- function(alpha)
-{
- rad <- (alpha*pi/180)
- return(rad)
-}
-
-## Generate coordinates for inner and outer circle in the clock representation for 
-## clock visualizer
-angle <- seq(from=0, to=2*pi, by=0.01)
-x.circle.1 <- radius.1*sin(angle)
-y.circle.1 <- radius.1*cos(angle)
-
-radius.2 <- radius.1 - radius.1/12
-x.circle.2 <- radius.2 * sin(angle)
-y.circle.2 <- radius.2 * cos(angle)
-
-## Define vectrors for location of transcription factors in the clock representation 
-## in clock visualizer
-agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", 
-             "AT2G46790","AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", 
-             "AT1G09530", "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
-name.tfs <- c("CCA1", "LHY",  "TOC1", "PRR5", "PRR7", "PRR9", "PHYA", "PHYB", 
-              "CRY2", "FHY1", "LUX", "PIF3", "PIF4", "PIF5", "ELF4", "ELF3")
-agi.tfs.zts <- list(c("ZT02","ZT14"),
-                    c("ZT02"),c("ZT15"),c("ZT10"),c("ZT12"),c("ZT04"),c("ZT00"),c("ZT00"),
-                    c("ZT08"),c("ZT04"),c("ZT10","ZT12"),c("ZT08"),c("ZT04"),c("ZT04"),
-                    c("ZT10"),c("ZT00","ZT04"))
-
-## Pasting transcription factors with ZTs
-tfs.with.zts <- c()
-for (i in 1:length(name.tfs))
-{
- tfs.with.zts <- c(tfs.with.zts, paste(name.tfs[i], agi.tfs.zts[[i]], sep= "_") )
-}
-
-## Determine the number of ZTs points for each transcription factor to represent
-## this multiplicity in the clock for clock visualizer
-agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
-names(agi.tfs.zts) <- agi.tfs
-names(agi.tfs.zts.multiplicity) <- agi.tfs
-names(name.tfs) <- agi.tfs
-
-## Extract adjacency matrix
-adj.global.matrix <- as.matrix(network.data[,tfs.with.zts])
-rownames(adj.global.matrix) <- network.data$names
-
-## Extract expression profiles
-mean.expression <- as.matrix(network.data[,zts])
-rownames(mean.expression) <- network.data$names
-
-## Computing angles for each transcription factor according to its ZT and
-## the muber of transcription factors in that ZT to represent tfs avoiding overlapping. 
-splitted.tfs.names <- strsplit(tfs.with.zts,split="_")
-tfs.angles <- vector(mode="numeric",length=length(tfs.with.zts))
-tfs.zts <- vector(mode="numeric",length=length(tfs.with.zts))
-
-for(i in 1:length(splitted.tfs.names))
-{
- tfs.zts[i] <- substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))
- tfs.angles[i] <- radian.conversion(15*as.numeric(tfs.zts[i]))
-}
-
-zt.multiplicity <- table(tfs.zts)
-## Compute coordinates for each transcription factor setting a radius 
-## and height to avoid the overlap
-radius.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
-height.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
-node.labels <- vector(mode="numeric",length=length(splitted.tfs.names))
-for(i in 1:length(splitted.tfs.names))
-{
- node.labels[i] <- splitted.tfs.names[i][[1]][1]
- current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
- current.multiplicity <- zt.multiplicity[current.zt]
- radius.to.multiply[i] <- (1 - (0.16*current.multiplicity))*radius.1
- height.to.multiply[i] <- (1 - (0.1*current.multiplicity))*height
- zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
-}
-
-get.first <- function(my.vector)
-{
- return(my.vector[[1]])
-}
-
-# names(height.to.multiply) <- tfs.names
-names(height.to.multiply) <- tfs.with.zts
-
-## Set the x.y coordinates for the positions 
-tfs.x <- radius.to.multiply * sin(tfs.angles)
-tfs.y <- radius.to.multiply * cos(tfs.angles)
-
-## Generating a positions matrix 
-matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
-
-## Function to generate output table
-create.output.table <- function(input.gene.df,alias,tfs.names)
-{
- output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
- colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
- output.selected.genes.df$`Gene Description` <- input.gene.df$description
- 
- for(i in 1:nrow(output.selected.genes.df))
- {
-  tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",input.gene.df[i,1])
-  output.selected.genes.df[i,1] <- paste(c("<a href=\"",
-                                           tair.link,
-                                           "\" target=\"_blank\">",
-                                           input.gene.df[i,1], "</a>"),
-                                         collapse="")
-  output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
-  output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
-  output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
-  output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
- }
- 
- return(output.selected.genes.df)
-}
-
-## Function to generate output table to download
-create.downloadable.output.table <- function(input.gene.df,alias,tfs.names)
-{
- output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
- colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
- output.selected.genes.df$`Gene Description` <- input.gene.df$description
- 
- for(i in 1:nrow(output.selected.genes.df))
- {
-  output.selected.genes.df[i,1] <- input.gene.df[i,1]
-  output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
-  output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
-  output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
-  output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
- }
- 
- return(output.selected.genes.df)
-}
-
-## Auxiliary function to compute enrichments for GO table
-compute.enrichments <- function(gene.ratios, bg.ratios)
-{
- gene.ratios.eval <- sapply(parse(text=gene.ratios),FUN = eval)
- bg.ratios.eval <- sapply(parse(text=bg.ratios),FUN = eval)
- enrichments <- round(x=gene.ratios.eval/bg.ratios.eval,digits = 2)
- enrichments.text <- paste(enrichments, " (", gene.ratios, "; ", bg.ratios, ")",sep="")
- 
- return(enrichments.text)  
-}
-
-#GO links and tair link functions
-go.link <- function(go.term)
-{
- link <- paste0("http://amigo.geneontology.org/amigo/term/", go.term)
- complete.link <- paste(c("<a href=\"",
-                          link,
-                          "\" target=\"_blank\">",
-                          go.term, "</a>"),
-                        collapse = "")
- return(complete.link)
-}
-
-gene.link.function <- function(gene.name)
-{
- tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
-                      gene.name,
-                      "&type=locus"),collapse="")
- gene.link <- paste(c("<a href=\"",
-                      tair.link,
-                      "\" target=\"_blank\">",
-                      gene.name, "</a>"),
-                    collapse="")
- return(gene.link)
-}
-
-## KEGG pathway link
-kegg.pathway.link <- function(kegg.pathway)
-{
- link <- paste0("https://www.genome.jp/kegg-bin/show_pathway?",kegg.pathway)
- complete.link <- paste(c("<a href=\"",
-                          link,
-                          "\" target=\"_blank\">",
-                          kegg.pathway, "</a>"),
-                        collapse = "")
- return(complete.link)
-}
-
-## KEGG module link
-kegg.module.link <- function(kegg.module)
-{
- link <- paste0("https://www.genome.jp/kegg-bin/show_module?",kegg.module)
- complete.link <- paste(c("<a href=\"",
-                          link,
-                          "\" target=\"_blank\">",
-                          kegg.module, "</a>"),
-                        collapse = "")
- return(complete.link)
-}
-
-## TFBS jaspar link
-tfbs.link <- function(motif.id)
-{
- link <- paste0("http://jaspar.genereg.net/matrix/",motif.id)
- complete.link <- paste(c("<a href=\"",
-                          link,
-                          "\" target=\"_blank\">",
-                          motif.id, "</a>"),
-                        collapse = "")
- return(complete.link)
-}
-
-
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -455,16 +76,16 @@ ui <- fluidPage(
           is also included in our network."),
                     tags$div(align="justify","Use the navigation bar on the left to explore the different utilities in ATTRACTOR or alternatively",
                              tags$a(href="https://www.youtube.com/watch?v=8eJN5zrMZbI", target="_blank", tags$b("view our video tutorial."))),
-                    tags$br(), tags$br()#,
-                    # actionButton("run", "Run Animation"),
-                    # fluidRow(column(width = 9,
-                    #                 plotOutput("networkAnimation")),
-                    #          column(width = 3,
-                    #                 tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),
-                    #                 plotOutput("clockAnimation")))
-                    # plotOutput("networkAnimation"),
-                    # tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
-                    # plotOutput("clockAnimation")
+                    tags$br(), tags$br(),
+                     actionButton("run", "Run Animation"),
+                     fluidRow(column(width = 9,
+                                     plotOutput("networkAnimation")))
+                              # column(width = 3,
+                              #        tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),tags$br(), tags$br(),
+                     #                 plotOutput("clockAnimation"))),
+                     # plotOutput("networkAnimation"),
+                     # tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(), tags$br(),
+                     # plotOutput("clockAnimation")
    ),
    
    conditionalPanel(condition = "input.navigation_bar == 'github'",
@@ -911,99 +532,480 @@ ui <- fluidPage(
 )
 
 
+library(rtracklayer)
+library(Biostrings)
+library(seqinr)
+library(igraph)
+library(ggplot2)
+library(stringr)
+
+##Load the network data
+network.data <- read.table(file="data/attractor_network_representation.tsv",header = TRUE,as.is=TRUE,sep="\t",quote = "")
+rownames(network.data) <- network.data$names
+
+## Tranforming coordinates for a better visualization
+x.coord <- as.numeric(network.data$y.pos)
+y.coord <- as.numeric(network.data$x.pos)
+
+network.data$x.pos <- x.coord
+network.data$y.pos <- y.coord
+
+pos.data <- t(matrix(data=c(x.coord,y.coord),ncol=2))
+
+rotation.angle <- -pi/2
+rotation.matrix <- matrix(data = c(cos(rotation.angle),sin(rotation.angle),-sin(rotation.angle),cos(rotation.angle)),nrow = 2,ncol = 2)
+rotated.pos <- t(rotation.matrix %*% pos.data)
+
+network.data$x.pos <- rotated.pos[,1]
+network.data$y.pos <- rotated.pos[,2]
+
+## Load normalized gene expression data for animation
+norm.data <- read.table(file = "data/normalized_gene_expression.txt",header = T,sep = "\t")
+
+## Transcription factors AGI ids and names
+tfs.names <- c("CCA1","LHY", "TOC1", "PRR5", "PRR7", "PRR9", "PHYA","PHYB",
+               "CRY2","FHY1","LUX","PIF3","PIF4","PIF5","ELF4","ELF3")
+
+tf.ids <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", "AT2G46790",
+            "AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", "AT1G09530",
+            "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+
+names(tf.ids) <- tfs.names
+
+## Extract gene ids
+genes <- sort(network.data$name)
+
+## Load and extract Arabidopsis thaliana annotation regarding genes, exons and cds 
+library(TxDb.Athaliana.BioMart.plantsmart28)
+library(org.At.tair.db)
+txdb <- TxDb.Athaliana.BioMart.plantsmart28
+genes.data <- subset(genes(txdb), seqnames %in% c("1","2","3","4","5")) ## only nuclear genes are considered
+genes.data <- as.data.frame(genes.data)
+exons.data <- as.data.frame(exons(txdb))
+cds.data <- as.data.frame(cds(txdb))
+
+## Load all and circadian genes
+alias2symbol.table <- AnnotationDbi::select(org.At.tair.db, 
+                                            keys=keys(org.At.tair.db, keytype="ENTREZID"), 
+                                            columns=c("SYMBOL", "TAIR"), keytype="ENTREZID")
+ath.universe <- alias2symbol.table$TAIR
+alias2symbol.table <- subset(alias2symbol.table, TAIR %in% genes)
+alias <- alias2symbol.table$SYMBOL
+names(alias) <- alias2symbol.table$TAIR
+alias[is.na(alias)] <- "" 
+genes.selectize <- paste(names(alias), alias, sep=" - ")
+
+## Setting conversion between alias and agis
+agis <-alias2symbol.table$TAIR
+names(agis) <- alias2symbol.table$SYMBOL
+agis[is.na(agis)] <- ""
+
+## Color vectors
+line.colors <- c("blue","red", "darkgreen","black","#663300","#99003d","#b3b300","#4d0039","#4d2600","#006666","#000066","#003300","#333300","#660066")
+area.colors <- c("skyblue","salmon", "lightgreen","lightgrey","#ffcc99","#ff99c2","#ffffb3","#ffe6f9","#ffe6cc","#80ffff","#b3b3ff","#99ff99","#e6e600","#ffb3ff")
+
+## Function to compute the reverse complement
+reverse.complement <- function(dna.sequence)
+{
+   return(c2s(comp(rev(s2c(dna.sequence)),forceToLower = FALSE)))
+}
+
+## Load bigwig files for each transcription factor
+bigwig.files <- c("data/bw_files/PHYA.bw",
+                  "data/bw_files/PHYB_FLAG_27_1.bw",
+                  "data/bw_files/PRR5_1.bw",
+                  "data/bw_files/TOC1.bw",
+                  "data/bw_files/CCA1_ZT02.bw",
+                  "data/bw_files/CCA1_ZT14_1.bw",
+                  "data/bw_files/LHY_1.bw",
+                  "data/bw_files/CRY2.bw",
+                  "data/bw_files/FHY1.bw",
+                  "data/bw_files/LUX_ZT10.bw",
+                  "data/bw_files/LUX_ZT12.bw",
+                  "data/bw_files/PIF3.bw",
+                  "data/bw_files/PIF4.bw",
+                  "data/bw_files/PIF5.bw",
+                  "data/bw_files/PRR7.bw",
+                  "data/bw_files/PRR9_1.bw",
+                  "data/bw_files/ELF3_ZT0.bw",
+                  "data/bw_files/ELF3_ZT4.bw",
+                  "data/bw_files/ELF4.bw")
+
+names(bigwig.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
+                         "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
+                         "LUX ZT12","PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
+                         "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+
+## Load bed files for each transcription factor
+bed.files <- c("data/bed_files/PHYA_peaks.narrowPeak",
+               "data/bed_files/PHYB_peaks.narrowPeak",
+               "data/bed_files/PRR5_1_peaks.narrowPeak",
+               "data/bed_files/TOC1_1_peaks.narrowPeak",
+               "data/bed_files/CCA1_ZT02_peaks.narrowPeak",
+               "data/bed_files/CCA1_ZT14_peaks.narrowPeak",
+               "data/bed_files/LHY_1_peaks.narrowPeak",
+               "data/bed_files/CRY2_peaks.narrowPeak",
+               "data/bed_files/FHY1_peaks.narrowPeak",
+               "data/bed_files/LUX_ZT10_1_peaks.narrowPeak",
+               "data/bed_files/LUX_ZT12_1_peaks.narrowPeak",
+               "data/bed_files/PIF3_peaks.narrowPeak",
+               "data/bed_files/PIF4_peaks.narrowPeak",
+               "data/bed_files/PIF5_peaks.narrowPeak",
+               "data/bed_files/PRR7_peaks.narrowPeak",
+               "data/bed_files/PRR9_1_peaks.narrowPeak",
+               "data/bed_files/ELF3_ZT0_1_peaks.narrowPeak",
+               "data/bed_files/ELF3_ZT4_1_peaks.narrowPeak",
+               "data/bed_files/ELF4_1_peaks.narrowPeak")
+
+names(bed.files) <- c("PHYA ZT00", "PHYB ZT00" ,"PRR5 ZT10", "TOC1 ZT15","CCA1 ZT02",
+                      "CCA1 ZT14","LHY ZT02","CRY2 ZT08","FHY1 ZT04","LUX ZT10", 
+                      "LUX ZT12", "PIF3 ZT08","PIF4 ZT04","PIF5 ZT04","PRR7 ZT12",
+                      "PRR9 ZT04","ELF3 ZT00", "ELF3 ZT04", "ELF4 ZT10")
+
+## TF binding sites colors and symbol shapes
+symbol.shapes <- c(17, 18, 19, 15)
+symbol.color <- c("blue", "red", "darkgreen", "magenta")
+
+## Colors used to represent repression/activation/neutrality in clock visualizer
+repressor.color <- "firebrick1"
+activator.color <- "seagreen3"
+neutral.color <- "lightgrey"
+
+## Colors to represent gene expression profiles in clock visualizer
+selected.colors <- c("blue4","blue","deepskyblue","gold","firebrick","gray47")
+peak.times <- c("peak20","peak0","peak4","peak8","peak12","peak16")
+names(selected.colors) <- peak.times
+
+## Node colors to represent in the global transcriptional network
+node.colors <- selected.colors[network.data$peak.zt]
+names(node.colors) <- NULL
+
+## Auxiliary function to determine surrounding ZTs in clock visualizer
+zts <- c("ZT00","ZT04","ZT08","ZT12","ZT16","ZT20")
+zts.to.consider <- function(zt.point, zts=zts)
+{
+   zts.numeric <- seq(from=0,to=20,by=4)
+   
+   if(zt.point %in% zts.numeric)
+   {
+      return(c(zt.point,zt.point))
+   } else
+   {
+      next.zt <- zts.numeric[which(zts.numeric >= zt.point)[1]]
+      previous.zt <- zts.numeric[which(zts.numeric >= zt.point)[1] - 1]
+      return(c(previous.zt, next.zt))
+   }
+}
+
+# Circle and profile parameters for clock visualizer
+radius.1 <- 100 #Outer circle radius
+height <- 4 ## highest point in ylim for profile plot
+
+#Function for radian conversion
+radian.conversion <- function(alpha)
+{
+   rad <- (alpha*pi/180)
+   return(rad)
+}
+
+## Generate coordinates for inner and outer circle in the clock representation for 
+## clock visualizer
+angle <- seq(from=0, to=2*pi, by=0.01)
+x.circle.1 <- radius.1*sin(angle)
+y.circle.1 <- radius.1*cos(angle)
+
+radius.2 <- radius.1 - radius.1/12
+x.circle.2 <- radius.2 * sin(angle)
+y.circle.2 <- radius.2 * cos(angle)
+
+## Define vectrors for location of transcription factors in the clock representation 
+## in clock visualizer
+agi.tfs <- c("AT2G46830", "AT1G01060", "AT5G61380", "AT5G24470", "AT5G02810", 
+             "AT2G46790","AT1G09570", "AT2G18790", "AT1G04400", "AT2G37678", "AT3G46640", 
+             "AT1G09530", "AT2G43010", "AT3G59060", "AT2G40080", "AT2G25930")
+name.tfs <- c("CCA1", "LHY",  "TOC1", "PRR5", "PRR7", "PRR9", "PHYA", "PHYB", 
+              "CRY2", "FHY1", "LUX", "PIF3", "PIF4", "PIF5", "ELF4", "ELF3")
+agi.tfs.zts <- list(c("ZT02","ZT14"),
+                    c("ZT02"),c("ZT15"),c("ZT10"),c("ZT12"),c("ZT04"),c("ZT00"),c("ZT00"),
+                    c("ZT08"),c("ZT04"),c("ZT10","ZT12"),c("ZT08"),c("ZT04"),c("ZT04"),
+                    c("ZT10"),c("ZT00","ZT04"))
+
+## Pasting transcription factors with ZTs
+tfs.with.zts <- c()
+for (i in 1:length(name.tfs))
+{
+   tfs.with.zts <- c(tfs.with.zts, paste(name.tfs[i], agi.tfs.zts[[i]], sep= "_") )
+}
+
+## Determine the number of ZTs points for each transcription factor to represent
+## this multiplicity in the clock for clock visualizer
+agi.tfs.zts.multiplicity <- sapply(agi.tfs.zts,length)
+names(agi.tfs.zts) <- agi.tfs
+names(agi.tfs.zts.multiplicity) <- agi.tfs
+names(name.tfs) <- agi.tfs
+
+## Extract adjacency matrix
+adj.global.matrix <- as.matrix(network.data[,tfs.with.zts])
+rownames(adj.global.matrix) <- network.data$names
+
+## Extract expression profiles
+mean.expression <- as.matrix(network.data[,zts])
+rownames(mean.expression) <- network.data$names
+
+## Computing angles for each transcription factor according to its ZT and
+## the muber of transcription factors in that ZT to represent tfs avoiding overlapping. 
+splitted.tfs.names <- strsplit(tfs.with.zts,split="_")
+tfs.angles <- vector(mode="numeric",length=length(tfs.with.zts))
+tfs.zts <- vector(mode="numeric",length=length(tfs.with.zts))
+
+for(i in 1:length(splitted.tfs.names))
+{
+   tfs.zts[i] <- substr(x=splitted.tfs.names[i][[1]][2],start = 3,stop=nchar(splitted.tfs.names[i][[1]][2]))
+   tfs.angles[i] <- radian.conversion(15*as.numeric(tfs.zts[i]))
+}
+
+zt.multiplicity <- table(tfs.zts)
+## Compute coordinates for each transcription factor setting a radius 
+## and height to avoid the overlap
+radius.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+height.to.multiply <- vector(mode="numeric",length=length(splitted.tfs.names))
+node.labels <- vector(mode="numeric",length=length(splitted.tfs.names))
+for(i in 1:length(splitted.tfs.names))
+{
+   node.labels[i] <- splitted.tfs.names[i][[1]][1]
+   current.zt <- substr(x=splitted.tfs.names[i][[1]][2],start=3,stop=nchar(splitted.tfs.names[i][[1]][2]))
+   current.multiplicity <- zt.multiplicity[current.zt]
+   radius.to.multiply[i] <- (1 - (0.16*current.multiplicity))*radius.1
+   height.to.multiply[i] <- (1 - (0.1*current.multiplicity))*height
+   zt.multiplicity[current.zt] <- zt.multiplicity[current.zt] - 1
+}
+
+get.first <- function(my.vector)
+{
+   return(my.vector[[1]])
+}
+
+# names(height.to.multiply) <- tfs.names
+names(height.to.multiply) <- tfs.with.zts
+
+## Set the x.y coordinates for the positions 
+tfs.x <- radius.to.multiply * sin(tfs.angles)
+tfs.y <- radius.to.multiply * cos(tfs.angles)
+
+## Generating a positions matrix 
+matrix.pos <- matrix(data = c(tfs.x, tfs.y), nrow = length(tfs.x), ncol = 2)
+
+## Function to generate output table
+create.output.table <- function(input.gene.df,alias,tfs.names)
+{
+   output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+   colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+   output.selected.genes.df$`Gene Description` <- input.gene.df$description
+   
+   for(i in 1:nrow(output.selected.genes.df))
+   {
+      tair.link <- paste0("https://www.arabidopsis.org/servlets/TairObject?type=locus&name=",input.gene.df[i,1])
+      output.selected.genes.df[i,1] <- paste(c("<a href=\"",
+                                               tair.link,
+                                               "\" target=\"_blank\">",
+                                               input.gene.df[i,1], "</a>"),
+                                             collapse="")
+      output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+      output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+      output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+      output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+   }
+   
+   return(output.selected.genes.df)
+}
+
+## Function to generate output table to download
+create.downloadable.output.table <- function(input.gene.df,alias,tfs.names)
+{
+   output.selected.genes.df <- data.frame(matrix(nrow=nrow(input.gene.df), ncol=6))
+   colnames(output.selected.genes.df) <- c("AGI ID", "Gene Name", "Gene Description", "Regulators","Expression Peak Time","Expression Trough Time")
+   output.selected.genes.df$`Gene Description` <- input.gene.df$description
+   
+   for(i in 1:nrow(output.selected.genes.df))
+   {
+      output.selected.genes.df[i,1] <- input.gene.df[i,1]
+      output.selected.genes.df[i,2] <- alias[input.gene.df[i,1]]
+      output.selected.genes.df[i,4] <- paste(tfs.names[which(input.gene.df[i,tfs.names] == 1)],collapse=", ")
+      output.selected.genes.df[i,5] <-paste0("ZT",substr(input.gene.df[i,"peak.zt"],start=5,stop=nchar(input.gene.df[i,"peak.zt"])))
+      output.selected.genes.df[i,6] <-paste0("ZT",substr(input.gene.df[i,"trough.zt"],start=7,stop=nchar(input.gene.df[i,"trough.zt"])))
+   }
+   
+   return(output.selected.genes.df)
+}
+
+## Auxiliary function to compute enrichments for GO table
+compute.enrichments <- function(gene.ratios, bg.ratios)
+{
+   gene.ratios.eval <- sapply(parse(text=gene.ratios),FUN = eval)
+   bg.ratios.eval <- sapply(parse(text=bg.ratios),FUN = eval)
+   enrichments <- round(x=gene.ratios.eval/bg.ratios.eval,digits = 2)
+   enrichments.text <- paste(enrichments, " (", gene.ratios, "; ", bg.ratios, ")",sep="")
+   
+   return(enrichments.text)  
+}
+
+#GO links and tair link functions
+go.link <- function(go.term)
+{
+   link <- paste0("http://amigo.geneontology.org/amigo/term/", go.term)
+   complete.link <- paste(c("<a href=\"",
+                            link,
+                            "\" target=\"_blank\">",
+                            go.term, "</a>"),
+                          collapse = "")
+   return(complete.link)
+}
+
+gene.link.function <- function(gene.name)
+{
+   tair.link <- paste(c("https://www.arabidopsis.org/servlets/TairObject?name=",
+                        gene.name,
+                        "&type=locus"),collapse="")
+   gene.link <- paste(c("<a href=\"",
+                        tair.link,
+                        "\" target=\"_blank\">",
+                        gene.name, "</a>"),
+                      collapse="")
+   return(gene.link)
+}
+
+## KEGG pathway link
+kegg.pathway.link <- function(kegg.pathway)
+{
+   link <- paste0("https://www.genome.jp/kegg-bin/show_pathway?",kegg.pathway)
+   complete.link <- paste(c("<a href=\"",
+                            link,
+                            "\" target=\"_blank\">",
+                            kegg.pathway, "</a>"),
+                          collapse = "")
+   return(complete.link)
+}
+
+## KEGG module link
+kegg.module.link <- function(kegg.module)
+{
+   link <- paste0("https://www.genome.jp/kegg-bin/show_module?",kegg.module)
+   complete.link <- paste(c("<a href=\"",
+                            link,
+                            "\" target=\"_blank\">",
+                            kegg.module, "</a>"),
+                          collapse = "")
+   return(complete.link)
+}
+
+## TFBS jaspar link
+tfbs.link <- function(motif.id)
+{
+   link <- paste0("http://jaspar.genereg.net/matrix/",motif.id)
+   complete.link <- paste(c("<a href=\"",
+                            link,
+                            "\" target=\"_blank\">",
+                            motif.id, "</a>"),
+                          collapse = "")
+   return(complete.link)
+}
+
+
+
+
 server <- function(input, output, session) {
  
  ## Animation in main page with node size
- # rv <- reactiveValues(i = 0)
- # 
- # increase.step <- 2
- # max.steps <- 1000
- # 
- # output$networkAnimation <- renderPlot( {
- #   ggplot(network.data, aes(x.pos,y.pos)) + 
- #     theme(panel.background = element_blank(), 
- #           panel.grid.major = element_blank(), 
- #           panel.grid.minor = element_blank(),
- #           axis.title = element_blank(),
- #           axis.text = element_blank(),
- #           axis.ticks.y = element_blank()) + 
- #     geom_point(fill=node.colors,size=1.65^norm.data[[(rv$i %% 48)+1]],pch=21)
- # },height = 600)
- # 
- # observeEvent(input$run, {
- #   rv$i <- 0
- #   observe({
- #     isolate({
- #       rv$i <- rv$i + increase.step
- #       print(rv$i)
- #     })
- #     
- #     if(rv$i < max.steps) {
- #       invalidateLater(5, session)
- #     }
- #   })
- # })
+  rv <- reactiveValues(i = 0)
  
+  increase.step <- 2
+  max.steps <- 1000
+ 
+  output$networkAnimation <- renderPlot( {
+    ggplot(network.data, aes(x.pos,y.pos)) +
+      theme(panel.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) +
+      geom_point(fill=node.colors,size=1.65^norm.data[[(rv$i %% 48)+1]],pch=21)
+  },height = 600)
+ 
+  observeEvent(input$run, {
+    rv$i <- 0
+    observe({
+      isolate({
+        rv$i <- rv$i + increase.step
+        print(rv$i)
+      })
+ 
+      if(rv$i < max.steps) {
+        invalidateLater(5, session)
+      }
+    })
+  })
+
  ## Animation in main page with red gradient
- # rv <- reactiveValues(i = 0)
- # 
- # increase.step <- 2
- # increase.step.sec <- 0.2
- # max.steps <- 1000
- # 
- # output$networkAnimation <- renderPlot( {
- #   ggplot(network.data, aes(x.pos,y.pos)) + 
- #     theme(panel.background = element_blank(), 
- #           panel.grid.major = element_blank(), 
- #           panel.grid.minor = element_blank(),
- #           axis.title = element_blank(),
- #           axis.text = element_blank(),
- #           axis.ticks.y = element_blank()) + 
- #     geom_point(fill=current.red.gradient[ceiling(1.7^norm.data[[(rv$i %% 48)+1]])],size=5,pch=21)
- # },height = 600, width = 600)
- # 
- # output$clockAnimation <- renderPlot({
- #   #Plot circle
- #   par(mar=c(0,0,0,0))
- #   plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
- #   lines(x.circle.2, y.circle.2, lwd=3)
- #   x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
- #                  sin(seq(from=-pi, to=0, by=0.01))* radius.1)
- #   y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2, 
- #                 cos(seq(from=-pi, to=0, by=0.01))*radius.1)
- #   polygon(x = x.polygon, y = y.polygon, col = "black")
- #   for (j in 0:5)
- #   {
- #     angle.zt <- radian.conversion(alpha = 60*j)
- #     zt <- 4*j
- #     current.zt <- paste("ZT", zt,  sep = "")
- #     text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
- #     lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)), 
- #           y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
- #   }
- #   
- #   radio.flecha <- 80
- #   angle.zt <- radian.conversion(alpha = 8*rv$i)
- #   arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt)*radio.flecha, y1 = cos(angle.zt)*radio.flecha,lwd = 5)
- #   
- # }, height = 300, width = 300)
- # 
- # observeEvent(input$run, {
- #   rv$i <- 0
- #   observe({
- #     isolate({
- #       rv$i <- rv$i + increase.step
- #       print(rv$i)
- #     })
- #   
- #     
- #     if(rv$i < max.steps) {
- #       invalidateLater(5, session)
- #     }
- #   })
- #   
- # })
+  rv <- reactiveValues(i = 0)
  
+  increase.step <- 2
+  increase.step.sec <- 0.2
+  max.steps <- 1000
+ 
+  output$networkAnimation <- renderPlot( {
+    ggplot(network.data, aes(x.pos,y.pos)) +
+      theme(panel.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            axis.ticks.y = element_blank()) +
+      geom_point(fill=current.red.gradient[ceiling(1.7^norm.data[[(rv$i %% 48)+1]])],size=5,pch=21)
+  },height = 600, width = 600)
+ 
+  output$clockAnimation <- renderPlot({
+    #Plot circle
+    par(mar=c(0,0,0,0))
+    plot(x.circle.1,y.circle.1, type = "l", lwd=3, axes=FALSE, xlab = "", ylab="",xlim=c(-1.2 * radius.1, 1.2 * radius.1),ylim=c(-1.2 * radius.1, 1.2 * radius.1))
+    lines(x.circle.2, y.circle.2, lwd=3)
+    x.polygon <- c(sin(seq(from=0, to=-pi, by=-0.01)) * radius.2,
+                   sin(seq(from=-pi, to=0, by=0.01))* radius.1)
+    y.polygon <-c(cos(seq(from=0, to=-pi, by=-0.01)) * radius.2,
+                  cos(seq(from=-pi, to=0, by=0.01))*radius.1)
+    polygon(x = x.polygon, y = y.polygon, col = "black")
+    for (j in 0:5)
+    {
+      angle.zt <- radian.conversion(alpha = 60*j)
+      zt <- 4*j
+      current.zt <- paste("ZT", zt,  sep = "")
+      text(x = (radius.1 + radius.1/6)*sin(angle.zt), y = (radius.1 + radius.1/6)*cos(angle.zt), labels = current.zt,cex = 1.5,font=2)
+      lines(x = c(radius.1 * sin(angle.zt), (radius.1 + radius.1/20)* sin(angle.zt)),
+            y = c(radius.1 * cos(angle.zt), (radius.1 + radius.1/20)* cos(angle.zt)), lwd=2)
+    }
+ 
+    radio.flecha <- 80
+    angle.zt <- radian.conversion(alpha = 8*rv$i)
+    arrows(x0 = 0, y0 = 0, x1 = sin(angle.zt)*radio.flecha, y1 = cos(angle.zt)*radio.flecha,lwd = 5)
+ 
+  }, height = 300, width = 300)
+ 
+  observeEvent(input$run, {
+    rv$i <- 0
+    observe({
+      isolate({
+        rv$i <- rv$i + increase.step
+        print(rv$i)
+      })
+ 
+ 
+      if(rv$i < max.steps) {
+        invalidateLater(5, session)
+      }
+    })
+ 
+  })
+
  ## video tutorial
  output$video_tutorial <- renderUI({
   HTML("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/8eJN5zrMZbI\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen></iframe>")
